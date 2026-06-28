@@ -1,0 +1,86 @@
+/* ============================================================
+   PetNalia — Typography tokens
+   Primary: Inter  ·  Alternative / display: Plus Jakarta Sans
+   Optimized for healthcare readability (generous line-height,
+   restrained tracking, high x-height fonts).
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
+
+:root {
+  /* ---- Families ---- */
+  --font-sans:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono:    "SFMono-Regular", ui-monospace, "Menlo", "Consolas", monospace;
+
+  /* ---- Weights ---- */
+  --fw-regular:  400; /* @kind other */
+  --fw-medium:   500; /* @kind other */
+  --fw-semibold: 600; /* @kind other */
+  --fw-bold:     700; /* @kind other */
+  --fw-extra:    800; /* @kind other */
+
+  /* ---- Type scale (size / line-height / weight / tracking / family) ---- */
+  /* Display XL */
+  --display-xl-size:    60px;
+  --display-xl-line:    66px;
+  --display-xl-weight:  var(--fw-extra);
+  --display-xl-track:   -0.022em;
+
+  /* Display L */
+  --display-l-size:     48px;
+  --display-l-line:     54px;
+  --display-l-weight:   var(--fw-bold);
+  --display-l-track:    -0.02em;
+
+  /* H1 */
+  --h1-size:   38px;
+  --h1-line:   44px;
+  --h1-weight: var(--fw-bold);
+  --h1-track:  -0.018em;
+
+  /* H2 */
+  --h2-size:   30px;
+  --h2-line:   38px;
+  --h2-weight: var(--fw-bold);
+  --h2-track:  -0.014em;
+
+  /* H3 */
+  --h3-size:   24px;
+  --h3-line:   32px;
+  --h3-weight: var(--fw-semibold);
+  --h3-track:  -0.01em;
+
+  /* H4 */
+  --h4-size:   20px;
+  --h4-line:   28px;
+  --h4-weight: var(--fw-semibold);
+  --h4-track:  -0.006em;
+
+  /* Body Large */
+  --body-lg-size:   18px;
+  --body-lg-line:   28px;
+  --body-lg-weight: var(--fw-regular);
+
+  /* Body */
+  --body-size:   16px;
+  --body-line:   24px;
+  --body-weight: var(--fw-regular);
+
+  /* Small */
+  --small-size:   14px;
+  --small-line:   20px;
+  --small-weight: var(--fw-regular);
+
+  /* Caption */
+  --caption-size:   12px;
+  --caption-line:   16px;
+  --caption-weight: var(--fw-medium);
+  --caption-track:  0.005em;
+
+  /* Overline (eyebrow labels) */
+  --overline-size:   12px;
+  --overline-line:   16px;
+  --overline-weight: var(--fw-semibold);
+  --overline-track:  0.08em;
+}

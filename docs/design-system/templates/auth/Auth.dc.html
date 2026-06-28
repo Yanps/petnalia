@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Authentication Template" description="Centered brand header · Auth card (Inputs + Button) · Help links — for Login, Register, Forgot Password" -->
+<helmet>
+<script src="./ds-base.js"></script>
+</helmet>
+
+<div style="min-height:100%;background:var(--bg);font-family:var(--font-sans);display:flex;align-items:center;justify-content:center;padding:48px 24px;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;opacity:.5;background:radial-gradient(50% 50% at 50% 0%, var(--brand-subtle), transparent 70%)"></div>
+
+  <div style="position:relative;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:24px">
+
+    <!-- BRAND HEADER -->
+    <img src="../../assets/brand/petnalia-horizontal.png" alt="PetNalia" style="height:40px;width:auto" />
+
+    <!-- AUTHENTICATION CARD -->
+    <div style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);padding:32px">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="height:24px;width:180px;max-width:70%;background:var(--surface-inset);border-radius:7px;margin:0 auto 10px"></div>
+        <div style="height:14px;width:240px;max-width:85%;background:var(--surface-inset);border-radius:6px;margin:0 auto"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Input" label="E-mail" type="email" placeholder="voce@email.com" icon="user" hint-size="100%,70px"></x-import>
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Input" label="Senha" type="password" placeholder="••••••••" hint-size="100%,70px"></x-import>
+
+        <div style="display:flex;justify-content:flex-end">
+          <div style="height:13px;width:120px;background:var(--surface-inset);border-radius:5px"></div>
+        </div>
+
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Button" variant="primary" block="{{ yes }}" size="lg" hint-size="100%,52px">Entrar</x-import>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:4px 0">
+          <span style="flex:1;height:1px;background:var(--border)"></span>
+          <span style="font-size:12px;color:var(--text-muted)">ou</span>
+          <span style="flex:1;height:1px;background:var(--border)"></span>
+        </div>
+
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Button" variant="secondary" block="{{ yes }}" hint-size="100%,44px">Continuar com Google</x-import>
+      </div>
+    </div>
+
+    <!-- HELP LINKS -->
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="height:13px;width:130px;background:var(--surface-inset);border-radius:5px"></div>
+      <span style="width:4px;height:4px;border-radius:50%;background:var(--text-disabled)"></span>
+      <div style="height:13px;width:90px;background:var(--surface-inset);border-radius:5px"></div>
+    </div>
+
+    <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)">
+      <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Icon" glyph="shield-check" size="14" hint-size="14px,14px"></x-import>
+      Conexão segura · dados protegidos
+    </span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:760}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { yes: true };
+  }
+}
+</script>
+</body>
+</html>

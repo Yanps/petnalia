@@ -1,0 +1,11 @@
+{
+  "extends": "@petnalia/tsconfig/react-lib.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

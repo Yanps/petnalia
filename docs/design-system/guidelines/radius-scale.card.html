@@ -1,0 +1,23 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Radius scale" subtitle="sm 8 · md 12 · lg 16 · xl 24 · full" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 22px 24px; background: var(--surface); display: flex; gap: 20px; align-items: flex-end; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .box { width: 92px; height: 92px; background: var(--brand-subtle); border: 1.5px solid var(--brand-border); }
+  .t { font-size: 12px; font-weight: 700; color: var(--text); }
+  .v { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); }
+  .lbl { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+</style>
+</head>
+<body>
+  <div class="col"><div class="box" style="border-radius:var(--radius-sm)"></div><div class="lbl"><span class="t">sm</span><span class="v">8px</span></div></div>
+  <div class="col"><div class="box" style="border-radius:var(--radius-md)"></div><div class="lbl"><span class="t">md</span><span class="v">12px</span></div></div>
+  <div class="col"><div class="box" style="border-radius:var(--radius-lg)"></div><div class="lbl"><span class="t">lg</span><span class="v">16px</span></div></div>
+  <div class="col"><div class="box" style="border-radius:var(--radius-xl)"></div><div class="lbl"><span class="t">xl</span><span class="v">24px</span></div></div>
+  <div class="col"><div class="box" style="border-radius:var(--radius-full)"></div><div class="lbl"><span class="t">full</span><span class="v">9999px</span></div></div>
+</body>
+</html>

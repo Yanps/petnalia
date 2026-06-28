@@ -1,0 +1,334 @@
+// PetNalia — Prisma Schema
+//
+// PostGIS geography columns are declared as Unsupported("geography(...)").
+// All spatial SQL lives exclusively in GeoRepository using $queryRaw.
+// See ADR-002 and ARCHITECTURE.md §4.4.
+//
+// Migrations: use `prisma migrate dev --create-only` then hand-edit the
+// generated SQL to add GIST indexes on geography columns.
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  tutor
+  veterinarian
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+  deleted
+}
+
+enum PetSex {
+  male
+  female
+}
+
+enum VerificationStatus {
+  pending
+  in_review
+  verified
+  rejected
+}
+
+enum VetTier {
+  free
+  premium
+}
+
+enum AppointmentStatus {
+  requested
+  confirmed
+  pending
+  completed
+  cancelled
+}
+
+enum Modality {
+  home
+  online
+}
+
+enum SlotStatus {
+  open
+  held
+  booked
+  blocked
+}
+
+enum SubscriptionStatus {
+  active
+  past_due
+  cancelled
+  trialing
+}
+
+enum NotificationChannel {
+  email
+  whatsapp
+  push
+}
+
+// ── Models ────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String     @unique @db.Citext
+  passwordHash    String
+  role            Role
+  emailVerifiedAt DateTime?  @db.Timestamptz
+  status          UserStatus @default(active)
+  createdAt       DateTime   @default(now()) @db.Timestamptz
+  updatedAt       DateTime   @updatedAt @db.Timestamptz
+  deletedAt       DateTime?  @db.Timestamptz
+
+  profile          Profile?
+  pets             Pet[]
+  veterinarian     Veterinarian?
+  addresses        Address[]
+  notifications    Notification[]
+  reviewsAuthored  Review[]        @relation("ReviewAuthor")
+  appointments     Appointment[]   @relation("TutorAppointments")
+  refreshTokens    RefreshToken[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Profile {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @unique @db.Uuid
+  fullName  String
+  phone     String?
+  avatarUrl String?
+  locale    String   @default("pt-BR")
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model Pet {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerId   String    @db.Uuid
+  name      String
+  species   String
+  breed     String?
+  birthdate DateTime? @db.Date
+  weightKg  Decimal?  @db.Decimal(5, 2)
+  sex       PetSex
+  neutered  Boolean   @default(false)
+  microchip String?
+  photoUrl  String?
+  createdAt DateTime  @default(now()) @db.Timestamptz
+  updatedAt DateTime  @updatedAt @db.Timestamptz
+  deletedAt DateTime? @db.Timestamptz
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  appointments Appointment[]
+
+  @@index([ownerId])
+  @@map("pets")
+}
+
+model Veterinarian {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String             @unique @db.Uuid
+  crmv               String
+  crmvState          String             @db.Char(2)
+  bio                String?
+  verificationStatus VerificationStatus @default(pending)
+  tier               VetTier            @default(free)
+  serviceRadiusKm    Int                @default(20)
+  createdAt          DateTime           @default(now()) @db.Timestamptz
+  updatedAt          DateTime           @updatedAt @db.Timestamptz
+  deletedAt          DateTime?          @db.Timestamptz
+
+  user              User                    @relation(fields: [userId], references: [id])
+  specialties       VeterinarianSpecialty[]
+  availabilitySlots AvailabilitySlot[]
+  appointments      Appointment[]
+  reviews           Review[]                @relation("ReviewSubject")
+  subscription      Subscription?
+
+  @@index([verificationStatus])
+  @@index([tier])
+  @@map("veterinarians")
+}
+
+model Specialty {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  slug String @unique
+
+  veterinarians VeterinarianSpecialty[]
+
+  @@map("specialties")
+}
+
+model VeterinarianSpecialty {
+  veterinarianId String @db.Uuid
+  specialtyId    String @db.Uuid
+
+  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id])
+  specialty    Specialty    @relation(fields: [specialtyId], references: [id])
+
+  @@id([veterinarianId, specialtyId])
+  @@map("veterinarian_specialties")
+}
+
+// Address stores tutor delivery addresses and vet base locations.
+// Geography columns (geog, serviceArea) use PostGIS types via Unsupported —
+// they are only accessed through raw SQL in GeoRepository.
+model Address {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String  @db.Uuid
+  label           String?
+  street          String
+  number          String
+  complement      String?
+  neighborhood    String
+  city            String
+  state           String  @db.Char(2)
+  cep             String
+  // GIST index added by hand-edited migration — see ADR-002
+  geog            Unsupported("geography(Point, 4326)")?
+  serviceRadiusKm Int?
+  // Nullable polygon for future polygon-based service areas
+  serviceArea     Unsupported("geography(Polygon, 4326)")?
+  createdAt       DateTime @default(now()) @db.Timestamptz
+  updatedAt       DateTime @updatedAt @db.Timestamptz
+
+  user         User          @relation(fields: [userId], references: [id])
+  appointments Appointment[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model Appointment {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tutorId        String            @db.Uuid
+  veterinarianId String            @db.Uuid
+  petId          String            @db.Uuid
+  addressId      String            @db.Uuid
+  slotId         String            @unique @db.Uuid
+  modality       Modality
+  status         AppointmentStatus @default(requested)
+  priceCents     Int
+  notes          String?
+  createdAt      DateTime          @default(now()) @db.Timestamptz
+  updatedAt      DateTime          @updatedAt @db.Timestamptz
+  deletedAt      DateTime?         @db.Timestamptz
+
+  tutor        User             @relation("TutorAppointments", fields: [tutorId], references: [id])
+  veterinarian Veterinarian     @relation(fields: [veterinarianId], references: [id])
+  pet          Pet              @relation(fields: [petId], references: [id])
+  address      Address          @relation(fields: [addressId], references: [id])
+  slot         AvailabilitySlot @relation(fields: [slotId], references: [id])
+  review       Review?
+
+  @@index([veterinarianId, status])
+  @@index([tutorId, status])
+  @@map("appointments")
+}
+
+model AvailabilitySlot {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  veterinarianId String     @db.Uuid
+  startsAt       DateTime   @db.Timestamptz
+  endsAt         DateTime   @db.Timestamptz
+  status         SlotStatus @default(open)
+  recurrenceId   String?    @db.Uuid
+  createdAt      DateTime   @default(now()) @db.Timestamptz
+  updatedAt      DateTime   @updatedAt @db.Timestamptz
+
+  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id])
+  appointment  Appointment?
+
+  @@index([veterinarianId, startsAt])
+  @@map("availability_slots")
+}
+
+model Review {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appointmentId  String    @unique @db.Uuid
+  authorId       String    @db.Uuid
+  veterinarianId String    @db.Uuid
+  rating         Int
+  text           String?
+  publishedAt    DateTime? @db.Timestamptz
+  createdAt      DateTime  @default(now()) @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @db.Timestamptz
+
+  appointment  Appointment  @relation(fields: [appointmentId], references: [id])
+  author       User         @relation("ReviewAuthor", fields: [authorId], references: [id])
+  veterinarian Veterinarian @relation("ReviewSubject", fields: [veterinarianId], references: [id])
+
+  @@index([veterinarianId])
+  @@map("reviews")
+}
+
+model Subscription {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  veterinarianId     String             @unique @db.Uuid
+  plan               String
+  status             SubscriptionStatus
+  provider           String             @default("stripe")
+  providerCustomerId String?
+  currentPeriodEnd   DateTime?          @db.Timestamptz
+  cancelAtPeriodEnd  Boolean            @default(false)
+  createdAt          DateTime           @default(now()) @db.Timestamptz
+  updatedAt          DateTime           @updatedAt @db.Timestamptz
+
+  veterinarian Veterinarian @relation(fields: [veterinarianId], references: [id])
+
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Notification {
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String              @db.Uuid
+  type      String
+  channel   NotificationChannel
+  payload   Json
+  readAt    DateTime?           @db.Timestamptz
+  sentAt    DateTime?           @db.Timestamptz
+  status    String
+  createdAt DateTime            @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  deviceId  String?
+  expiresAt DateTime  @db.Timestamptz
+  revokedAt DateTime? @db.Timestamptz
+  createdAt DateTime  @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}

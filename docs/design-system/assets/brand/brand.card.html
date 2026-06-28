@@ -1,0 +1,39 @@
+<!-- @dsCard group="Brand" viewport="700x400" name="Logo · lockups" subtitle="Horizontal (nav), icon-only, and app icon — the source of truth" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface); display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; gap: 18px; align-items: stretch; }
+  .tile { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; }
+  .cap { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
+  .on-light { background: var(--surface); }
+  .on-teal { background: linear-gradient(160deg, var(--teal-700), var(--blue-700)); }
+  .on-teal .cap { color: rgba(255,255,255,.85); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="tile on-light" style="flex:2">
+      <img src="./petnalia-horizontal.png" alt="PetNalia horizontal lockup" style="height:54px;width:auto" />
+      <span class="cap">Horizontal · desktop navigation</span>
+    </div>
+    <div class="tile on-teal" style="flex:1">
+      <img src="./petnalia-app-icon.png" alt="PetNalia app icon" style="height:96px;width:auto;border-radius:20px" />
+      <span class="cap">App icon</span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="tile on-light" style="flex:1">
+      <img src="./petnalia-icon.png" alt="PetNalia icon" style="height:84px;width:auto" />
+      <span class="cap">Icon-only · constrained space</span>
+    </div>
+    <div class="tile on-light" style="flex:2;align-items:flex-start;justify-content:center;text-align:left">
+      <span style="font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--text);letter-spacing:-0.01em">Cuidado que chega até você.</span>
+      <span style="font-size:13px;color:var(--text-secondary);line-height:1.5">Source of truth — never recreate or recolor the mark. Keep clear space ≈ the height of the pin on all sides. <strong>Pet</strong> is teal, <strong>Nalia</strong> is slate ink.</span>
+    </div>
+  </div>
+</body>
+</html>

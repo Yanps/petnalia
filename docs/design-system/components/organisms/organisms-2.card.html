@@ -1,0 +1,67 @@
+<!-- @dsCard group="Components" viewport="900x600" name="Organisms · Booking & Geolocation" subtitle="AvailabilityCalendar, BookingSidebar, Timeline, CoverageMap, Radius" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--bg); }
+  #root { display: flex; flex-direction: column; gap: 26px; }
+  .grp { display: flex; flex-direction: column; gap: 10px; }
+  .lbl { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  .cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; align-items: start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const NS = window.VetNaliaDesignSystem_7efbb4;
+  const { AvailabilityCalendar, BookingSidebar, AppointmentTimeline, CoverageMap, RadiusSelector, Card } = NS;
+  const days = [
+    {dow:"SEG",day:16,available:true},{dow:"TER",day:17,available:true},
+    {dow:"QUA",day:18,today:true,available:true},{dow:"QUI",day:19,available:true},
+    {dow:"SEX",day:20},{dow:"SÁB",day:21,disabled:true},{dow:"DOM",day:22,disabled:true},
+  ];
+  function Demo() {
+    const [day,setDay]=React.useState(18);
+    const [slot,setSlot]=React.useState("16:30");
+    const [radius,setRadius]=React.useState(5);
+    return (
+      <>
+        <div className="cols">
+          <div className="grp">
+            <span className="lbl">AvailabilityCalendar</span>
+            <Card pad><AvailabilityCalendar days={days} selectedDay={day} onSelectDay={setDay}
+              slots={{morning:["08:00","09:00","10:30"],afternoon:[{time:"14:00"},{time:"15:30",occupied:true},"16:30"],evening:["18:00","19:00"]}}
+              selectedSlot={slot} onSelectSlot={setSlot} /></Card>
+          </div>
+          <div className="grp">
+            <span className="lbl">BookingSidebar</span>
+            <BookingSidebar price={180} nextAvailable="Hoje 16:30" selectedDate="QUA, 18/06" selectedTime={slot} onMessage={()=>{}} />
+          </div>
+        </div>
+        <div className="cols">
+          <div className="grp">
+            <span className="lbl">CoverageMap + RadiusSelector</span>
+            <Card pad><RadiusSelector value={radius} onChange={setRadius} resultCount={48} areaLabel="Zona Oeste · SP" /></Card>
+          </div>
+          <div className="grp">
+            <span className="lbl">AppointmentTimeline</span>
+            <Card pad><AppointmentTimeline items={[
+              {kind:"visit",title:"Consulta de rotina",date:"18 jun 2026",vet:"Dra. Helena",tag:"Concluída",tagVariant:"success",description:"Tudo bem com a Mel. Retorno em 6 meses."},
+              {kind:"vaccine",title:"Vacina V4",date:"02 mai 2026",vet:"Dr. Rafael",tag:"Vacina",tagVariant:"info"},
+              {kind:"prescription",title:"Receita — antialérgico",date:"02 mai 2026",vet:"Dr. Rafael"},
+            ]} /></Card>
+          </div>
+        </div>
+      </>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

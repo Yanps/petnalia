@@ -1,0 +1,77 @@
+<!-- @dsCard group="Components" viewport="700x470" name="Atoms · Chips, Status, Price, Calendar, Radio" subtitle="Domain atoms + Label / Textarea / RadioGroup" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--bg); }
+  #root { display: flex; flex-direction: column; gap: 20px; }
+  .grp { display: flex; flex-direction: column; gap: 10px; }
+  .lbl { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const NS = window.VetNaliaDesignSystem_7efbb4;
+  const { Chip, StatusDot, PriceTag, DistanceIndicator, CalendarDay, RadioGroup, Textarea } = NS;
+  function Demo() {
+    const [sel, setSel] = React.useState("dog");
+    const [day, setDay] = React.useState(18);
+    return (
+      <>
+        <div className="grp">
+          <span className="lbl">Pet Type / Filter Chips</span>
+          <div className="row">
+            <Chip icon="paw-print" selected={sel==="dog"} onClick={()=>setSel("dog")}>Cão</Chip>
+            <Chip icon="paw-print" selected={sel==="cat"} onClick={()=>setSel("cat")}>Gato</Chip>
+            <Chip selected onRemove={()=>{}}>Visita em casa</Chip>
+            <Chip>Emergência</Chip>
+          </div>
+        </div>
+        <div className="grp">
+          <span className="lbl">Status Dot · Price · Distance</span>
+          <div className="row">
+            <StatusDot status="online" label pulse />
+            <StatusDot status="busy" label="Em atendimento" />
+            <StatusDot status="emergency" label />
+            <span style={{width:1,height:20,background:"var(--border)"}}></span>
+            <PriceTag amount={180} from />
+            <PriceTag amount={120} unit="consulta" />
+            <DistanceIndicator km={2.4} />
+          </div>
+        </div>
+        <div className="cols">
+          <div className="grp">
+            <span className="lbl">Calendar Day</span>
+            <div className="row">
+              <CalendarDay dow="SEG" day={16} available />
+              <CalendarDay dow="TER" day={17} />
+              <CalendarDay dow="QUA" day={18} selected={day===18} onClick={()=>setDay(18)} />
+              <CalendarDay dow="QUI" day={19} today available />
+              <CalendarDay dow="DOM" day={22} disabled />
+            </div>
+          </div>
+          <div className="grp">
+            <span className="lbl">RadioGroup</span>
+            <RadioGroup name="modal" defaultValue="home" options={[{value:"home",label:"Visita em casa"},{value:"online",label:"Teleconsulta"}]} />
+          </div>
+        </div>
+        <div className="grp">
+          <span className="lbl">Textarea</span>
+          <Textarea placeholder="Conte ao vet sobre os sintomas do seu pet…" rows={2} />
+        </div>
+      </>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

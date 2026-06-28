@@ -1,0 +1,22 @@
+/* ============================================================
+   PetNalia — Breakpoints
+   Mobile-first. Tailwind v4 / shadcn aligned. These tokens
+   document the system; in CSS use @media (min-width: …) and in
+   Tailwind use the sm: md: lg: xl: 2xl: prefixes.
+   ============================================================ */
+
+:root {
+  --bp-sm:   640px;  /* @kind other */ /* large phone / small tablet */
+  --bp-md:   768px;  /* @kind other */ /* tablet (PetNalia "tablet" target) */
+  --bp-lg:   1024px; /* @kind other */ /* small desktop */
+  --bp-xl:   1280px; /* @kind other */ /* desktop */
+  --bp-2xl:  1440px; /* @kind other */ /* wide desktop (container max) */
+}
+
+/* Reference media features (copy into component sheets):
+   @media (min-width: 640px)  { … }   sm
+   @media (min-width: 768px)  { … }   md
+   @media (min-width: 1024px) { … }   lg
+   @media (min-width: 1280px) { … }   xl
+   @media (min-width: 1440px) { … }   2xl
+*/

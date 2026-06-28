@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+out/
+coverage/
+
+# Environment / secrets — NEVER commit
+.env
+.env.*
+!.env.example
+
+# Isolated gcloud config (personal account) — contains credentials, MUST stay local
+/.gcloud/
+
+# Testing
+playwright-report/
+test-results/
+
+# Claude Code session files (personal, not project)
+.claude/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*

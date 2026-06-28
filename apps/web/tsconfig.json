@@ -1,0 +1,11 @@
+{
+  "extends": "@petnalia/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "next.config.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

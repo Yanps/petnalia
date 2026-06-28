@@ -1,0 +1,17 @@
+/* ============================================================
+   PetNalia — Z-index & layering scale
+   A single ordered ladder so overlays never fight. Reference
+   these tokens instead of literal z-index values.
+   ============================================================ */
+
+:root {
+  --z-base:      0;   /* @kind other */
+  --z-dropdown:  10;  /* @kind other */
+  --z-sticky:    20;  /* @kind other */ /* sticky headers / rails */
+  --z-overlay:   30;  /* @kind other */ /* scrim behind modals/drawers */
+  --z-drawer:    40;  /* @kind other */ /* side sheets / mobile filters */
+  --z-modal:     50;  /* @kind other */ /* dialogs */
+  --z-popover:   60;  /* @kind other */ /* popovers / menus */
+  --z-toast:     70;  /* @kind other */ /* transient notifications */
+  --z-tooltip:   80;  /* @kind other */ /* always on top */
+}

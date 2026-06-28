@@ -1,0 +1,15 @@
+/* ============================================================
+   PetNalia Design System — global entry point
+   Consumers link THIS file only. Import order matters:
+   tokens first, then base/reset & utilities.
+   ============================================================ */
+
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius-shadow.css";
+@import "./tokens/zindex.css";
+@import "./tokens/breakpoints.css";
+@import "./tokens/motion.css";
+@import "./tokens/base.css";
+@import "./tokens/components.css";

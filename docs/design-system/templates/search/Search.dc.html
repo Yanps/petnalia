@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Search Template" description="Header · SearchBar · Filters sidebar · Map · ResultsGrid · Pagination · Footer — for Vet Search Results" -->
+<helmet>
+<script src="./ds-base.js"></script>
+</helmet>
+
+<div style="min-height:100%;background:var(--bg);font-family:var(--font-sans)">
+
+  <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Header" logo-src="{{ logo }}" links="{{ navLinks }}" active="search" city="São Paulo" user="{{ user }}" hint-size="100%,68px"></x-import>
+
+  <div style="max-width:1280px;margin:0 auto;padding:24px">
+    <!-- Search bar + heading -->
+    <div style="height:13px;width:240px;background:var(--surface-inset);border-radius:6px;margin-bottom:16px"></div>
+    <div style="margin-bottom:20px">
+      <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.SearchBar" hint-size="100%,72px"></x-import>
+    </div>
+
+    <!-- Two-region responsive layout: filters sidebar + main -->
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+      <!-- Filters sidebar (becomes FilterDrawer on mobile) -->
+      <aside style="flex:1 1 240px;min-width:240px;position:sticky;top:84px">
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.SearchFilters" result-count="{{ count }}" hint-size="100%,520px"></x-import>
+      </aside>
+
+      <!-- Main: map view + results + pagination -->
+      <main style="flex:999 1 520px;min-width:300px;display:flex;flex-direction:column;gap:20px">
+
+        <!-- MAP VIEW region -->
+        <div>
+          <span style="display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brand);margin-bottom:8px">Map View · toggle on mobile</span>
+          <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.CoverageMap" covered="{{ yes }}" radius-km="5" area-label="São Paulo · resultados" height="{{ mapH }}" pins="{{ pins }}" hint-size="100%,200px"></x-import>
+        </div>
+
+        <!-- Results toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <div style="height:16px;width:180px;background:var(--surface-inset);border-radius:6px"></div>
+          <div style="height:40px;width:200px;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px"></div>
+        </div>
+
+        <!-- RESULTS GRID organism (loading placeholder) -->
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.ResultsGrid" loading="{{ yes }}" columns="{{ cols }}" skeleton-count="{{ count6 }}" hint-size="100%,520px"></x-import>
+
+        <!-- PAGINATION organism -->
+        <div style="display:flex;justify-content:center;padding-top:8px">
+          <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Pagination" total="{{ pages }}" page="{{ page }}" hint-size="320px,40px"></x-import>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Footer" logo-src="{{ logo }}" columns="{{ footerColumns }}" social="{{ social }}" hint-size="100%,300px"></x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      cols: 2, count6: 6, pages: 8, page: 1, count: 48, mapH: 200,
+      logo: "../../assets/brand/petnalia-horizontal.png",
+      pins: [{ top: 35, left: 28 }, { top: 58, left: 62 }, { top: 44, left: 78, covered: false }, { top: 70, left: 38 }],
+      navLinks: [
+        { id: "home", label: "Início" },
+        { id: "search", label: "Buscar vets" },
+        { id: "how", label: "Como funciona" },
+      ],
+      user: { name: "Camila Rocha", status: "online" },
+      footerColumns: [
+        { title: "Produto", links: [{ label: "Buscar vets" }, { label: "Como funciona" }] },
+        { title: "Para vets", links: [{ label: "Seja parceiro" }, { label: "Entrar" }] },
+        { title: "Suporte", links: [{ label: "Central de ajuda" }, { label: "Contato" }] },
+      ],
+      social: [{ icon: "message-circle", label: "WhatsApp" }, { icon: "phone", label: "Telefone" }],
+    };
+  }
+}
+</script>
+</body>
+</html>

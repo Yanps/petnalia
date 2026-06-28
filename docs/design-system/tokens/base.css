@@ -1,0 +1,84 @@
+/* ============================================================
+   PetNalia — Base / reset & typography utility classes
+   ============================================================ */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--body-size);
+  line-height: var(--body-line);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--brand-subtle-2); color: var(--text); }
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Typographic specimens / helpers ---- */
+.ds-display-xl {
+  font-family: var(--font-display);
+  font-size: var(--display-xl-size); line-height: var(--display-xl-line);
+  font-weight: var(--display-xl-weight); letter-spacing: var(--display-xl-track);
+  color: var(--text);
+}
+.ds-display-l {
+  font-family: var(--font-display);
+  font-size: var(--display-l-size); line-height: var(--display-l-line);
+  font-weight: var(--display-l-weight); letter-spacing: var(--display-l-track);
+  color: var(--text);
+}
+.ds-h1 {
+  font-family: var(--font-display);
+  font-size: var(--h1-size); line-height: var(--h1-line);
+  font-weight: var(--h1-weight); letter-spacing: var(--h1-track); color: var(--text);
+}
+.ds-h2 {
+  font-family: var(--font-display);
+  font-size: var(--h2-size); line-height: var(--h2-line);
+  font-weight: var(--h2-weight); letter-spacing: var(--h2-track); color: var(--text);
+}
+.ds-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--h3-size); line-height: var(--h3-line);
+  font-weight: var(--h3-weight); letter-spacing: var(--h3-track); color: var(--text);
+}
+.ds-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--h4-size); line-height: var(--h4-line);
+  font-weight: var(--h4-weight); letter-spacing: var(--h4-track); color: var(--text);
+}
+.ds-body-lg {
+  font-size: var(--body-lg-size); line-height: var(--body-lg-line); color: var(--text-secondary);
+}
+.ds-body {
+  font-size: var(--body-size); line-height: var(--body-line); color: var(--text);
+}
+.ds-small {
+  font-size: var(--small-size); line-height: var(--small-line); color: var(--text-secondary);
+}
+.ds-caption {
+  font-size: var(--caption-size); line-height: var(--caption-line);
+  font-weight: var(--caption-weight); letter-spacing: var(--caption-track); color: var(--text-muted);
+}
+.ds-overline {
+  font-size: var(--overline-size); line-height: var(--overline-line);
+  font-weight: var(--overline-weight); letter-spacing: var(--overline-track);
+  text-transform: uppercase; color: var(--brand);
+}

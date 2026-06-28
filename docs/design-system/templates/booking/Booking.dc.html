@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Booking Template" description="Progress · Step content (AvailabilityCalendar) · Summary sidebar · Nav actions — for Appointment Booking & Confirmation" -->
+<helmet>
+<script src="./ds-base.js"></script>
+</helmet>
+
+<div style="min-height:100%;background:var(--bg);font-family:var(--font-sans)">
+
+  <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Header" logo-src="{{ logo }}" compact="{{ yes }}" city="São Paulo" user="{{ user }}" hint-size="100%,68px"></x-import>
+
+  <div style="max-width:980px;margin:0 auto;padding:24px">
+    <div style="height:28px;width:280px;max-width:80%;background:var(--surface-inset);border-radius:8px;margin-bottom:24px"></div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+      <!-- Step card -->
+      <main style="flex:999 1 460px;min-width:300px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-sm);padding:24px">
+
+        <!-- PROGRESS INDICATOR region (5 steps) -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:24px;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700">1</span><span style="font-size:13px;font-weight:600;color:var(--text)">Data e hora</span></span>
+          <span style="width:24px;height:2px;background:var(--border)"></span>
+          <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:50%;background:var(--surface-inset);color:var(--text-muted);display:grid;place-items:center;font-size:13px;font-weight:700">2</span><span style="font-size:13px;color:var(--text-muted)">Pet</span></span>
+          <span style="width:24px;height:2px;background:var(--border)"></span>
+          <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:50%;background:var(--surface-inset);color:var(--text-muted);display:grid;place-items:center;font-size:13px;font-weight:700">3</span><span style="font-size:13px;color:var(--text-muted)">Endereço</span></span>
+          <span style="width:24px;height:2px;background:var(--border)"></span>
+          <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:50%;background:var(--surface-inset);color:var(--text-muted);display:grid;place-items:center;font-size:13px;font-weight:700">4</span><span style="font-size:13px;color:var(--text-muted)">Motivo</span></span>
+          <span style="width:24px;height:2px;background:var(--border)"></span>
+          <span style="display:inline-flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:50%;background:var(--surface-inset);color:var(--text-muted);display:grid;place-items:center;font-size:13px;font-weight:700">5</span><span style="font-size:13px;color:var(--text-muted)">Confirmar</span></span>
+        </div>
+
+        <!-- STEP CONTENT region — step 1: AvailabilityCalendar organism -->
+        <span style="display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brand);margin-bottom:12px">Step Content · Data e hora</span>
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.AvailabilityCalendar" days="{{ days }}" selected-day="{{ selDay }}" slots="{{ slots }}" selected-slot="16:30" hint-size="100%,300px"></x-import>
+
+        <!-- NAVIGATION ACTIONS region -->
+        <div style="display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+          <div style="height:44px;width:110px;background:var(--surface-inset);border-radius:12px"></div>
+          <div style="height:44px;width:150px;background:var(--brand);border-radius:12px"></div>
+        </div>
+      </main>
+
+      <!-- SUMMARY SIDEBAR -->
+      <aside style="flex:1 1 300px;min-width:280px;position:sticky;top:84px">
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.BookingSidebar" price="180" next-available="Hoje 16:30" selected-date="QUA, 18/06" selected-time="16:30" hint-size="100%,340px"></x-import>
+      </aside>
+    </div>
+  </div>
+
+  <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Footer" logo-src="{{ logo }}" columns="{{ footerColumns }}" hint-size="100%,260px"></x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, selDay: 18,
+      logo: "../../assets/brand/petnalia-horizontal.png",
+      days: [
+        { dow: "SEG", day: 16, available: true }, { dow: "TER", day: 17, available: true },
+        { dow: "QUA", day: 18, today: true, available: true }, { dow: "QUI", day: 19, available: true },
+        { dow: "SEX", day: 20 }, { dow: "SÁB", day: 21, disabled: true }, { dow: "DOM", day: 22, disabled: true },
+      ],
+      slots: {
+        morning: ["08:00", "09:00", "10:30"],
+        afternoon: [{ time: "14:00" }, { time: "15:30", occupied: true }, "16:30"],
+        evening: ["18:00", "19:00"],
+      },
+      user: { name: "Camila Rocha", status: "online" },
+      footerColumns: [
+        { title: "Produto", links: [{ label: "Buscar vets" }, { label: "Como funciona" }] },
+        { title: "Suporte", links: [{ label: "Central de ajuda" }, { label: "Contato" }] },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

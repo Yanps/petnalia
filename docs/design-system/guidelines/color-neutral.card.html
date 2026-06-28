@@ -1,0 +1,31 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Neutral · Slate" subtitle="Slate scale for text, surfaces & borders" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface); }
+  .row { display: flex; gap: 0; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+  .sw { flex: 1; height: 92px; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px 9px; }
+  .sw .n { font-size: 11px; font-weight: 700; }
+  .sw .h { font-size: 9.5px; font-family: var(--font-mono); opacity: .85; }
+  .lt { color: var(--slate-900); }
+  .dk { color: #fff; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw" style="background:var(--slate-50)"><span class="n lt">50</span><span class="h lt">#F8FAFC</span></div>
+    <div class="sw" style="background:var(--slate-100)"><span class="n lt">100</span><span class="h lt">#F1F5F9</span></div>
+    <div class="sw" style="background:var(--slate-200)"><span class="n lt">200</span><span class="h lt">#E2E8F0</span></div>
+    <div class="sw" style="background:var(--slate-300)"><span class="n lt">300</span><span class="h lt">#CBD5E1</span></div>
+    <div class="sw" style="background:var(--slate-400)"><span class="n lt">400</span><span class="h lt">#94A3B8</span></div>
+    <div class="sw" style="background:var(--slate-500)"><span class="n dk">500</span><span class="h dk">#64748B</span></div>
+    <div class="sw" style="background:var(--slate-600)"><span class="n dk">600</span><span class="h dk">#475569</span></div>
+    <div class="sw" style="background:var(--slate-700)"><span class="n dk">700</span><span class="h dk">#334155</span></div>
+    <div class="sw" style="background:var(--slate-800)"><span class="n dk">800</span><span class="h dk">#1E293B</span></div>
+    <div class="sw" style="background:var(--slate-900)"><span class="n dk">900</span><span class="h dk">#0F172A</span></div>
+  </div>
+</body>
+</html>

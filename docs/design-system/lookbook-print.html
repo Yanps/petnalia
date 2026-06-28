@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VetNalia Design System — Lookbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --brand:#0D9488; --brand-700:#115E59;
+    --ink:#0F172A; --muted:#64748B; --line:#E2E8F0;
+    --bg:#F8FAFC; --paper:#FFFFFF;
+    --sans:"Inter",system-ui,sans-serif;
+    --display:"Plus Jakarta Sans","Inter",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#54606e;font-family:var(--sans);color:var(--ink);}
+
+  .deck{display:flex;flex-direction:column;align-items:center;gap:32px;padding:40px 0;}
+  .page{
+    width:1252px;background:var(--paper);position:relative;overflow:hidden;
+    box-shadow:0 24px 60px rgba(2,6,12,.35);
+  }
+
+  /* ---- Caption bar ---- */
+  .cap{
+    height:56px;display:flex;align-items:center;gap:16px;
+    padding:0 36px;border-bottom:1px solid var(--line);
+    background:var(--paper);position:relative;z-index:2;
+  }
+  .cap .num{
+    font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.04em;
+    color:#fff;background:var(--brand);border-radius:7px;padding:5px 9px;line-height:1;
+  }
+  .cap .ttl{font-family:var(--display);font-weight:700;font-size:17px;color:var(--ink);}
+  .cap .meta{
+    margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:500;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:720px;
+  }
+  .cap .dim{font-family:var(--display);font-weight:600;font-size:11.5px;color:var(--brand-700);
+    background:#CCFBF1;border-radius:6px;padding:4px 8px;margin-left:14px;}
+
+  /* ---- Body holds the scaled iframe ---- */
+  .body{padding:24px 36px 36px;display:flex;justify-content:center;background:var(--bg);}
+  .frame{position:relative;overflow:hidden;box-shadow:0 2px 18px rgba(2,6,12,.10);border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .frame iframe{border:0;display:block;transform-origin:top left;background:#fff;}
+
+  /* ---- Cover ---- */
+  .page.cover{height:860px;background:var(--brand-700);color:#fff;overflow:hidden;}
+  .cover .inner{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 96px;}
+  .cover img{height:46px;width:auto;margin-bottom:46px;filter:brightness(0) invert(1);}
+  .cover h1{font-family:var(--display);font-weight:800;font-size:76px;line-height:1.02;margin:0;letter-spacing:-.02em;}
+  .cover .sub{font-size:20px;font-weight:500;margin-top:22px;color:#A7F3D0;max-width:720px;line-height:1.55;}
+  .cover .rule{width:64px;height:5px;background:#5EEAD4;border-radius:3px;margin:38px 0 0;}
+  .cover .foot{position:absolute;left:96px;bottom:70px;display:flex;gap:44px;}
+  .cover .foot div{font-size:13px;color:#99F6E4;}
+  .cover .foot b{display:block;font-family:var(--display);font-weight:700;font-size:26px;color:#fff;margin-bottom:4px;}
+  .cover .tag{position:absolute;right:96px;top:78px;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#5EEAD4;}
+
+  /* ============== PRINT — one design per sheet, sheet sized to content ============== */
+  @page        { size:1252px 860px;  margin:0; } /* cover */
+  @page p_mk   { size:1252px 1631px; margin:0; }
+  @page p_auth { size:1252px 1156px; margin:0; }
+  @page p_mkt  { size:1252px 2703px; margin:0; }
+  @page p_srch { size:1252px 1978px; margin:0; }
+  @page p_prof { size:1252px 2392px; margin:0; }
+  @page p_book { size:1252px 1620px; margin:0; }
+  @page p_dash { size:1252px 691px;  margin:0; }
+  @page p_adm  { size:1252px 648px;  margin:0; }
+
+  @media print{
+    html,body{background:#fff;}
+    .deck{display:block;padding:0;gap:0;}
+    .page{box-shadow:none;break-after:page;page-break-after:always;break-inside:avoid;}
+    .page:last-child{break-after:auto;page-break-after:auto;}
+    .frame{box-shadow:none;}
+    .page.cover{page:auto;}
+    .page.mk  {page:p_mk;}
+    .page.auth{page:p_auth;}
+    .page.mkt {page:p_mkt;}
+    .page.srch{page:p_srch;}
+    .page.prof{page:p_prof;}
+    .page.book{page:p_book;}
+    .page.dash{page:p_dash;}
+    .page.adm {page:p_adm;}
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- COVER -->
+  <section class="page cover" data-screen-label="Cover">
+    <div class="inner">
+      <img src="assets/brand/petnalia-horizontal.png" alt="PetNalia" />
+      <h1>Design<br/>Lookbook</h1>
+      <div class="sub">The complete VetNalia design system in context — the PetNalia marketplace flow and seven production page templates, captured page by page.</div>
+      <div class="rule"></div>
+      <span class="tag">VetNalia · 2026</span>
+      <div class="foot">
+        <div><b>8</b>Designs</div>
+        <div><b>1</b>Marketplace flow</div>
+        <div><b>7</b>Page templates</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 · MARKETPLACE -->
+  <section class="page mk" data-screen-label="01 Marketplace">
+    <div class="cap">
+      <span class="num">01</span><span class="ttl">PetNalia Marketplace</span>
+      <span class="meta">Homepage → Search → Vet Profile → Booking · interactive web app</span>
+      <span class="dim">Web · 1200</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:1495px;">
+        <iframe src="ui_kits/marketplace/index.html" style="width:1200px;height:1520px;transform:scale(.9833);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · AUTH -->
+  <section class="page auth" data-screen-label="02 Auth">
+    <div class="cap">
+      <span class="num">02</span><span class="ttl">Authentication Template</span>
+      <span class="meta">Centered brand header · Auth card (Inputs + Button) · Help links — Login, Register, Forgot Password</span>
+      <span class="dim">Web · 900</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:1020px;">
+        <iframe src="templates/auth/Auth.dc.html" style="width:900px;height:778px;transform:scale(1.3111);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 · MARKETING -->
+  <section class="page mkt" data-screen-label="03 Marketing">
+    <div class="cap">
+      <span class="num">03</span><span class="ttl">Marketing Template</span>
+      <span class="meta">Header · Hero · Features · Testimonials · FAQ · CTA · Footer — Homepage, Landing, Pricing, About</span>
+      <span class="dim">Web · 1280</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:2567px;">
+        <iframe src="templates/marketing/Marketing.dc.html" style="width:1280px;height:2784px;transform:scale(.9219);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 · SEARCH -->
+  <section class="page srch" data-screen-label="04 Search">
+    <div class="cap">
+      <span class="num">04</span><span class="ttl">Search Template</span>
+      <span class="meta">Header · SearchBar · Filters sidebar · Map · ResultsGrid · Pagination · Footer — Vet Search Results</span>
+      <span class="dim">Web · 1280</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:1842px;">
+        <iframe src="templates/search/Search.dc.html" style="width:1280px;height:1998px;transform:scale(.9219);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 · PROFILE -->
+  <section class="page prof" data-screen-label="05 Profile">
+    <div class="cap">
+      <span class="num">05</span><span class="ttl">Veterinarian Profile Template</span>
+      <span class="meta">VetHero · Services · CoverageMap · Reviews + sticky BookingSidebar · Footer — Vet Profile Page</span>
+      <span class="dim">Web · 1180</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:2256px;">
+        <iframe src="templates/profile/Profile.dc.html" style="width:1180px;height:2256px;transform:scale(1);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 · BOOKING -->
+  <section class="page book" data-screen-label="06 Booking">
+    <div class="cap">
+      <span class="num">06</span><span class="ttl">Booking Template</span>
+      <span class="meta">Progress · Step content (AvailabilityCalendar) · Summary sidebar · Nav actions — Appointment Booking</span>
+      <span class="dim">Web · 1080</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:1484px;">
+        <iframe src="templates/booking/Booking.dc.html" style="width:1080px;height:1358px;transform:scale(1.0926);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 · DASHBOARD -->
+  <section class="page dash" data-screen-label="07 Dashboard">
+    <div class="cap">
+      <span class="num">07</span><span class="ttl">Dashboard Template</span>
+      <span class="meta">Persistent sidebar · Top nav · Metrics widgets · AppointmentTimeline — Vet Dashboard & Management</span>
+      <span class="dim">App · 1280</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:555px;">
+        <iframe src="templates/dashboard/Dashboard.dc.html" style="width:1280px;height:602px;transform:scale(.9219);"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 · ADMIN -->
+  <section class="page adm" data-screen-label="08 Admin">
+    <div class="cap">
+      <span class="num">08</span><span class="ttl">Admin Template</span>
+      <span class="meta">Sidebar · Filters · Data Table · Detail Panel (split view) — Vet Verification & User Management</span>
+      <span class="dim">App · 1280</span>
+    </div>
+    <div class="body">
+      <div class="frame" style="width:1180px;height:512px;">
+        <iframe src="templates/admin/Admin.dc.html" style="width:1280px;height:555px;transform:scale(.9219);"></iframe>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Inject print-color + animation-freeze CSS into each same-origin iframe so
+  // backgrounds/brand colors survive the print rasterizer and entrance
+  // animations are frozen at their end state.
+  const FIX = '*{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }' +
+    '*,*::before,*::after{ animation-delay:-99s !important; animation-duration:.001s !important;' +
+    'animation-iteration-count:1 !important; animation-fill-mode:both !important;' +
+    'animation-play-state:running !important; transition-duration:0s !important; }';
+  function patch(ifr){
+    try{
+      const d = ifr.contentDocument;
+      if(!d) return;
+      if(d.querySelector('style[data-print-fix]')) return;
+      const s = d.createElement('style');
+      s.setAttribute('data-print-fix','');
+      s.textContent = FIX;
+      (d.head || d.documentElement).appendChild(s);
+    }catch(e){ /* not ready */ }
+  }
+  const frames = [...document.querySelectorAll('iframe')];
+
+  // Wait for every iframe to fire 'load', then a grace period for React /
+  // support.js inside the DCs to mount, then trigger the print dialog.
+  const ready = frames.map(ifr=>new Promise(res=>{
+    if(ifr.contentDocument && ifr.contentDocument.readyState === 'complete'){ res(); }
+    ifr.addEventListener('load', ()=>res());
+  }));
+  frames.forEach(ifr=>{
+    ifr.addEventListener('load', ()=>{ patch(ifr); setTimeout(()=>patch(ifr), 1600); });
+  });
+
+  Promise.race([
+    Promise.all(ready).then(()=>document.fonts.ready),
+    new Promise(res=>setTimeout(res, 9000)) // safety cap
+  ]).then(()=>{
+    frames.forEach(patch);            // ensure print CSS is in every frame
+    setTimeout(()=>window.print(), 2200); // let DC React mount + fonts settle
+  });
+</script>
+</body>
+</html>

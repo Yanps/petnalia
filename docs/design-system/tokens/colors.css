@@ -1,0 +1,182 @@
+/* ============================================================
+   PetNalia — Color tokens
+   Primary = Teal (trust + healthcare), Secondary = Deep cyan-blue,
+   Accent = Green (availability / go), Neutral = Slate.
+   ============================================================ */
+
+:root {
+  /* ---- Primary (Teal) ---- */
+  --teal-50:  #F0FDFA;
+  --teal-100: #CCFBF1;
+  --teal-200: #99F6E4;
+  --teal-300: #5EEAD4;
+  --teal-400: #2DD4BF;
+  --teal-500: #0D9488;
+  --teal-600: #0F766E;
+  --teal-700: #115E59;
+  --teal-800: #134E4A;
+  --teal-900: #0F2F2C;
+
+  /* ---- Secondary (Deep blue) ---- */
+  --blue-50:  #ECFEFF;
+  --blue-100: #CFF6FB;
+  --blue-200: #A5E8F2;
+  --blue-300: #6FD2E3;
+  --blue-400: #2FA9C4;
+  --blue-500: #1F7E9B;
+  --blue-600: #1A6480;
+  --blue-700: #164E63;
+  --blue-800: #123C4D;
+  --blue-900: #0C2A37;
+
+  /* ---- Accent (Green) ---- */
+  --green-50:  #F0FDF4;
+  --green-100: #DCFCE7;
+  --green-200: #BBF7D0;
+  --green-300: #86EFAC;
+  --green-400: #4ADE80;
+  --green-500: #22C55E;
+  --green-600: #16A34A;
+  --green-700: #15803D;
+
+  /* ---- Neutral (Slate) ---- */
+  --slate-0:   #FFFFFF;
+  --slate-50:  #F8FAFC;
+  --slate-100: #F1F5F9;
+  --slate-200: #E2E8F0;
+  --slate-300: #CBD5E1;
+  --slate-400: #94A3B8;
+  --slate-500: #64748B;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1E293B;
+  --slate-900: #0F172A;
+  --slate-950: #060B16;
+
+  /* ---- Semantic base hues ---- */
+  --success-50:  #F0FDF4;
+  --success-100: #DCFCE7;
+  --success-500: #16A34A;
+  --success-600: #15803D;
+
+  --warning-50:  #FFFBEB;
+  --warning-100: #FEF3C7;
+  --warning-500: #F59E0B;
+  --warning-600: #D97706;
+
+  --error-50:  #FEF2F2;
+  --error-100: #FEE2E2;
+  --error-500: #DC2626;
+  --error-600: #B91C1C;
+
+  --info-50:  #EFF6FF;
+  --info-100: #DBEAFE;
+  --info-500: #0EA5E9;
+  --info-600: #0284C7;
+}
+
+/* ============================================================
+   SEMANTIC ALIASES — light theme (default)
+   ============================================================ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --brand:            var(--teal-500);
+  --brand-hover:      var(--teal-600);
+  --brand-active:     var(--teal-700);
+  --brand-subtle:     var(--teal-50);
+  --brand-subtle-2:   var(--teal-100);
+  --brand-border:     var(--teal-200);
+  --brand-fg:         #FFFFFF;          /* text on brand fill */
+  --accent:           var(--green-500);
+  --accent-hover:     var(--green-600);
+
+  /* Surfaces */
+  --bg:               var(--slate-50);  /* app canvas */
+  --surface:          #FFFFFF;          /* card / panel */
+  --surface-2:        var(--slate-50);  /* nested / subtle panel */
+  --surface-inset:    var(--slate-100); /* wells, inputs hover */
+  --overlay:          rgba(15, 23, 42, 0.45);
+
+  /* Text */
+  --text:             var(--slate-900); /* primary copy */
+  --text-secondary:   var(--slate-600); /* supporting copy */
+  --text-muted:       var(--slate-500); /* meta, captions */
+  --text-disabled:    var(--slate-400);
+  --text-on-brand:    #FFFFFF;
+  --text-link:        var(--teal-700);
+
+  /* Borders */
+  --border:           var(--slate-200);
+  --border-strong:    var(--slate-300);
+  --border-focus:     var(--teal-500);
+  --ring:             rgba(13, 148, 136, 0.35);
+
+  /* Semantic text/fill pairs */
+  --success:          var(--success-500);
+  --success-bg:       var(--success-50);
+  --success-border:   #BBF7D0;
+  --warning:          var(--warning-600);
+  --warning-bg:       var(--warning-50);
+  --warning-border:   #FDE68A;
+  --error:            var(--error-500);
+  --error-bg:         var(--error-50);
+  --error-border:     #FECACA;
+  --info:             var(--info-600);
+  --info-bg:          var(--info-50);
+  --info-border:      #BFDBFE;
+
+  /* Star / rating */
+  --rating:           #F59E0B;
+}
+
+/* ============================================================
+   SEMANTIC ALIASES — dark theme
+   ============================================================ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand:            var(--teal-400);
+  --brand-hover:      var(--teal-300);
+  --brand-active:     var(--teal-200);
+  --brand-subtle:     rgba(13, 148, 136, 0.14);
+  --brand-subtle-2:   rgba(13, 148, 136, 0.22);
+  --brand-border:     rgba(45, 212, 191, 0.30);
+  --brand-fg:         #04201D;
+  --accent:           var(--green-400);
+  --accent-hover:     var(--green-300);
+
+  --bg:               var(--slate-950);
+  --surface:          #0F1B27;
+  --surface-2:        #0C1620;
+  --surface-inset:    #16232F;
+  --overlay:          rgba(2, 6, 12, 0.62);
+
+  --text:             var(--slate-100);
+  --text-secondary:   var(--slate-300);
+  --text-muted:       var(--slate-400);
+  --text-disabled:    var(--slate-600);
+  --text-on-brand:    #04201D;
+  --text-link:        var(--teal-300);
+
+  --border:           #243441;
+  --border-strong:    #33485A;
+  --border-focus:     var(--teal-400);
+  --ring:             rgba(45, 212, 191, 0.40);
+
+  --success:          #4ADE80;
+  --success-bg:       rgba(34, 197, 94, 0.12);
+  --success-border:   rgba(74, 222, 128, 0.32);
+  --warning:          #FBBF24;
+  --warning-bg:       rgba(245, 158, 11, 0.12);
+  --warning-border:   rgba(251, 191, 36, 0.32);
+  --error:            #F87171;
+  --error-bg:         rgba(220, 38, 38, 0.14);
+  --error-border:     rgba(248, 113, 113, 0.32);
+  --info:             #38BDF8;
+  --info-bg:          rgba(14, 165, 233, 0.14);
+  --info-border:      rgba(56, 189, 248, 0.32);
+
+  --rating:           #FBBF24;
+}

@@ -1,0 +1,27 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Spacing scale · 8px grid" subtitle="Base unit 8px · 4px reserved for tight gaps" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 22px 24px; background: var(--surface); display: flex; align-items: flex-end; gap: 16px; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .bar { width: 26px; background: var(--brand); border-radius: var(--radius-sm); }
+  .v { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .t { font-size: 11px; font-weight: 700; color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="col"><div class="bar" style="height:4px"></div><span class="t">1</span><span class="v">4px</span></div>
+  <div class="col"><div class="bar" style="height:8px"></div><span class="t">2</span><span class="v">8px</span></div>
+  <div class="col"><div class="bar" style="height:12px"></div><span class="t">3</span><span class="v">12px</span></div>
+  <div class="col"><div class="bar" style="height:16px"></div><span class="t">4</span><span class="v">16px</span></div>
+  <div class="col"><div class="bar" style="height:24px"></div><span class="t">5</span><span class="v">24px</span></div>
+  <div class="col"><div class="bar" style="height:32px"></div><span class="t">6</span><span class="v">32px</span></div>
+  <div class="col"><div class="bar" style="height:40px"></div><span class="t">7</span><span class="v">40px</span></div>
+  <div class="col"><div class="bar" style="height:48px"></div><span class="t">8</span><span class="v">48px</span></div>
+  <div class="col"><div class="bar" style="height:64px"></div><span class="t">9</span><span class="v">64px</span></div>
+  <div class="col"><div class="bar" style="height:80px"></div><span class="t">10</span><span class="v">80px</span></div>
+</body>
+</html>

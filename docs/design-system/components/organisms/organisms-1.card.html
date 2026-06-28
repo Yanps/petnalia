@@ -1,0 +1,62 @@
+<!-- @dsCard group="Components" viewport="900x560" name="Organisms · Marketplace & Profile" subtitle="ResultsGrid, VetHero, ServicesList, ReviewList" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--bg); }
+  #root { display: flex; flex-direction: column; gap: 26px; }
+  .grp { display: flex; flex-direction: column; gap: 10px; }
+  .lbl { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const NS = window.VetNaliaDesignSystem_7efbb4;
+  const { ResultsGrid, VetHero, ServicesList, ReviewList, Card } = NS;
+  const vets = [
+    { id:"helena", name:"Dra. Helena Marques", specialty:"Felinos · Dermatologia", rating:4.9, reviews:213, distance:2.4, homeVisit:true, online:true, verified:true, next:"Hoje 16:30", price:"A partir de R$ 180" },
+    { id:"rafael", name:"Dr. Rafael Lima", specialty:"Clínica geral · Ortopedia", rating:4.8, reviews:168, distance:3.1, homeVisit:true, verified:true, next:"Amanhã 09:00", price:"A partir de R$ 160" },
+  ];
+  function Demo() {
+    return (
+      <>
+        <div className="grp">
+          <span className="lbl">VetHero</span>
+          <Card pad><VetHero name="Dra. Helena Marques" specialty="Felinos · Dermatologia" crm="CRMV-SP 28431" rating={4.9} reviews={213} distance={2.4} homeVisit online verified onBook={()=>{}} onMessage={()=>{}} /></Card>
+        </div>
+        <div className="cols">
+          <div className="grp">
+            <span className="lbl">ServicesList</span>
+            <Card pad><ServicesList selectable services={[
+              {icon:"home",name:"Visita domiciliar",duration:"45 min",price:180,from:true},
+              {icon:"video",name:"Teleconsulta",duration:"30 min",price:120,from:true},
+              {icon:"syringe",name:"Vacinação a domicílio",price:90,from:true},
+            ]} /></Card>
+          </div>
+          <div className="grp">
+            <span className="lbl">ReviewList</span>
+            <Card pad><ReviewList average={4.9} total={213} distribution={[88,9,2,1,0]} reviews={[
+              {author:"Camila R.",meta:"tutora da Mel",rating:5,date:"há 2 dias",text:"Super atenciosa. O atendimento em casa fez toda a diferença."},
+              {author:"Bruno T.",meta:"tutor do Thor",rating:5,date:"há 1 semana",text:"Pontual e muito cuidadosa."},
+            ]} /></Card>
+          </div>
+        </div>
+        <div className="grp">
+          <span className="lbl">ResultsGrid</span>
+          <ResultsGrid vets={vets} columns={2} />
+        </div>
+      </>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

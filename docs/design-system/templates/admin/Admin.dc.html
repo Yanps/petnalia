@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin Template" description="Sidebar · Filters · Data Table · Detail Panel (split view) — for Vet Verification, Appointment & User Management" -->
+<helmet>
+<script src="./ds-base.js"></script>
+</helmet>
+
+<div style="min-height:100%;background:var(--bg);font-family:var(--font-sans);display:flex;flex-wrap:wrap;align-items:stretch">
+
+  <!-- SIDEBAR -->
+  <aside style="flex:1 1 220px;min-width:200px;max-width:260px;background:var(--slate-900);padding:20px 14px;display:flex;flex-direction:column;gap:6px">
+    <div style="padding:6px 8px 16px;display:flex;align-items:center;gap:9px"><span style="width:30px;height:30px;border-radius:9px;background:var(--brand);display:grid;place-items:center"><x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Icon" glyph="shield-check" size="17" hint-size="17px,17px"></x-import></span><span style="font-family:var(--font-display);font-weight:800;font-size:16px;color:#fff">Admin</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.10)"><span style="width:18px;height:18px;border-radius:5px;background:var(--teal-400)"></span><div style="height:12px;width:110px;background:rgba(255,255,255,.35);border-radius:5px"></div></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px"><span style="width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.18)"></span><div style="height:12px;width:90px;background:rgba(255,255,255,.18);border-radius:5px"></div></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px"><span style="width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.18)"></span><div style="height:12px;width:130px;background:rgba(255,255,255,.18);border-radius:5px"></div></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px"><span style="width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.18)"></span><div style="height:12px;width:100px;background:rgba(255,255,255,.18);border-radius:5px"></div></div>
+  </aside>
+
+  <!-- MAIN: split view (table + detail) -->
+  <div style="flex:999 1 620px;min-width:320px;display:flex;flex-direction:column">
+    <!-- Top bar -->
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--border)">
+      <div style="height:22px;width:240px;background:var(--surface-inset);border-radius:6px"></div>
+      <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Avatar" full-name="Admin User" size="md" hint-size="40px,40px"></x-import>
+    </header>
+
+    <div style="padding:24px;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+      <!-- DATA TABLE + FILTERS -->
+      <section style="flex:999 1 460px;min-width:320px;display:flex;flex-direction:column;gap:16px">
+        <span style="display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brand)">Filters</span>
+        <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.FilterChipGroup" options="{{ filters }}" default-value="{{ activeFilters }}" hint-size="100%,40px"></x-import>
+
+        <span style="display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brand)">Data Table</span>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+          <!-- table header -->
+          <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--border)">
+            <div style="flex:2;height:11px;background:var(--surface-inset);border-radius:5px"></div>
+            <div style="flex:1;height:11px;background:var(--surface-inset);border-radius:5px"></div>
+            <div style="flex:1;height:11px;background:var(--surface-inset);border-radius:5px"></div>
+            <div style="width:80px;height:11px;background:var(--surface-inset);border-radius:5px"></div>
+          </div>
+          <!-- rows -->
+          <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border)"><div style="flex:2;display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:50%;background:var(--brand-subtle)"></span><div style="height:12px;width:60%;background:var(--surface-inset);border-radius:5px"></div></div><div style="flex:1;height:12px;background:var(--surface-inset);border-radius:5px"></div><div style="flex:1"><span style="display:inline-block;height:22px;width:80px;background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:8px"></span></div><div style="width:80px;height:30px;background:var(--surface-inset);border-radius:8px"></div></div>
+          <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border)"><div style="flex:2;display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:50%;background:var(--brand-subtle)"></span><div style="height:12px;width:50%;background:var(--surface-inset);border-radius:5px"></div></div><div style="flex:1;height:12px;background:var(--surface-inset);border-radius:5px"></div><div style="flex:1"><span style="display:inline-block;height:22px;width:80px;background:var(--success-bg);border:1px solid var(--success-border);border-radius:8px"></span></div><div style="width:80px;height:30px;background:var(--surface-inset);border-radius:8px"></div></div>
+          <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border)"><div style="flex:2;display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:50%;background:var(--brand-subtle)"></span><div style="height:12px;width:65%;background:var(--surface-inset);border-radius:5px"></div></div><div style="flex:1;height:12px;background:var(--surface-inset);border-radius:5px"></div><div style="flex:1"><span style="display:inline-block;height:22px;width:80px;background:var(--success-bg);border:1px solid var(--success-border);border-radius:8px"></span></div><div style="width:80px;height:30px;background:var(--surface-inset);border-radius:8px"></div></div>
+          <div style="display:flex;align-items:center;gap:16px;padding:14px 18px"><div style="flex:2;display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:50%;background:var(--brand-subtle)"></span><div style="height:12px;width:55%;background:var(--surface-inset);border-radius:5px"></div></div><div style="flex:1;height:12px;background:var(--surface-inset);border-radius:5px"></div><div style="flex:1"><span style="display:inline-block;height:22px;width:80px;background:var(--error-bg);border:1px solid var(--error-border);border-radius:8px"></span></div><div style="width:80px;height:30px;background:var(--surface-inset);border-radius:8px"></div></div>
+        </div>
+      </section>
+
+      <!-- DETAIL PANEL -->
+      <aside style="flex:1 1 300px;min-width:280px;position:sticky;top:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow-sm)">
+        <span style="display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--brand);margin-bottom:16px">Detail Panel</span>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding-bottom:18px;border-bottom:1px solid var(--border)">
+          <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Avatar" full-name="Helena Marques" size="xl" hint-size="72px,72px"></x-import>
+          <div style="height:16px;width:160px;background:var(--surface-inset);border-radius:6px"></div>
+          <span style="display:inline-block;height:22px;width:110px;background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:999px"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:18px 0">
+          <div style="height:13px;width:90%;background:var(--surface-inset);border-radius:5px"></div>
+          <div style="height:13px;width:75%;background:var(--surface-inset);border-radius:5px"></div>
+          <div style="height:13px;width:85%;background:var(--surface-inset);border-radius:5px"></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Button" variant="primary" block="{{ yes }}" icon-left="shield-check" hint-size="100%,44px">Aprovar</x-import>
+          <x-import component-from-global-scope="VetNaliaDesignSystem_7efbb4.Button" variant="secondary" hint-size="44px,44px">Recusar</x-import>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      filters: [
+        { value: "all", label: "Todos" },
+        { value: "pending", label: "Pendentes" },
+        { value: "verified", label: "Verificados" },
+        { value: "rejected", label: "Recusados" },
+      ],
+      activeFilters: ["pending"],
+    };
+  }
+}
+</script>
+</body>
+</html>

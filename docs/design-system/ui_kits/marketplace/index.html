@@ -1,0 +1,52 @@
+<!-- @dsCard group="Marketplace Web" viewport="1200x760" name="PetNalia Marketplace — full flow" subtitle="Homepage → Search → Profile → Booking (interactive)" -->
+<!-- @startingPoint section="Marketplace" subtitle="PetNalia marketplace web app — interactive flow" viewport="1200x760" -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PetNalia — Marketplace</title>
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 999px; border: 2px solid var(--bg); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="data.js"></script>
+<script type="text/babel" src="Homepage.jsx"></script>
+<script type="text/babel" src="SearchResults.jsx"></script>
+<script type="text/babel" src="VetProfile.jsx"></script>
+<script type="text/babel" src="Booking.jsx"></script>
+<script type="text/babel" data-presets="env,react">
+  function App() {
+    const [route, setRoute] = React.useState({ name: "home" });
+    const go = (name, params = {}) => { window.scrollTo(0, 0); setRoute({ name, ...params }); };
+
+    let screen;
+    if (route.name === "home") screen = <window.Homepage onSearch={() => go("search")} onVet={(id) => go("profile", { vetId: id })} />;
+    else if (route.name === "search") screen = <window.SearchResults onVet={(id) => go("profile", { vetId: id })} />;
+    else if (route.name === "profile") screen = <window.VetProfile vetId={route.vetId} onBook={(id) => go("booking", { vetId: id })} onBack={() => go("search")} />;
+    else if (route.name === "booking") screen = <window.Booking vetId={route.vetId} onDone={() => go("home")} onBack={() => go("profile", { vetId: route.vetId })} />;
+    else screen = <window.Homepage onSearch={() => go("search")} onVet={(id) => go("profile", { vetId: id })} />;
+
+    const activeNav = route.name === "home" ? "home" : "search";
+
+    return (
+      <>
+        <NS.Header onNav={(id) => go(id === "how" ? "home" : id)} active={activeNav} city={window.VN_DATA.city} />
+        {screen}
+      </>
+    );
+  }
+  const NS = window.VetNaliaDesignSystem_7efbb4;
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

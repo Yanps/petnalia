@@ -1,0 +1,37 @@
+<!-- @dsCard group="Colors" viewport="700x190" name="Secondary, Accent & Semantic" subtitle="Deep blue, green accent, success / warning / error / info" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface); display: flex; flex-direction: column; gap: 14px; }
+  .grp { display: flex; flex-direction: column; gap: 6px; }
+  .lbl { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  .row { display: flex; gap: 10px; }
+  .chip { flex: 1; height: 56px; border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: flex-end; padding: 8px 10px; box-shadow: var(--shadow-xs); }
+  .chip .t { font-size: 11px; font-weight: 700; color: #fff; }
+  .chip .h { font-size: 9.5px; font-family: var(--font-mono); color: rgba(255,255,255,.85); }
+</style>
+</head>
+<body>
+  <div class="grp">
+    <span class="lbl">Secondary · Blue / Accent · Green</span>
+    <div class="row">
+      <div class="chip" style="background:var(--blue-700)"><span class="t">Blue 700</span><span class="h">#164E63</span></div>
+      <div class="chip" style="background:var(--blue-500)"><span class="t">Blue 500</span><span class="h">#1F7E9B</span></div>
+      <div class="chip" style="background:var(--green-500)"><span class="t">Accent 500</span><span class="h">#22C55E</span></div>
+      <div class="chip" style="background:var(--green-600)"><span class="t">Accent 600</span><span class="h">#16A34A</span></div>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="lbl">Semantic</span>
+    <div class="row">
+      <div class="chip" style="background:var(--success-500)"><span class="t">Success</span><span class="h">#16A34A</span></div>
+      <div class="chip" style="background:var(--warning-500)"><span class="t">Warning</span><span class="h">#F59E0B</span></div>
+      <div class="chip" style="background:var(--error-500)"><span class="t">Error</span><span class="h">#DC2626</span></div>
+      <div class="chip" style="background:var(--info-500)"><span class="t">Info</span><span class="h">#0EA5E9</span></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Elevation · Shadows" subtitle="Subtle, cool-tinted SaaS elevation — no heavy shadows" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 26px 24px; background: var(--slate-100); display: flex; gap: 22px; align-items: center; justify-content: space-between; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .box { width: 96px; height: 70px; background: var(--surface); border-radius: var(--radius-lg); }
+  .t { font-size: 12px; font-weight: 700; color: var(--text); }
+  .b-xs { box-shadow: var(--shadow-xs); }
+  .b-sm { box-shadow: var(--shadow-sm); }
+  .b-md { box-shadow: var(--shadow-md); }
+  .b-lg { box-shadow: var(--shadow-lg); }
+  .b-xl { box-shadow: var(--shadow-xl); }
+  .b-br { box-shadow: var(--shadow-brand); }
+</style>
+</head>
+<body>
+  <div class="col"><div class="box b-xs"></div><span class="t">xs</span></div>
+  <div class="col"><div class="box b-sm"></div><span class="t">sm</span></div>
+  <div class="col"><div class="box b-md"></div><span class="t">md</span></div>
+  <div class="col"><div class="box b-lg"></div><span class="t">lg</span></div>
+  <div class="col"><div class="box b-xl"></div><span class="t">xl</span></div>
+  <div class="col"><div class="box b-br"></div><span class="t">brand</span></div>
+</body>
+</html>
