@@ -83,3 +83,22 @@ export const VetSearchResponseSchema = z.object({
   hasMore: z.boolean(),
 });
 export type VetSearchResponse = z.infer<typeof VetSearchResponseSchema>;
+
+export const VetProfilePublicResponseSchema = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  fullName: z.string(),
+  avatarUrl: z.string().url().nullable(),
+  bio: z.string().nullable(),
+  specialties: z.array(SpecialtySchema),
+  crmv: z.string(),
+  crmvState: z.string().length(2),
+  averageRating: z.number().min(0).max(5),
+  totalReviews: z.number().int().nonnegative(),
+  verificationStatus: VerificationStatusSchema,
+  tier: VetTierSchema,
+  baseCity: z.string(),
+  baseState: z.string().length(2),
+  serviceRadiusKm: z.number().positive(),
+});
+export type VetProfilePublicResponse = z.infer<typeof VetProfilePublicResponseSchema>;

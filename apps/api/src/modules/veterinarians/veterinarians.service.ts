@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import type { VetSearchQuery, VetSearchResponse, VetSearchResult } from '@petnalia/types';
+import type {
+  VetProfilePublicResponse,
+  VetSearchQuery,
+  VetSearchResponse,
+  VetSearchResult,
+} from '@petnalia/types';
 
+import { VeterinarianNotFoundError } from './veterinarians.errors';
 import { VeterinariansRepository } from './veterinarians.repository';
 
 function toSlug(fullName: string, id: string): string {
@@ -44,6 +50,29 @@ export class VeterinariansService {
       page: params.page,
       limit: params.limit,
       hasMore: params.page * params.limit < totalCount,
+    };
+  }
+
+  async getProfile(slug: string): Promise<VetProfilePublicResponse> {
+    const row = await this.vetsRepository.findProfileBySlug(slug);
+    if (!row) throw new VeterinarianNotFoundError();
+
+    return {
+      id: row.vet_id,
+      slug,
+      fullName: row.full_name,
+      avatarUrl: row.avatar_url,
+      bio: row.bio,
+      specialties: row.specialties ?? [],
+      crmv: row.crmv,
+      crmvState: row.crmv_state,
+      averageRating: row.average_rating,
+      totalReviews: row.total_reviews,
+      verificationStatus: row.verification_status as VetProfilePublicResponse['verificationStatus'],
+      tier: row.tier as VetProfilePublicResponse['tier'],
+      baseCity: row.base_city ?? '',
+      baseState: row.base_state ?? '',
+      serviceRadiusKm: row.service_radius_km,
     };
   }
 }
