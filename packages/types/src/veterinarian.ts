@@ -46,6 +46,13 @@ export const CreateVetProfileInputSchema = z.object({
 });
 export type CreateVetProfileInput = z.infer<typeof CreateVetProfileInputSchema>;
 
+export const UpdateVetProfileInputSchema = z.object({
+  bio: z.string().max(1000).optional(),
+  serviceRadiusKm: z.number().positive().max(200).optional(),
+  specialtyIds: z.array(z.string().uuid()).optional(),
+});
+export type UpdateVetProfileInput = z.infer<typeof UpdateVetProfileInputSchema>;
+
 export const VetSearchQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),

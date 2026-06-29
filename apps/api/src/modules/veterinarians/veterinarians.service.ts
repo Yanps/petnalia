@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  Specialty,
+  UpdateVetProfileInput,
   VetProfilePublicResponse,
   VetSearchQuery,
   VetSearchResponse,
@@ -74,5 +76,36 @@ export class VeterinariansService {
       baseState: row.base_state ?? '',
       serviceRadiusKm: row.service_radius_km,
     };
+  }
+
+  async getOwnProfile(userId: string): Promise<VetProfilePublicResponse> {
+    const row = await this.vetsRepository.findOwnProfile(userId);
+    if (!row) throw new VeterinarianNotFoundError();
+
+    return {
+      id: row.vet_id,
+      slug: toSlug(row.full_name, row.vet_id),
+      fullName: row.full_name,
+      avatarUrl: row.avatar_url,
+      bio: row.bio,
+      specialties: row.specialties ?? [],
+      crmv: row.crmv,
+      crmvState: row.crmv_state,
+      averageRating: 0,
+      totalReviews: 0,
+      verificationStatus: row.verification_status as VetProfilePublicResponse['verificationStatus'],
+      tier: row.tier as VetProfilePublicResponse['tier'],
+      baseCity: '',
+      baseState: '',
+      serviceRadiusKm: row.service_radius_km,
+    };
+  }
+
+  async updateOwnProfile(userId: string, input: UpdateVetProfileInput): Promise<void> {
+    await this.vetsRepository.updateProfile(userId, input);
+  }
+
+  async listSpecialties(): Promise<Specialty[]> {
+    return this.vetsRepository.findAllSpecialties();
   }
 }

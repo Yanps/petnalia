@@ -1,8 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { VetSearchQuery } from '@petnalia/types';
+import type { UpdateVetProfileInput, VetSearchQuery } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';
+
+interface RawOwnProfile {
+  vet_id: string;
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  crmv: string;
+  crmv_state: string;
+  verification_status: string;
+  tier: string;
+  service_radius_km: number;
+  specialties: Array<{ id: string; name: string; slug: string }> | null;
+}
 
 interface RawVetProfile {
   vet_id: string;
@@ -168,5 +182,71 @@ export class VeterinariansRepository {
     `;
 
     return rows[0] ?? null;
+  }
+
+  async findOwnProfile(userId: string): Promise<RawOwnProfile | null> {
+    const rows = await this.prisma.$queryRaw<RawOwnProfile[]>`
+      SELECT
+        v.id::text                                                    AS vet_id,
+        u.id::text                                                    AS user_id,
+        p."fullName"                                                  AS full_name,
+        p."avatarUrl"                                                 AS avatar_url,
+        v.bio,
+        v.crmv,
+        v."crmvState"                                                 AS crmv_state,
+        v."verificationStatus"                                        AS verification_status,
+        v.tier,
+        v."serviceRadiusKm"                                           AS service_radius_km,
+        COALESCE(
+          JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
+            'id',   s.id::text,
+            'name', s.name,
+            'slug', s.slug
+          )) FILTER (WHERE s.id IS NOT NULL),
+          '[]'::json
+        )                                                             AS specialties
+      FROM veterinarians v
+      JOIN users u         ON u.id       = v."userId"
+      JOIN profiles p      ON p."userId" = u.id
+      LEFT JOIN veterinarian_specialties vs ON vs."veterinarianId" = v.id
+      LEFT JOIN specialties s               ON s.id = vs."specialtyId"
+      WHERE v."userId" = ${userId}::uuid
+        AND v."deletedAt" IS NULL
+      GROUP BY
+        v.id, u.id, p."fullName", p."avatarUrl", v.bio,
+        v.crmv, v."crmvState",
+        v."verificationStatus", v.tier, v."serviceRadiusKm"
+      LIMIT 1
+    `;
+
+    return rows[0] ?? null;
+  }
+
+  async findAllSpecialties() {
+    return this.prisma.specialty.findMany({ orderBy: { name: 'asc' } });
+  }
+
+  async updateProfile(userId: string, data: UpdateVetProfileInput): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const vet = await tx.veterinarian.update({
+        where: { userId },
+        data: {
+          ...(data.bio !== undefined && { bio: data.bio }),
+          ...(data.serviceRadiusKm && { serviceRadiusKm: data.serviceRadiusKm }),
+        },
+      });
+
+      if (data.specialtyIds !== undefined) {
+        await tx.veterinarianSpecialty.deleteMany({ where: { veterinarianId: vet.id } });
+        if (data.specialtyIds.length > 0) {
+          await tx.veterinarianSpecialty.createMany({
+            data: data.specialtyIds.map((sId) => ({
+              veterinarianId: vet.id,
+              specialtyId: sId,
+            })),
+          });
+        }
+      }
+    });
   }
 }

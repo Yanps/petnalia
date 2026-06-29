@@ -27,6 +27,11 @@ export async function getSession(): Promise<Session | null> {
   }
 }
 
+export async function getToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get('petnalia_session')?.value ?? null;
+}
+
 export async function requireSession(role?: UserRole): Promise<Session> {
   const session = await getSession();
   if (!session) throw new Error('Unauthenticated');
