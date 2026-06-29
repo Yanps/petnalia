@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 
+import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
+import { RolesGuard } from './shared/guards/roles.guard';
 import { MailerModule } from './shared/mailer/mailer.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { QueueModule } from './shared/queue/queue.module';
@@ -19,6 +23,7 @@ import { VeterinariansModule } from './modules/veterinarians/veterinarians.modul
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     // Shared infrastructure (global)
     PrismaModule,
     RedisModule,
@@ -37,6 +42,10 @@ import { VeterinariansModule } from './modules/veterinarians/veterinarians.modul
     SubscriptionsModule,
     NotificationsModule,
     AdminModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

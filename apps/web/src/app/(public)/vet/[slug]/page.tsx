@@ -1,23 +1,31 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { findVetBySlug } from '@/data/mock-vets';
+import { VetProfile } from '@/components/vet/vet-profile';
 
-interface VetProfilePageProps {
+interface VetPageProps {
   readonly params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: VetProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: VetPageProps): Promise<Metadata> {
   const { slug } = await params;
-  // TODO: fetch vet data and populate metadata
-  return { title: `Veterinário ${slug}` };
+  const vet = findVetBySlug(slug);
+  if (!vet) return { title: 'Veterinário não encontrado' };
+  return {
+    title: `${vet.name} — ${vet.specialty}`,
+    description: vet.about.slice(0, 155),
+  };
 }
 
-export default async function VetProfilePage({ params }: VetProfilePageProps) {
+export default async function VetPage({ params }: VetPageProps) {
   const { slug } = await params;
-  if (!slug) notFound();
+  const vet = findVetBySlug(slug);
+
+  if (!vet) notFound();
+
   return (
-    <main>
-      <h1>Perfil do veterinário</h1>
-      {/* TODO: VetHero, ReviewList, AvailabilityCalendar, BookingSidebar */}
+    <main style={{ flex: 1, background: 'var(--surface-2)' }}>
+      <VetProfile vet={vet} />
     </main>
   );
 }

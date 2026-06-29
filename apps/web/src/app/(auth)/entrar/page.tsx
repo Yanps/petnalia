@@ -1,12 +1,8 @@
 import type { Metadata } from 'next';
+import { LoginForm } from '@/features/auth/login-form';
 
 export const metadata: Metadata = { title: 'Entrar' };
 
 export default function EntrarPage() {
-  return (
-    <main>
-      <h1>Entrar</h1>
-      {/* TODO: LoginForm (email + senha, Client Component) */}
-    </main>
-  );
+  return <LoginForm />;
 }

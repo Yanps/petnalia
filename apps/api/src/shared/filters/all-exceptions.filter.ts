@@ -7,6 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { ZodError } from 'zod';
+
+import type { DomainErrorBody } from '../errors/domain.error';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -14,27 +17,48 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const res = ctx.getResponse<Response>();
+    const req = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let code = 'INTERNAL_ERROR';
+    let message = 'Erro interno. Tente novamente mais tarde.';
+    let details: unknown = undefined;
 
-    const message =
-      exception instanceof HttpException ? exception.message : 'Internal server error';
+    if (exception instanceof ZodError) {
+      status = HttpStatus.UNPROCESSABLE_ENTITY;
+      code = 'VALIDATION_ERROR';
+      message = 'Dados inválidos.';
+      details = exception.issues.map((i) => ({
+        field: i.path.join('.'),
+        message: i.message,
+      }));
+    } else if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const body = exception.getResponse();
 
-    this.logger.error(
-      `${request.method} ${request.url} → ${status}`,
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+      if (typeof body === 'object' && body !== null && 'code' in body) {
+        const domainBody = body as DomainErrorBody;
+        code = domainBody.code;
+        message = domainBody.message;
+      } else {
+        code = `HTTP_${status}`;
+        message =
+          typeof body === 'string'
+            ? body
+            : ((body as Record<string, unknown>)['message'] as string | undefined) ??
+              exception.message;
+      }
+    } else {
+      this.logger.error(
+        `Unhandled exception on ${req.method} ${req.url}`,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    }
 
-    response.status(status).json({
-      statusCode: status,
-      error: message,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+    const envelope: Record<string, unknown> = { code, message };
+    if (details !== undefined) envelope['details'] = details;
+
+    res.status(status).json({ error: envelope });
   }
 }
