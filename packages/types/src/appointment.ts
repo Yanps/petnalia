@@ -24,6 +24,7 @@ export const CreateAppointmentInputSchema = z.object({
   petId: z.string().uuid(),
   addressId: z.string().uuid(),
   slotId: z.string().uuid(),
+  holdToken: z.string().min(1),
   modality: ModalitySchema,
   notes: z.string().max(500).optional(),
 });
@@ -33,3 +34,9 @@ export const CancelAppointmentInputSchema = z.object({
   reason: z.string().max(200).optional(),
 });
 export type CancelAppointmentInput = z.infer<typeof CancelAppointmentInputSchema>;
+
+export const HoldSlotResponseSchema = z.object({
+  holdToken: z.string(),
+  expiresAt: z.string().datetime(),
+});
+export type HoldSlotResponse = z.infer<typeof HoldSlotResponseSchema>;

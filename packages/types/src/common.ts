@@ -8,7 +8,7 @@ export type Role = z.infer<typeof RoleSchema>;
 export const AppointmentStatusSchema = z.enum([
   'requested',
   'confirmed',
-  'pending_payment',
+  'pending',
   'completed',
   'cancelled',
 ]);

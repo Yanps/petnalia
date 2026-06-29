@@ -253,6 +253,7 @@ model AvailabilitySlot {
   startsAt       DateTime   @db.Timestamptz
   endsAt         DateTime   @db.Timestamptz
   status         SlotStatus @default(open)
+  heldUntil      DateTime?  @db.Timestamptz
   recurrenceId   String?    @db.Uuid
   createdAt      DateTime   @default(now()) @db.Timestamptz
   updatedAt      DateTime   @updatedAt @db.Timestamptz
