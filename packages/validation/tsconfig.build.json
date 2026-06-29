@@ -1,0 +1,10 @@
+{
+  "extends": "@petnalia/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "declarationDir": "dist",
+    "declaration": true
+  },
+  "include": ["src"]
+}

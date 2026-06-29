@@ -14,6 +14,7 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
 import { GeoModule } from './modules/geo/geo.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PetsModule } from './modules/pets/pets.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
@@ -41,6 +42,7 @@ import { VeterinariansModule } from './modules/veterinarians/veterinarians.modul
     ReviewsModule,
     SubscriptionsModule,
     NotificationsModule,
+    AddressesModule,
     AdminModule,
   ],
   providers: [

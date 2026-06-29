@@ -7,3 +7,4 @@ export * from './availability.js';
 export * from './review.js';
 export * from './subscription.js';
 export * from './notification.js';
+export * from './address.js';

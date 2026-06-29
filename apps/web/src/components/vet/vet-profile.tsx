@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Avatar, Badge, Button, Icon, Rating, Separator } from '@petnalia/ui';
-import type { VetProfilePublicResponse } from '@petnalia/types';
+import { Avatar, Badge, Icon, Rating, Separator } from '@petnalia/ui';
+import type { Review, VetProfilePublicResponse } from '@petnalia/types';
+import type { Session } from '@/lib/auth';
+import { BookingSidebar } from './booking-sidebar';
 
 type Tab = 'sobre' | 'avaliacoes';
 
@@ -12,23 +13,62 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'avaliacoes', label: 'Avaliações' },
 ];
 
-const TIMES = ['08h00', '09h30', '11h00', '14h00', '15h30', '17h00', '19h00'];
-
 interface Props {
   readonly vet: VetProfilePublicResponse;
+  readonly initialReviews: Review[];
+  readonly session: Session | null;
+  readonly token: string | null;
 }
 
-export function VetProfile({ vet }: Props) {
-  const router = useRouter();
-  const [tab, setTab] = useState<Tab>('sobre');
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
-  const [booked, setBooked] = useState(false);
+function StarRating({ value }: { value: number }) {
+  return (
+    <div style={{ display: 'flex', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Icon
+          key={star}
+          name="star"
+          size={14}
+          style={{
+            color: star <= value ? 'var(--warning-400, #fbbf24)' : 'var(--border)',
+            fill: star <= value ? 'var(--warning-400, #fbbf24)' : 'none',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
-  function handleBook() {
-    if (!selectedTime) return;
-    setBooked(true);
-    setTimeout(() => router.push('/painel'), 2000);
-  }
+function ReviewCard({ review }: { review: Review }) {
+  const date = review.publishedAt
+    ? new Date(review.publishedAt).toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      })
+    : null;
+
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '18px 20px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <StarRating value={review.rating} />
+        {date && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{date}</span>
+        )}
+      </div>
+      {review.text && (
+        <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          {review.text}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function VetProfile({ vet, initialReviews, session, token }: Props) {
+  const [tab, setTab] = useState<Tab>('sobre');
 
   const tabLabel = (t: Tab) =>
     t === 'avaliacoes' ? `Avaliações (${vet.totalReviews})` : TABS.find((x) => x.id === t)!.label;
@@ -126,6 +166,7 @@ export function VetProfile({ vet }: Props) {
                   color: tab === t.id ? 'var(--brand)' : 'var(--text-secondary)',
                   borderBottom: tab === t.id ? '2px solid var(--brand)' : '2px solid transparent',
                   marginBottom: -1, transition: 'all 0.15s',
+                  fontFamily: 'inherit',
                 }}
               >
                 {tabLabel(t.id)}
@@ -180,81 +221,45 @@ export function VetProfile({ vet }: Props) {
 
         {/* Tab: Avaliações */}
         {tab === 'avaliacoes' && (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
-            <Icon name="star" size={40} style={{ marginBottom: 16, opacity: 0.4 }} />
-            <p style={{ fontSize: '0.9375rem' }}>
-              {vet.totalReviews === 0
-                ? 'Nenhuma avaliação ainda.'
-                : `${vet.totalReviews} avaliações · média ${vet.averageRating.toFixed(1)}`}
-            </p>
+          <div>
+            {initialReviews.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
+                <Icon name="star" size={40} style={{ marginBottom: 16, opacity: 0.4 }} />
+                <p style={{ fontSize: '0.9375rem' }}>
+                  {vet.totalReviews === 0
+                    ? 'Nenhuma avaliação ainda.'
+                    : `${vet.totalReviews} avaliações · média ${vet.averageRating.toFixed(1)}`}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {vet.totalReviews > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <StarRating value={Math.round(vet.averageRating)} />
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>
+                      {vet.averageRating.toFixed(1)}
+                    </span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                      ({vet.totalReviews} {vet.totalReviews === 1 ? 'avaliação' : 'avaliações'})
+                    </span>
+                  </div>
+                )}
+                {initialReviews.map((review) => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
+                {vet.totalReviews > initialReviews.length && (
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', textAlign: 'center', paddingTop: 8 }}>
+                    Exibindo {initialReviews.length} de {vet.totalReviews} avaliações.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Booking sidebar */}
-      <aside style={{
-        width: 316, flexShrink: 0,
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-xl)', padding: '24px',
-        position: 'sticky', top: 88,
-      }}>
-        {booked ? (
-          <div style={{ textAlign: 'center', padding: '16px 0' }}>
-            <div style={{ width: 56, height: 56, background: 'var(--success-50)', borderRadius: 'var(--radius-full)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
-              <Icon name="check-circle" size={28} style={{ color: 'var(--success-500)' }} />
-            </div>
-            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--text)', marginBottom: 8 }}>
-              Consulta agendada!
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Redirecionando para o painel...
-            </p>
-          </div>
-        ) : (
-          <>
-            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.0625rem', color: 'var(--text)', marginBottom: 16 }}>
-              Agendar consulta
-            </p>
-
-            <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
-              Horários disponíveis
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
-              {TIMES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTime(t)}
-                  style={{
-                    padding: '8px 4px', borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.8125rem', fontWeight: 500,
-                    border: `1px solid ${selectedTime === t ? 'var(--brand)' : 'var(--border)'}`,
-                    background: selectedTime === t ? 'var(--brand)' : 'var(--surface)',
-                    color: selectedTime === t ? 'white' : 'var(--text)',
-                    cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <Button
-              variant="primary"
-              size="lg"
-              block
-              iconLeft="calendar"
-              disabled={!selectedTime}
-              onClick={handleBook}
-            >
-              {selectedTime ? `Agendar às ${selectedTime}` : 'Selecione um horário'}
-            </Button>
-
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: 12 }}>
-              Cancelamento gratuito até 24h antes
-            </p>
-          </>
-        )}
-      </aside>
+      <BookingSidebar vet={vet} session={session} token={token} />
     </div>
   );
 }
