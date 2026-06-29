@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { UsersModule } from '../../src/modules/users/users.module';
+import { VeterinariansModule } from '../../src/modules/veterinarians/veterinarians.module';
 import { AllExceptionsFilter } from '../../src/shared/filters/all-exceptions.filter';
 import { JwtAuthGuard } from '../../src/shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/shared/guards/roles.guard';
@@ -20,13 +21,14 @@ import { PrismaModule } from '../../src/shared/prisma/prisma.module';
     PrismaModule,
     AuthModule,
     UsersModule,
+    VeterinariansModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-class AuthTestModule {}
+class TestAppModule {}
 
 export async function createTestApp(databaseUrl: string): Promise<INestApplication> {
   process.env['DATABASE_URL'] = databaseUrl;
@@ -39,7 +41,7 @@ export async function createTestApp(databaseUrl: string): Promise<INestApplicati
   process.env['API_URL'] = 'http://localhost:4000';
 
   const moduleRef = await Test.createTestingModule({
-    imports: [AuthTestModule],
+    imports: [TestAppModule],
   }).compile();
 
   const app = moduleRef.createNestApplication();
