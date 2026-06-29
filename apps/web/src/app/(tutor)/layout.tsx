@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
+import { TutorShell } from '@/components/dashboard/tutor-shell';
 
 export default async function TutorLayout({
   children,
@@ -10,5 +11,9 @@ export default async function TutorLayout({
   if (!session || session.role !== 'TUTOR') {
     redirect('/entrar');
   }
-  return <>{children}</>;
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <TutorShell session={session}>{children}</TutorShell>
+    </div>
+  );
 }

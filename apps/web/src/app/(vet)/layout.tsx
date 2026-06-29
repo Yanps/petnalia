@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
+import { VetShell } from '@/components/dashboard/vet-shell';
 
 export default async function VetLayout({
   children,
@@ -10,5 +11,9 @@ export default async function VetLayout({
   if (!session || session.role !== 'VETERINARIAN') {
     redirect('/entrar');
   }
-  return <>{children}</>;
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <VetShell session={session}>{children}</VetShell>
+    </div>
+  );
 }
