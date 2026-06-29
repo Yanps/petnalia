@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { VetCard } from '@petnalia/ui';
-import type { MockVet } from '@/data/mock-vets';
+import type { VetSearchResult } from '@petnalia/types';
 
 interface VetResultsGridProps {
-  readonly vets: readonly MockVet[];
+  readonly vets: readonly VetSearchResult[];
   readonly columns?: 2 | 3;
 }
 
@@ -25,17 +25,14 @@ export function VetResultsGrid({ vets, columns = 3 }: VetResultsGridProps) {
           onClick={() => router.push(`/vet/${vet.slug}`)}
         >
           <VetCard
-            name={vet.name}
-            specialty={vet.specialty}
-            photo={vet.photo}
-            rating={vet.rating}
-            reviews={vet.reviews}
-            distance={vet.distance}
-            homeVisit={vet.homeVisit}
-            online={vet.online}
-            nextAvailable={vet.nextAvailable}
-            price={vet.price}
-            verified={vet.verified}
+            name={vet.fullName}
+            {...(vet.specialties[0] && { specialty: vet.specialties[0].name })}
+            {...(vet.avatarUrl && { photo: vet.avatarUrl })}
+            rating={vet.averageRating}
+            reviews={vet.totalReviews}
+            distance={vet.distanceKm}
+            homeVisit
+            verified={vet.verificationStatus === 'verified'}
             onSchedule={(e) => {
               e.stopPropagation();
               router.push(`/vet/${vet.slug}`);

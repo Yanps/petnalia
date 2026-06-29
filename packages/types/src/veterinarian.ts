@@ -56,3 +56,30 @@ export const VetSearchQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(12),
 });
 export type VetSearchQuery = z.infer<typeof VetSearchQuerySchema>;
+
+export const VetSearchResultSchema = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  fullName: z.string(),
+  avatarUrl: z.string().url().nullable(),
+  bio: z.string().nullable(),
+  specialties: z.array(SpecialtySchema),
+  averageRating: z.number().min(0).max(5),
+  totalReviews: z.number().int().nonnegative(),
+  distanceKm: z.number().nonnegative(),
+  baseCity: z.string(),
+  baseState: z.string().length(2),
+  serviceRadiusKm: z.number().positive(),
+  verificationStatus: VerificationStatusSchema,
+  tier: VetTierSchema,
+});
+export type VetSearchResult = z.infer<typeof VetSearchResultSchema>;
+
+export const VetSearchResponseSchema = z.object({
+  data: z.array(VetSearchResultSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  hasMore: z.boolean(),
+});
+export type VetSearchResponse = z.infer<typeof VetSearchResponseSchema>;

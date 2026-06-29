@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { VetSearchResult } from '@petnalia/types';
 import Link from 'next/link';
 import { Button, Badge, Icon } from '@petnalia/ui';
 import { VetResultsGrid } from '@/components/search/vet-results-grid';
@@ -24,7 +25,26 @@ const HOW = [
 ] as const;
 
 export default function HomePage() {
-  const featuredVets = MOCK_VETS.slice(0, 3);
+  const featuredVets: VetSearchResult[] = MOCK_VETS.slice(0, 3).map((v) => ({
+    id: v.id,
+    slug: v.slug,
+    fullName: v.name,
+    avatarUrl: v.photo ?? null,
+    bio: v.about,
+    specialties: v.specialties.map((name, i) => ({
+      id: String(i),
+      name,
+      slug: name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-'),
+    })),
+    averageRating: v.rating,
+    totalReviews: v.reviews,
+    distanceKm: v.distance,
+    baseCity: v.city.split(',')[0]?.trim() ?? v.city,
+    baseState: v.city.split(',')[1]?.trim() ?? 'SP',
+    serviceRadiusKm: 20,
+    verificationStatus: (v.verified ? 'verified' : 'pending') as VetSearchResult['verificationStatus'],
+    tier: 'free' as VetSearchResult['tier'],
+  }));
 
   return (
     <main>
