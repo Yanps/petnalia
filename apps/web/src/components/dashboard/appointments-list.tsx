@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Button, Icon } from '@petnalia/ui';
 import type { Appointment } from '@petnalia/types';
 
+import { ReviewModal } from './review-modal';
+
 const STATUS_LABEL: Record<Appointment['status'], string> = {
   requested: 'Pendente',
   confirmed: 'Confirmada',
@@ -64,6 +66,8 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
   const [activeTab, setActiveTab] = useState<Tab>('Todas');
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
 
   const visible = filterByTab(appointments, activeTab);
 
@@ -217,7 +221,7 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
                 {role === 'veterinarian' && appt.status === 'requested' && (
                   <Button
                     variant="primary"
@@ -248,10 +252,41 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
                     {cancelling === appt.id ? 'Cancelando...' : 'Cancelar'}
                   </Button>
                 )}
+                {role === 'tutor' && appt.status === 'completed' && (
+                  reviewedIds.has(appt.id) ? (
+                    <span style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      fontSize: '0.8125rem', fontWeight: 600, color: '#16a34a',
+                    }}>
+                      <Icon name="check-circle" size={14} style={{ color: '#16a34a' }} />
+                      Avaliada
+                    </span>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setReviewingId(appt.id)}
+                    >
+                      Avaliar
+                    </Button>
+                  )
+                )}
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {reviewingId && (
+        <ReviewModal
+          appointmentId={reviewingId}
+          token={token}
+          onSuccess={() => {
+            setReviewedIds((prev) => new Set(prev).add(reviewingId));
+            setReviewingId(null);
+          }}
+          onClose={() => setReviewingId(null)}
+        />
       )}
     </div>
   );
