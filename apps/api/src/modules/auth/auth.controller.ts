@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { LoginInputSchema, RegisterInputSchema } from '@petnalia/types';
+import { LoginInputSchema, RegisterInputSchema, RegisterVetInputSchema } from '@petnalia/types';
 
 import { Public } from '../../shared/decorators/public.decorator';
 import { AuthService } from './auth.service';
@@ -30,6 +30,19 @@ export class AuthController {
   ) {
     const dto = RegisterInputSchema.parse(body);
     const { tokens, rawRefreshToken } = await this.authService.register(dto);
+    this.setRefreshCookie(res, rawRefreshToken);
+    return tokens;
+  }
+
+  @Public()
+  @Post('register/veterinarian')
+  @HttpCode(HttpStatus.CREATED)
+  async registerVet(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const dto = RegisterVetInputSchema.parse(body);
+    const { tokens, rawRefreshToken } = await this.authService.registerVet(dto);
     this.setRefreshCookie(res, rawRefreshToken);
     return tokens;
   }

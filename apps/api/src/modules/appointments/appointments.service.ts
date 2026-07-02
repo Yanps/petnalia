@@ -4,6 +4,7 @@ import type { CreateAppointmentInput } from '@petnalia/types';
 
 import { RedisService } from '../../shared/redis/redis.service';
 import { AvailabilityService } from '../availability/availability.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   AppointmentForbiddenError,
   AppointmentNotFoundError,
@@ -53,6 +54,7 @@ export class AppointmentsService {
     private readonly appointmentsRepository: AppointmentsRepository,
     private readonly availabilityService: AvailabilityService,
     private readonly redis: RedisService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async bookAppointment(
@@ -99,7 +101,37 @@ export class AppointmentsService {
       await this.redis.set(IDEM_KEY(idempotencyKey), JSON.stringify(result), 'EX', IDEM_TTL_SECONDS);
     }
 
+    void this.notifyAppointmentBooked(appointment.id);
+
     return result;
+  }
+
+  private async notifyAppointmentBooked(appointmentId: string): Promise<void> {
+    const data = await this.appointmentsRepository.findParticipants(appointmentId);
+    if (!data) return;
+
+    const scheduledAt = data.slot.startsAt.toISOString();
+    const tutorName = data.tutor.profile?.fullName ?? data.tutor.email;
+    const vetName = data.veterinarian.user.profile?.fullName ?? data.veterinarian.user.email;
+    const petName = data.pet.name;
+
+    void this.notifications.enqueueEmail({
+      to: data.tutor.email,
+      type: 'appointment_booked_tutor',
+      name: tutorName,
+      scheduledAt,
+      otherPartyName: vetName,
+      petName,
+    });
+
+    void this.notifications.enqueueEmail({
+      to: data.veterinarian.user.email,
+      type: 'appointment_booked_vet',
+      name: vetName,
+      scheduledAt,
+      otherPartyName: tutorName,
+      petName,
+    });
   }
 
   async listMyAppointments(
@@ -137,6 +169,7 @@ export class AppointmentsService {
       'veterinarianId',
       userId,
     );
+    void this.notifyAppointmentConfirmed(appointmentId);
     return toAppointment({ ...row, ...updated!, slot: row.slot });
   }
 
@@ -162,6 +195,7 @@ export class AppointmentsService {
       ownerField,
       userId,
     );
+    void this.notifyAppointmentCancelled(appointmentId);
     return toAppointment({ ...row, ...updated!, slot: row.slot });
   }
 
@@ -179,5 +213,39 @@ export class AppointmentsService {
       userId,
     );
     return toAppointment({ ...row, ...updated!, slot: row.slot });
+  }
+
+  private async notifyAppointmentConfirmed(appointmentId: string): Promise<void> {
+    const data = await this.appointmentsRepository.findParticipants(appointmentId);
+    if (!data) return;
+
+    void this.notifications.enqueueEmail({
+      to: data.tutor.email,
+      type: 'appointment_confirmed',
+      name: data.tutor.profile?.fullName ?? data.tutor.email,
+      scheduledAt: data.slot.startsAt.toISOString(),
+      otherPartyName: data.veterinarian.user.profile?.fullName ?? data.veterinarian.user.email,
+    });
+  }
+
+  private async notifyAppointmentCancelled(appointmentId: string): Promise<void> {
+    const data = await this.appointmentsRepository.findParticipants(appointmentId);
+    if (!data) return;
+
+    const scheduledAt = data.slot.startsAt.toISOString();
+
+    void this.notifications.enqueueEmail({
+      to: data.tutor.email,
+      type: 'appointment_cancelled',
+      name: data.tutor.profile?.fullName ?? data.tutor.email,
+      scheduledAt,
+    });
+
+    void this.notifications.enqueueEmail({
+      to: data.veterinarian.user.email,
+      type: 'appointment_cancelled',
+      name: data.veterinarian.user.profile?.fullName ?? data.veterinarian.user.email,
+      scheduledAt,
+    });
   }
 }

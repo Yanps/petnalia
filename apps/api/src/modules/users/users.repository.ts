@@ -28,6 +28,31 @@ export class UsersRepository {
     });
   }
 
+  createVet(input: {
+    email: string;
+    passwordHash: string;
+    fullName: string;
+    crmv: string;
+    crmvState: string;
+  }) {
+    return this.prisma.user.create({
+      data: {
+        email: input.email,
+        passwordHash: input.passwordHash,
+        role: 'veterinarian',
+        profile: { create: { fullName: input.fullName } },
+        veterinarian: {
+          create: {
+            crmv: input.crmv,
+            crmvState: input.crmvState,
+            verificationStatus: 'pending',
+          },
+        },
+      },
+      include: { profile: true },
+    });
+  }
+
   update(id: string, data: Prisma.UserUpdateInput) {
     return this.prisma.user.update({ where: { id }, data });
   }

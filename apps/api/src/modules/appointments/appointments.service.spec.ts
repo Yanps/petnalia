@@ -38,6 +38,7 @@ function makeRepo(overrides: Partial<AppointmentsRepository> = {}) {
     findById: vi.fn().mockResolvedValue(baseAppointment),
     findByTutor: vi.fn().mockResolvedValue([baseAppointment]),
     findByVet: vi.fn().mockResolvedValue([baseAppointment]),
+    findParticipants: vi.fn().mockResolvedValue(null),
     book: vi.fn().mockResolvedValue(baseAppointment),
     updateStatus: vi.fn().mockImplementation((id, status) =>
       Promise.resolve({ ...baseAppointment, status }),
@@ -74,12 +75,16 @@ function makeRedis(overrides: Partial<RedisService> = {}) {
   } as unknown as RedisService;
 }
 
+function makeNotifications() {
+  return { enqueueEmail: vi.fn().mockResolvedValue(undefined) } as never;
+}
+
 function makeService(
   repo: AppointmentsRepository,
   avail: AvailabilityService,
   redis: RedisService,
 ) {
-  return new AppointmentsService(repo, avail, redis);
+  return new AppointmentsService(repo, avail, redis, makeNotifications());
 }
 
 describe('AppointmentsService', () => {

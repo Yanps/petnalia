@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { api } from '@/lib/api-client';
-import { LoginSchema, RegisterSchema, ForgotPasswordSchema } from './schema';
+import { LoginSchema, RegisterSchema, RegisterVetSchema, ForgotPasswordSchema } from './schema';
 
 interface AuthTokens {
   readonly accessToken: string;
@@ -31,15 +31,39 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function registerAction(formData: FormData) {
-  const data = RegisterSchema.parse({
-    name:     formData.get('name'),
-    email:    formData.get('email'),
-    password: formData.get('password'),
-    role:     formData.get('role'),
-  });
+  const role = formData.get('role');
 
-  await api.post('/v1/auth/register', data);
-  redirect('/entrar');
+  if (role === 'VETERINARIAN') {
+    const data = RegisterVetSchema.parse({
+      name:      formData.get('name'),
+      email:     formData.get('email'),
+      password:  formData.get('password'),
+      crmv:      formData.get('crmv'),
+      crmvState: formData.get('crmvState'),
+    });
+    await api.post('/v1/auth/register/veterinarian', {
+      fullName:  data.name,
+      email:     data.email,
+      password:  data.password,
+      crmv:      data.crmv,
+      crmvState: data.crmvState.toUpperCase(),
+    });
+    redirect('/entrar?cadastro=pendente');
+  } else {
+    const data = RegisterSchema.parse({
+      name:     formData.get('name'),
+      email:    formData.get('email'),
+      password: formData.get('password'),
+      role,
+    });
+    await api.post('/v1/auth/register', {
+      fullName: data.name,
+      email:    data.email,
+      password: data.password,
+      role:     data.role.toLowerCase(),
+    });
+    redirect('/entrar');
+  }
 }
 
 export async function forgotPasswordAction(formData: FormData) {

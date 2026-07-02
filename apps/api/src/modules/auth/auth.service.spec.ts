@@ -50,6 +50,7 @@ function makeUsersRepo(overrides: Partial<Record<keyof UsersRepository, unknown>
     findByEmail: vi.fn().mockResolvedValue(null),
     findById: vi.fn().mockResolvedValue(baseUser),
     create: vi.fn().mockResolvedValue(baseUser),
+    createVet: vi.fn().mockResolvedValue(baseUser),
     update: vi.fn(),
     softDelete: vi.fn(),
     ...overrides,
@@ -66,12 +67,15 @@ function makeTokensRepo(overrides: Partial<Record<keyof TokensRepository, unknow
   } as unknown as TokensRepository;
 }
 
+const mockNotifications = { enqueueEmail: vi.fn().mockResolvedValue(undefined) };
+
 function makeService(usersRepo: UsersRepository, tokensRepo: TokensRepository): AuthService {
   return new AuthService(
     mockJwtService as never,
     mockConfig as never,
     usersRepo,
     tokensRepo,
+    mockNotifications as never,
   );
 }
 

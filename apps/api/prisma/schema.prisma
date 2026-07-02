@@ -152,6 +152,7 @@ model Veterinarian {
   crmvState          String             @db.Char(2)
   bio                String?
   verificationStatus VerificationStatus @default(pending)
+  rejectionReason    String?
   tier               VetTier            @default(free)
   serviceRadiusKm    Int                @default(20)
   createdAt          DateTime           @default(now()) @db.Timestamptz

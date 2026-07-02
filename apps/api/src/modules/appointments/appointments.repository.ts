@@ -74,6 +74,18 @@ export class AppointmentsRepository {
     }
   }
 
+  async findParticipants(appointmentId: string) {
+    return this.prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: {
+        tutor: { include: { profile: true } },
+        pet: { select: { name: true } },
+        veterinarian: { include: { user: { include: { profile: true } } } },
+        slot: { select: { startsAt: true } },
+      },
+    });
+  }
+
   getPrisma(): PrismaService {
     return this.prisma;
   }

@@ -4,6 +4,16 @@ import type { UpdateVetProfileInput, VetSearchQuery } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';
 
+interface RawPendingVet {
+  vet_id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  crmv: string;
+  crmv_state: string;
+  created_at: Date;
+}
+
 interface RawOwnProfile {
   vet_id: string;
   user_id: string;
@@ -224,6 +234,59 @@ export class VeterinariansRepository {
 
   async findAllSpecialties() {
     return this.prisma.specialty.findMany({ orderBy: { name: 'asc' } });
+  }
+
+  async findPendingVets(page: number, limit: number) {
+    const offset = (page - 1) * limit;
+    const rows = await this.prisma.$queryRaw<RawPendingVet[]>`
+      SELECT
+        v.id::text   AS vet_id,
+        u.id::text   AS user_id,
+        p."fullName" AS full_name,
+        u.email,
+        v.crmv,
+        v."crmvState" AS crmv_state,
+        v."createdAt" AS created_at
+      FROM veterinarians v
+      JOIN users u    ON u.id = v."userId"
+      JOIN profiles p ON p."userId" = u.id
+      WHERE v."verificationStatus" = 'pending'
+        AND v."deletedAt" IS NULL
+      ORDER BY v."createdAt" ASC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const countRows = await this.prisma.$queryRaw<[{ total: bigint }]>`
+      SELECT COUNT(*) AS total FROM veterinarians WHERE "verificationStatus" = 'pending' AND "deletedAt" IS NULL
+    `;
+    const total = Number(countRows[0]?.total ?? 0);
+
+    return { rows, total };
+  }
+
+  async findVetById(vetId: string) {
+    return this.prisma.veterinarian.findUnique({ where: { id: vetId } });
+  }
+
+  async findVetWithUser(vetId: string) {
+    return this.prisma.veterinarian.findUnique({
+      where: { id: vetId },
+      include: { user: { include: { profile: true } } },
+    });
+  }
+
+  async updateVerificationStatus(
+    vetId: string,
+    status: 'verified' | 'rejected',
+    rejectionReason?: string,
+  ): Promise<void> {
+    await this.prisma.veterinarian.update({
+      where: { id: vetId },
+      data: {
+        verificationStatus: status,
+        ...(rejectionReason !== undefined ? { rejectionReason } : {}),
+      },
+    });
   }
 
   async updateProfile(userId: string, data: UpdateVetProfileInput): Promise<void> {

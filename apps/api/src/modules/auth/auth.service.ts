@@ -4,8 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { hash as argonHash, verify as argonVerify } from 'argon2';
-import type { LoginInput, RegisterInput, AuthTokens } from '@petnalia/types';
+import type { LoginInput, RegisterInput, RegisterVetInput, AuthTokens } from '@petnalia/types';
 
+import { NotificationsService } from '../notifications/notifications.service';
 import { UsersRepository } from '../users/users.repository';
 import {
   AccountSuspendedError,
@@ -45,6 +46,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly usersRepo: UsersRepository,
     private readonly tokensRepo: TokensRepository,
+    private readonly notifications: NotificationsService,
   ) {
     this.refreshTtlMs = parseTtlMs(config.get('JWT_REFRESH_TTL', '30d'));
   }
@@ -60,6 +62,29 @@ export class AuthService {
       passwordHash,
       role: dto.role,
       profile: { create: { fullName: dto.fullName } },
+    });
+
+    return this.issueTokens(user.id, user.email, user.role);
+  }
+
+  async registerVet(dto: RegisterVetInput): Promise<IssuedTokens> {
+    const existing = await this.usersRepo.findByEmail(dto.email);
+    if (existing) throw new EmailTakenError();
+
+    const passwordHash = await argonHash(dto.password);
+
+    const user = await this.usersRepo.createVet({
+      email: dto.email,
+      passwordHash,
+      fullName: dto.fullName,
+      crmv: dto.crmv,
+      crmvState: dto.crmvState,
+    });
+
+    void this.notifications.enqueueEmail({
+      to: dto.email,
+      type: 'vet_registered',
+      name: dto.fullName,
     });
 
     return this.issueTokens(user.id, user.email, user.role);

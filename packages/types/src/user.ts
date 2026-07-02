@@ -54,3 +54,30 @@ export const UpdateProfileInputSchema = ProfileSchema.pick({
   cpf: true,
 }).partial();
 export type UpdateProfileInput = z.infer<typeof UpdateProfileInputSchema>;
+
+// Vet-specific registration — extends base register with CRMV; role is always 'veterinarian'
+export const RegisterVetInputSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(128),
+  fullName: z.string().min(2).max(120),
+  crmv: z.string().min(1).max(20),
+  crmvState: z.string().length(2).toUpperCase(),
+});
+export type RegisterVetInput = z.infer<typeof RegisterVetInputSchema>;
+
+// Admin — pending vet list item
+export const PendingVetItemSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string().uuid(),
+  fullName: z.string(),
+  email: z.string().email(),
+  crmv: z.string(),
+  crmvState: z.string().length(2),
+  createdAt: z.string().datetime(),
+});
+export type PendingVetItem = z.infer<typeof PendingVetItemSchema>;
+
+export const RejectVetInputSchema = z.object({
+  reason: z.string().min(1).max(500),
+});
+export type RejectVetInput = z.infer<typeof RejectVetInputSchema>;

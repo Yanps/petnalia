@@ -7,6 +7,12 @@ import { registerAction } from './actions';
 
 type Role = 'TUTOR' | 'VETERINARIAN';
 
+const BRAZIL_STATES = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA',
+  'MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN',
+  'RS','RO','RR','SC','SP','SE','TO',
+];
+
 const ROLES: { id: Role; label: string; description: string; icon: React.ReactNode }[] = [
   {
     id: 'TUTOR',
@@ -22,6 +28,19 @@ const ROLES: { id: Role; label: string; description: string; icon: React.ReactNo
   },
 ];
 
+const fieldStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px',
+  borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+  fontSize: '0.9375rem', color: 'var(--text)',
+  fontFamily: 'var(--font-sans)', background: 'var(--surface)',
+  outline: 'none', boxSizing: 'border-box',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: '0.875rem', fontWeight: 500,
+  color: 'var(--text)', marginBottom: 6,
+};
+
 export function RegisterForm() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>(undefined);
@@ -36,7 +55,7 @@ export function RegisterForm() {
       try {
         await registerAction(formData);
       } catch {
-        setError('Não foi possível criar sua conta. Tente novamente.');
+        setError('Não foi possível criar sua conta. Verifique os dados e tente novamente.');
       }
     });
   }
@@ -51,7 +70,9 @@ export function RegisterForm() {
           Crie sua conta
         </h1>
         <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
-          Gratuito para tutores, sem cartão de crédito.
+          {role === 'TUTOR'
+            ? 'Gratuito para tutores, sem cartão de crédito.'
+            : 'Cadastre seu CRMV — a aprovação é feita em até 24h.'}
         </p>
       </div>
 
@@ -101,70 +122,63 @@ export function RegisterForm() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label htmlFor="name" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>
-              Nome completo
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              placeholder="Seu nome"
-              disabled={pending}
-              style={{
-                width: '100%', padding: '10px 14px',
-                borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
-                fontSize: '0.9375rem', color: 'var(--text)',
-                fontFamily: 'var(--font-sans)', background: 'var(--surface)',
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
+            <label htmlFor="name" style={labelStyle}>Nome completo</label>
+            <input id="name" name="name" type="text" required placeholder="Seu nome" disabled={pending} style={fieldStyle} />
           </div>
 
           <div>
-            <label htmlFor="reg-email" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>
-              E-mail
-            </label>
-            <input
-              id="reg-email"
-              name="email"
-              type="email"
-              required
-              placeholder="seu@email.com.br"
-              disabled={pending}
-              style={{
-                width: '100%', padding: '10px 14px',
-                borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
-                fontSize: '0.9375rem', color: 'var(--text)',
-                fontFamily: 'var(--font-sans)', background: 'var(--surface)',
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
+            <label htmlFor="reg-email" style={labelStyle}>E-mail</label>
+            <input id="reg-email" name="email" type="email" required placeholder="seu@email.com.br" disabled={pending} style={fieldStyle} />
           </div>
 
           <div>
-            <label htmlFor="reg-password" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>
-              Senha
-            </label>
-            <input
-              id="reg-password"
-              name="password"
-              type="password"
-              required
-              placeholder="Mínimo 8 caracteres"
-              disabled={pending}
-              style={{
-                width: '100%', padding: '10px 14px',
-                borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
-                fontSize: '0.9375rem', color: 'var(--text)',
-                fontFamily: 'var(--font-sans)', background: 'var(--surface)',
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
+            <label htmlFor="reg-password" style={labelStyle}>Senha</label>
+            <input id="reg-password" name="password" type="password" required placeholder="Mínimo 8 caracteres" disabled={pending} style={fieldStyle} />
           </div>
+
+          {role === 'VETERINARIAN' && (
+            <>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                  Dados profissionais — necessários para verificação
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10 }}>
+                  <div>
+                    <label htmlFor="crmv" style={labelStyle}>CRMV</label>
+                    <input
+                      id="crmv" name="crmv" type="text" required
+                      placeholder="Ex: 12345" maxLength={20}
+                      disabled={pending} style={fieldStyle}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="crmvState" style={labelStyle}>Estado</label>
+                    <select
+                      id="crmvState" name="crmvState" required
+                      disabled={pending}
+                      style={{ ...fieldStyle, width: 80 }}
+                    >
+                      <option value="">UF</option>
+                      {BRAZIL_STATES.map((uf) => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                padding: '12px 14px', borderRadius: 'var(--radius-md)',
+                background: 'var(--teal-50)', border: '1px solid var(--teal-100)',
+                fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5,
+              }}>
+                Após o cadastro, nossa equipe verificará seu CRMV em até 24 horas. Você receberá um e-mail quando seu perfil for aprovado.
+              </div>
+            </>
+          )}
 
           <Button type="submit" variant="primary" size="lg" block disabled={pending} style={{ marginTop: 4 }}>
-            {pending ? 'Criando conta...' : 'Criar conta grátis'}
+            {pending ? 'Criando conta...' : role === 'VETERINARIAN' ? 'Cadastrar e aguardar verificação' : 'Criar conta grátis'}
           </Button>
 
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
