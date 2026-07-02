@@ -1,17 +1,20 @@
 import type { Metadata } from 'next';
 import type { Address } from '@petnalia/types';
 import { AddressManager } from '@/components/dashboard/address-manager';
-import { api } from '@/lib/api-client';
 import { getSession, getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Meu perfil' };
 
+const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
+
 async function getAddresses(token: string): Promise<Address[]> {
   try {
-    return await api.get<Address[]>('/v1/addresses', {
+    const res = await fetch(`${API}/v1/addresses`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
+    if (!res.ok) return [];
+    return (await res.json()) as Address[];
   } catch {
     return [];
   }
@@ -23,7 +26,7 @@ export default async function TutorPerfilPage() {
   const addresses = token ? await getAddresses(token) : [];
 
   return (
-    <div style={{ padding: '40px 40px 60px' }}>
+    <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 800,

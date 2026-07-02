@@ -10,6 +10,7 @@ export interface JwtPayload {
   readonly sub: string;
   readonly email: string;
   readonly role: string;
+  readonly name: string;
   readonly iat?: number;
   readonly exp?: number;
 }

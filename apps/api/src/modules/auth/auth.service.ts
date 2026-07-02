@@ -64,7 +64,7 @@ export class AuthService {
       profile: { create: { fullName: dto.fullName } },
     });
 
-    return this.issueTokens(user.id, user.email, user.role);
+    return this.issueTokens(user.id, user.email, user.role, dto.fullName);
   }
 
   async registerVet(dto: RegisterVetInput): Promise<IssuedTokens> {
@@ -87,7 +87,7 @@ export class AuthService {
       name: dto.fullName,
     });
 
-    return this.issueTokens(user.id, user.email, user.role);
+    return this.issueTokens(user.id, user.email, user.role, dto.fullName);
   }
 
   async login(dto: LoginInput): Promise<IssuedTokens> {
@@ -100,7 +100,8 @@ export class AuthService {
     if (user.status === 'suspended') throw new AccountSuspendedError();
     if (user.status === 'deleted') throw new InvalidCredentialsError();
 
-    return this.issueTokens(user.id, user.email, user.role);
+    const name = user.profile?.fullName ?? user.email;
+    return this.issueTokens(user.id, user.email, user.role, name);
   }
 
   async refresh(rawToken: string): Promise<IssuedTokens> {
@@ -115,7 +116,8 @@ export class AuthService {
     const user = await this.usersRepo.findById(stored.userId);
     if (!user || user.status !== 'active') throw new InvalidCredentialsError();
 
-    return this.issueTokens(user.id, user.email, user.role);
+    const name = user.profile?.fullName ?? user.email;
+    return this.issueTokens(user.id, user.email, user.role, name);
   }
 
   async logout(rawToken: string): Promise<void> {
@@ -125,11 +127,11 @@ export class AuthService {
     }
   }
 
-  private async issueTokens(userId: string, email: string, role: string): Promise<IssuedTokens> {
+  private async issueTokens(userId: string, email: string, role: string, name: string): Promise<IssuedTokens> {
     const ttl = this.config.get<string>('JWT_ACCESS_TTL', '15m');
 
     const accessToken = this.jwtService.sign(
-      { sub: userId, email, role },
+      { sub: userId, email, role, name },
       { expiresIn: ttl },
     );
 

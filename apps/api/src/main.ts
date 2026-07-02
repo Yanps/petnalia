@@ -10,7 +10,7 @@ import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.use(helmet());
   app.use(cookieParser());

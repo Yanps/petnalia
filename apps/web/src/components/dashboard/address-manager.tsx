@@ -6,6 +6,31 @@ import { Button, Icon } from '@petnalia/ui';
 
 import { apiFetch } from '@/lib/api-client';
 
+interface ViaCepResponse {
+  logradouro?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
+  erro?: boolean;
+}
+
+async function lookupCep(cep: string): Promise<Partial<Pick<FormState, 'street' | 'neighborhood' | 'city' | 'state'>> | null> {
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as ViaCepResponse;
+    if (data.erro) return null;
+    return {
+      street: data.logradouro ?? '',
+      neighborhood: data.bairro ?? '',
+      city: data.localidade ?? '',
+      state: data.uf ?? '',
+    };
+  } catch {
+    return null;
+  }
+}
+
 interface AddressManagerProps {
   initialAddresses: Address[];
   token: string;
@@ -60,8 +85,31 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+  async function handleCepChange(raw: string) {
+    const digits = raw.replace(/\D/g, '');
+    const formatted = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5, 8)}` : digits;
+    setForm((f) => ({ ...f, cep: formatted }));
+
+    if (digits.length === 8) {
+      setCepLoading(true);
+      const data = await lookupCep(digits);
+      setCepLoading(false);
+      if (data) {
+        setForm((f) => ({
+          ...f,
+          street: data.street ?? f.street,
+          neighborhood: data.neighborhood ?? f.neighborhood,
+          city: data.city ?? f.city,
+          state: data.state ?? f.state,
+        }));
+      }
+    }
+  }
 
   function openForm() {
     setForm(EMPTY_FORM);
@@ -83,6 +131,7 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
       setError('CEP deve ter 8 dígitos.');
       return;
     }
+    setDeleteConfirm(null);
     if (form.state.length !== 2) {
       setError('Estado deve ter 2 letras (ex: SP).');
       return;
@@ -114,6 +163,11 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
   }
 
   async function handleDelete(id: string) {
+    if (deleteConfirm !== id) {
+      setDeleteConfirm(id);
+      return;
+    }
+    setDeleteConfirm(null);
     try {
       await apiFetch(`/v1/addresses/${id}`, { method: 'DELETE', headers: authHeaders });
       setAddresses((prev) => prev.filter((a) => a.id !== id));
@@ -192,17 +246,45 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(addr.id)}
-                aria-label="Remover endereço"
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-muted)', padding: 4, borderRadius: 'var(--radius-sm)',
-                  display: 'flex', alignItems: 'center', flexShrink: 0,
-                }}
-              >
-                <Icon name="x" size={16} />
-              </button>
+              {deleteConfirm === addr.id ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <span style={{ fontSize: '0.8125rem', color: '#dc2626', whiteSpace: 'nowrap' }}>
+                    Remover?
+                  </span>
+                  <button
+                    onClick={() => void handleDelete(addr.id)}
+                    style={{
+                      background: '#dc2626', border: 'none', cursor: 'pointer',
+                      color: '#fff', padding: '4px 10px', borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.8125rem', fontWeight: 600, fontFamily: 'inherit',
+                    }}
+                  >
+                    Sim
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    style={{
+                      background: 'none', border: '1px solid var(--border)', cursor: 'pointer',
+                      color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.8125rem', fontFamily: 'inherit',
+                    }}
+                  >
+                    Não
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => void handleDelete(addr.id)}
+                  aria-label="Remover endereço"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-muted)', padding: 4, borderRadius: 'var(--radius-sm)',
+                    display: 'flex', alignItems: 'center', flexShrink: 0,
+                  }}
+                >
+                  <Icon name="x" size={16} />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -314,12 +396,19 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
                 />
               </div>
               <div style={{ minWidth: 120 }}>
-                <label style={labelStyle}>CEP *</label>
+                <label style={labelStyle}>
+                  CEP *
+                  {cepLoading && (
+                    <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: 6 }}>
+                      buscando...
+                    </span>
+                  )}
+                </label>
                 <input
                   type="text"
                   required
                   value={form.cep}
-                  onChange={(e) => setForm((f) => ({ ...f, cep: e.target.value }))}
+                  onChange={(e) => void handleCepChange(e.target.value)}
                   placeholder="00000-000"
                   maxLength={9}
                   style={inputStyle}

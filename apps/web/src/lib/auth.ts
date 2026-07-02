@@ -1,4 +1,6 @@
 import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
+import { redirect } from 'next/navigation';
 
 export type UserRole = 'TUTOR' | 'VETERINARIAN' | 'ADMIN';
 
@@ -9,19 +11,45 @@ export interface Session {
   readonly name: string;
 }
 
-// TODO: replace with real JWT validation (jose or similar)
+interface JwtClaims {
+  sub: string;
+  email: string;
+  role: string;
+  name: string;
+  iat?: number;
+  exp?: number;
+}
+
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) throw new Error('JWT_ACCESS_SECRET not set');
+  return new TextEncoder().encode(secret);
+}
+
+function normalizeRole(role: string): UserRole | null {
+  const map: Record<string, UserRole> = {
+    tutor: 'TUTOR',
+    veterinarian: 'VETERINARIAN',
+    admin: 'ADMIN',
+  };
+  return map[role.toLowerCase()] ?? null;
+}
+
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('petnalia_session')?.value;
   if (!token) return null;
 
-  // Placeholder: in production, verify JWT signature and extract claims
   try {
-    const payload = JSON.parse(
-      Buffer.from(token.split('.')[1] ?? '', 'base64url').toString(),
-    ) as Partial<Session>;
-    if (!payload.userId || !payload.role) return null;
-    return payload as Session;
+    const { payload } = await jwtVerify<JwtClaims>(token, getJwtSecret());
+    const role = normalizeRole(payload.role ?? '');
+    if (!payload.sub || !role) return null;
+    return {
+      userId: payload.sub,
+      role,
+      email: payload.email,
+      name: payload.name ?? payload.email,
+    };
   } catch {
     return null;
   }
@@ -34,7 +62,7 @@ export async function getToken(): Promise<string | null> {
 
 export async function requireSession(role?: UserRole): Promise<Session> {
   const session = await getSession();
-  if (!session) throw new Error('Unauthenticated');
-  if (role && session.role !== role) throw new Error('Forbidden');
+  if (!session) redirect('/entrar');
+  if (role && session.role !== role) redirect('/entrar');
   return session;
 }
