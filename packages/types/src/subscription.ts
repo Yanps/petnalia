@@ -2,10 +2,13 @@ import { z } from 'zod';
 
 import { SubscriptionStatusSchema } from './common.js';
 
+export const SubscriptionPlanSchema = z.enum(['pro', 'clinic']);
+export type SubscriptionPlan = z.infer<typeof SubscriptionPlanSchema>;
+
 export const SubscriptionSchema = z.object({
   id: z.string().uuid(),
   veterinarianId: z.string().uuid(),
-  plan: z.enum(['monthly', 'annual']),
+  plan: SubscriptionPlanSchema,
   status: SubscriptionStatusSchema,
   provider: z.literal('stripe'),
   providerCustomerId: z.string().nullable(),
@@ -18,7 +21,12 @@ export const SubscriptionSchema = z.object({
 });
 export type Subscription = z.infer<typeof SubscriptionSchema>;
 
-export const CreateSubscriptionInputSchema = z.object({
-  plan: z.enum(['monthly', 'annual']),
+export const CreateCheckoutSessionInputSchema = z.object({
+  plan: SubscriptionPlanSchema,
 });
-export type CreateSubscriptionInput = z.infer<typeof CreateSubscriptionInputSchema>;
+export type CreateCheckoutSessionInput = z.infer<typeof CreateCheckoutSessionInputSchema>;
+
+export const CheckoutSessionResponseSchema = z.object({
+  url: z.string().url(),
+});
+export type CheckoutSessionResponse = z.infer<typeof CheckoutSessionResponseSchema>;

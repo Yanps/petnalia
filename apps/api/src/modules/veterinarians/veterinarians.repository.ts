@@ -323,4 +323,26 @@ export class VeterinariansRepository {
       }
     });
   }
+
+  async updateAvatarUrl(userId: string, avatarUrl: string): Promise<void> {
+    await this.prisma.profile.update({
+      where: { userId },
+      data: { avatarUrl },
+    });
+  }
+
+  async findIdByUserId(userId: string): Promise<string | null> {
+    const vet = await this.prisma.veterinarian.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    return vet?.id ?? null;
+  }
+
+  async updateTier(veterinarianId: string, tier: 'free' | 'premium'): Promise<void> {
+    await this.prisma.veterinarian.update({
+      where: { id: veterinarianId },
+      data: { tier },
+    });
+  }
 }
