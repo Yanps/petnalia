@@ -45,6 +45,7 @@ const mockStorage: StoragePort = {
   putObject: vi.fn(),
   getPresignedUrl: vi.fn().mockResolvedValue('https://example.com/photo.jpg'),
   deleteObject: vi.fn(),
+  getPublicUrl: vi.fn().mockReturnValue('https://minio/avatars/test.jpg'),
 };
 
 describe('VeterinariansService.search', () => {
@@ -144,6 +145,7 @@ describe('VeterinariansService.uploadCrmvPhoto', () => {
       putObject: vi.fn().mockResolvedValue(undefined),
       getPresignedUrl: vi.fn().mockResolvedValue('https://minio/crmv/photo.jpg'),
       deleteObject: vi.fn(),
+      getPublicUrl: vi.fn().mockReturnValue('https://minio/avatars/test.jpg'),
     };
   }
 

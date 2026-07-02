@@ -66,6 +66,22 @@ export class VeterinariansController {
     });
   }
 
+  @Post('avatar')
+  @Roles('veterinarian')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  async uploadAvatar(
+    @CurrentUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.vetsService.uploadAvatar(user.id, {
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+      size: file.size,
+      originalname: file.originalname,
+    });
+  }
+
   @Public()
   @Get(':slug')
   getProfile(@Param('slug') slug: string) {

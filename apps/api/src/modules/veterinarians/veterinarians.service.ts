@@ -15,6 +15,7 @@ import { VeterinarianNotFoundError } from './veterinarians.errors';
 import { VeterinariansRepository } from './veterinarians.repository';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const AVATAR_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export class InvalidCrmvPhotoError extends DomainError {
@@ -150,5 +151,27 @@ export class VeterinariansService {
     const vet = await this.vetsRepository.findVetById(vetId);
     if (!vet?.crmvPhotoKey) return null;
     return this.storage.getPresignedUrl(vet.crmvPhotoKey, 3600);
+  }
+
+  async uploadAvatar(
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; size: number; originalname: string },
+  ): Promise<{ avatarUrl: string }> {
+    if (!AVATAR_MIME.has(file.mimetype)) {
+      throw new InvalidCrmvPhotoError('Formato inválido. Envie JPEG, PNG ou WebP.');
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      throw new InvalidCrmvPhotoError('Arquivo muito grande. Máximo 5 MB.');
+    }
+
+    const ext = file.originalname.split('.').pop() ?? 'jpg';
+    const key = `avatars/${userId}/${Date.now()}.${ext}`;
+
+    await this.storage.putObject(key, file.buffer, file.mimetype);
+
+    const avatarUrl = this.storage.getPublicUrl(key);
+    await this.vetsRepository.updateAvatarUrl(userId, avatarUrl);
+
+    return { avatarUrl };
   }
 }

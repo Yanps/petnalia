@@ -6,6 +6,7 @@ import {
   DeleteObjectCommand,
   CreateBucketCommand,
   HeadBucketCommand,
+  PutBucketPolicyCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
@@ -17,12 +18,14 @@ export class S3StorageAdapter implements StoragePort {
   private readonly logger = new Logger(S3StorageAdapter.name);
   private readonly client: S3Client;
   private readonly bucket: string;
+  private readonly endpoint: string;
 
   constructor(@Inject(ConfigService) config: ConfigService) {
     this.bucket = config.get('S3_BUCKET', 'petnalia');
+    this.endpoint = config.get('S3_ENDPOINT', 'http://localhost:9000');
 
     this.client = new S3Client({
-      endpoint: config.get('S3_ENDPOINT', 'http://localhost:9000'),
+      endpoint: this.endpoint,
       region: config.get('S3_REGION', 'us-east-1'),
       credentials: {
         accessKeyId: config.get('S3_ACCESS_KEY_ID', 'minioadmin'),
@@ -59,6 +62,10 @@ export class S3StorageAdapter implements StoragePort {
     );
   }
 
+  getPublicUrl(key: string): string {
+    return `${this.endpoint}/${this.bucket}/${key}`;
+  }
+
   private async ensureBucket(): Promise<void> {
     try {
       await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
@@ -69,6 +76,26 @@ export class S3StorageAdapter implements StoragePort {
       } catch (err) {
         this.logger.warn(`Não foi possível criar bucket: ${String(err)}`);
       }
+    }
+
+    // Allow public read for avatars so URLs never expire
+    try {
+      const policy = JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Principal: { AWS: ['*'] },
+            Action: ['s3:GetObject'],
+            Resource: [`arn:aws:s3:::${this.bucket}/avatars/*`],
+          },
+        ],
+      });
+      await this.client.send(
+        new PutBucketPolicyCommand({ Bucket: this.bucket, Policy: policy }),
+      );
+    } catch (err) {
+      this.logger.warn(`Não foi possível definir política pública para avatars: ${String(err)}`);
     }
   }
 }

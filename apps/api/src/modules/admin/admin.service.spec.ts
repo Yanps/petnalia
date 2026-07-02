@@ -36,6 +36,7 @@ function makeStorage(overrides: Partial<StoragePort> = {}): StoragePort {
     putObject: vi.fn(),
     getPresignedUrl: vi.fn().mockResolvedValue('https://minio/crmv.jpg'),
     deleteObject: vi.fn(),
+    getPublicUrl: vi.fn().mockReturnValue('https://minio/avatars/test.jpg'),
     ...overrides,
   };
 }

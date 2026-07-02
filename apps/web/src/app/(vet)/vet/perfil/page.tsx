@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import type { Specialty, VetProfilePublicResponse } from '@petnalia/types';
+import type { Specialty, VetOwnProfileResponse } from '@petnalia/types';
 import { Icon } from '@petnalia/ui';
 
 import { apiFetch } from '@/lib/api-client';
@@ -13,7 +13,7 @@ export default async function VetPerfilPage() {
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
   const [profileResult, specialties] = await Promise.all([
-    apiFetch<VetProfilePublicResponse>('/v1/veterinarians/me', { headers: authHeaders }).catch(
+    apiFetch<VetOwnProfileResponse>('/v1/veterinarians/me', { headers: authHeaders }).catch(
       () => null,
     ),
     apiFetch<Specialty[]>('/v1/veterinarians/specialties').catch(() => []),
@@ -21,7 +21,7 @@ export default async function VetPerfilPage() {
 
   if (!profileResult) {
     return (
-      <div style={{ padding: '40px 40px 60px' }}>
+      <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
         <div style={{ marginBottom: 32 }}>
           <h1 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800,

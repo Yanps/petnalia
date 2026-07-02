@@ -1,18 +1,154 @@
 'use client';
 
-import { useState } from 'react';
-import type { Specialty, VetProfilePublicResponse } from '@petnalia/types';
+import { useRef, useState } from 'react';
+import type { Specialty, VetOwnProfileResponse } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
-import { apiFetch } from '@/lib/api-client';
-
 interface VetProfileFormProps {
-  profile: VetProfilePublicResponse;
-  specialties: Specialty[];
-  token: string;
+  readonly profile: VetOwnProfileResponse;
+  readonly specialties: Specialty[];
+  readonly token: string;
 }
 
 type SaveState = 'idle' | 'saving' | 'success' | 'error';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+function AvatarUpload({
+  currentUrl,
+  name,
+  token,
+  onUpload,
+}: {
+  currentUrl: string | null;
+  name: string;
+  token: string;
+  onUpload: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(currentUrl);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    setError(null);
+
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/veterinarians/avatar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: { message?: string } };
+        setError(data.error?.message ?? 'Erro ao enviar foto.');
+        return;
+      }
+
+      const { avatarUrl } = (await res.json()) as { avatarUrl: string };
+      setPreview(avatarUrl);
+      onUpload(avatarUrl);
+    } catch {
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        style={{
+          position: 'relative',
+          width: 80, height: 80,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '2px solid var(--border)',
+          cursor: uploading ? 'wait' : 'pointer',
+          background: 'var(--teal-50)',
+          flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        {preview ? (
+          <img
+            src={preview}
+            alt={name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <span style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700, fontSize: '1.375rem',
+            color: 'var(--brand)',
+          }}>
+            {getInitials(name)}
+          </span>
+        )}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.35)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: 0,
+          transition: 'opacity 0.15s',
+        }}
+          className="avatar-overlay"
+        >
+          <Icon name="user" size={20} style={{ color: '#fff' }} />
+        </div>
+      </button>
+
+      <div>
+        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+          Foto de perfil
+        </p>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+          JPEG, PNG ou WebP, máximo 5 MB
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? 'Enviando...' : preview ? 'Trocar foto' : 'Adicionar foto'}
+        </Button>
+        {error && (
+          <p style={{ marginTop: 6, fontSize: '0.8125rem', color: '#dc2626' }}>{error}</p>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleFile(file);
+          e.target.value = '';
+        }}
+      />
+    </div>
+  );
+}
 
 export function VetProfileForm({ profile, specialties, token }: VetProfileFormProps) {
   const [bio, setBio] = useState(profile.bio ?? '');
@@ -25,11 +161,8 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
   function toggleSpecialty(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   }
@@ -38,15 +171,19 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
     e.preventDefault();
     setSaveState('saving');
     try {
-      await apiFetch('/v1/veterinarians/profile', {
+      const res = await fetch(`${API_BASE}/v1/veterinarians/profile`, {
         method: 'PUT',
-        body: {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
           bio: bio || null,
           serviceRadiusKm,
           specialtyIds: Array.from(selectedIds),
-        },
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }),
       });
+      if (!res.ok) throw new Error('Failed');
       setSaveState('success');
     } catch {
       setSaveState('error');
@@ -70,12 +207,13 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-xl)',
           padding: '32px 36px',
+          display: 'flex', flexDirection: 'column', gap: 28,
         }}>
+          {/* Identity header */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28,
             paddingBottom: 24, borderBottom: '1px solid var(--border)',
           }}>
-            <div>
+            <div style={{ marginBottom: 20 }}>
               <p style={{ fontWeight: 700, fontSize: '1.0625rem', color: 'var(--text)' }}>
                 {profile.fullName}
               </p>
@@ -83,8 +221,16 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
                 CRMV-{profile.crmvState} {profile.crmv}
               </p>
             </div>
+
+            <AvatarUpload
+              currentUrl={profile.avatarUrl}
+              name={profile.fullName}
+              token={token}
+              onUpload={() => { /* profile will refresh on next page load */ }}
+            />
           </div>
 
+          {/* Editable fields */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <label style={labelStyle}>
@@ -99,18 +245,7 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Descreva sua experiência e especialidades..."
-                style={{
-                  width: '100%', padding: '10px 14px',
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.9375rem', color: 'var(--text)',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  resize: 'vertical',
-                  lineHeight: 1.6,
-                  fontFamily: 'inherit',
-                }}
+                style={inputStyle}
               />
             </div>
 
@@ -123,16 +258,7 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
                 required
                 value={serviceRadiusKm}
                 onChange={(e) => setServiceRadiusKm(Number(e.target.value))}
-                style={{
-                  width: '100%', padding: '10px 14px',
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.9375rem', color: 'var(--text)',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                }}
+                style={inputStyle}
               />
             </div>
 
@@ -172,12 +298,12 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 14px',
-                background: 'var(--success-50)',
-                border: '1px solid var(--success-500)',
+                background: '#dcfce7',
+                border: '1px solid #86efac',
                 borderRadius: 'var(--radius-md)',
               }}>
-                <Icon name="check-circle" size={16} style={{ color: 'var(--success-600)', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.875rem', color: 'var(--success-600)', fontWeight: 500 }}>
+                <Icon name="check-circle" size={16} style={{ color: '#16a34a', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.875rem', color: '#15803d', fontWeight: 500 }}>
                   Perfil atualizado com sucesso.
                 </span>
               </div>
@@ -187,12 +313,12 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 14px',
-                background: 'var(--teal-50)',
-                border: '1px solid var(--teal-200)',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
                 borderRadius: 'var(--radius-md)',
               }}>
-                <Icon name="alert-circle" size={16} style={{ color: 'var(--brand)', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.875rem', color: 'var(--brand)', fontWeight: 500 }}>
+                <Icon name="alert-circle" size={16} style={{ color: '#dc2626', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.875rem', color: '#b91c1c', fontWeight: 500 }}>
                   Não foi possível salvar as alterações. Tente novamente.
                 </span>
               </div>
@@ -221,4 +347,17 @@ const labelStyle: React.CSSProperties = {
   fontWeight: 600,
   color: 'var(--text)',
   marginBottom: 8,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 14px',
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-md)',
+  fontSize: '0.9375rem', color: 'var(--text)',
+  boxSizing: 'border-box',
+  outline: 'none',
+  resize: 'vertical',
+  lineHeight: 1.6,
+  fontFamily: 'inherit',
 };
