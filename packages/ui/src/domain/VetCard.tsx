@@ -54,12 +54,12 @@ export function VetCard({
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-            <div style={{ minWidth: 0 }}>
-              <h3 style={{ margin: 0, font: `var(--fw-semibold) var(--h4-size)/var(--h4-line) var(--font-sans)`, color: 'var(--text)', letterSpacing: 'var(--h4-track)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</h3>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ margin: 0, font: `var(--fw-semibold) var(--body-size)/var(--body-line) var(--font-sans)`, color: 'var(--text)', letterSpacing: 'var(--h4-track)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</h3>
               {specialty && <p style={{ margin: '2px 0 0', fontSize: 'var(--small-size)', color: 'var(--text-secondary)' }}>{specialty}</p>}
             </div>
-            {typeof rating === 'number' && <Rating value={rating} count={reviews} />}
+            {typeof rating === 'number' && <span style={{ flexShrink: 0 }}><Rating value={rating} count={reviews} /></span>}
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>

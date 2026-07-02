@@ -15,7 +15,7 @@ export function VetResultsGrid({ vets, columns = 3 }: VetResultsGridProps) {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: `repeat(auto-fill, minmax(${columns === 3 ? 260 : 280}px, 1fr))`,
+      gridTemplateColumns: `repeat(${columns}, 1fr)`,
       gap: 20,
     }}>
       {vets.map((vet) => (

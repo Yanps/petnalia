@@ -87,8 +87,13 @@
   display: none !important;
 }
 
-/* Mobile filter toggle */
+/* Mobile filter toggle — hidden on desktop */
 .pn-filter-toggle-btn {
+  display: none;
+}
+
+/* Mobile filter panel — hidden on desktop, shown on mobile via media query */
+.pn-filter-panel {
   display: none;
 }
 
@@ -146,10 +151,9 @@
     flex-direction: column !important;
     gap: 0 !important;
   }
+  /* Hide the desktop aside on mobile — toggle panel handles filters */
   .pn-search-filters {
-    width: 100% !important;
-    position: static !important;
-    margin-bottom: 20px;
+    display: none !important;
   }
 
   /* ── Header: hide desktop nav, show hamburger ── */
@@ -175,12 +179,11 @@
   /* ── Search filter toggle ── */
   .pn-filter-toggle-btn {
     display: flex;
-  }
-  .pn-filter-panel {
-    display: none;
+    margin-bottom: 8px;
   }
   .pn-filter-panel.open {
     display: block;
+    margin-bottom: 16px;
   }
 
   /* ── Verification banners: reduce padding ── */

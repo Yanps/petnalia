@@ -93,7 +93,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyId, 
         className="pn-filter-toggle-btn"
         onClick={() => setPanelOpen((v) => !v)}
         style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%', alignItems: 'center', justifyContent: 'space-between',
           padding: '12px 16px',
           background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 'var(--radius-lg)', cursor: 'pointer',
