@@ -1,15 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import type {
   Specialty,
   UpdateVetProfileInput,
+  VetOwnProfileResponse,
   VetProfilePublicResponse,
   VetSearchQuery,
   VetSearchResponse,
   VetSearchResult,
 } from '@petnalia/types';
 
+import { DomainError } from '../../shared/errors/domain.error';
+import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
 import { VeterinarianNotFoundError } from './veterinarians.errors';
 import { VeterinariansRepository } from './veterinarians.repository';
+
+const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
+const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+export class InvalidCrmvPhotoError extends DomainError {
+  constructor(msg: string) {
+    super('INVALID_CRMV_PHOTO', msg, HttpStatus.UNPROCESSABLE_ENTITY);
+  }
+}
 
 function toSlug(fullName: string, id: string): string {
   const base = fullName
@@ -24,7 +36,10 @@ function toSlug(fullName: string, id: string): string {
 
 @Injectable()
 export class VeterinariansService {
-  constructor(private readonly vetsRepository: VeterinariansRepository) {}
+  constructor(
+    private readonly vetsRepository: VeterinariansRepository,
+    @Inject(STORAGE_PORT) private readonly storage: StoragePort,
+  ) {}
 
   async search(params: VetSearchQuery): Promise<VetSearchResponse> {
     const { rows, totalCount } = await this.vetsRepository.search(params);
@@ -78,7 +93,7 @@ export class VeterinariansService {
     };
   }
 
-  async getOwnProfile(userId: string): Promise<VetProfilePublicResponse> {
+  async getOwnProfile(userId: string): Promise<VetOwnProfileResponse> {
     const row = await this.vetsRepository.findOwnProfile(userId);
     if (!row) throw new VeterinarianNotFoundError();
 
@@ -93,11 +108,12 @@ export class VeterinariansService {
       crmvState: row.crmv_state,
       averageRating: 0,
       totalReviews: 0,
-      verificationStatus: row.verification_status as VetProfilePublicResponse['verificationStatus'],
-      tier: row.tier as VetProfilePublicResponse['tier'],
+      verificationStatus: row.verification_status as VetOwnProfileResponse['verificationStatus'],
+      tier: row.tier as VetOwnProfileResponse['tier'],
       baseCity: '',
       baseState: '',
       serviceRadiusKm: row.service_radius_km,
+      crmvPhotoUploaded: row.has_crmv_photo,
     };
   }
 
@@ -107,5 +123,32 @@ export class VeterinariansService {
 
   async listSpecialties(): Promise<Specialty[]> {
     return this.vetsRepository.findAllSpecialties();
+  }
+
+  async uploadCrmvPhoto(
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; size: number; originalname: string },
+  ): Promise<{ photoUrl: string }> {
+    if (!ALLOWED_MIME.has(file.mimetype)) {
+      throw new InvalidCrmvPhotoError('Formato inválido. Envie JPEG, PNG, WebP ou PDF.');
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      throw new InvalidCrmvPhotoError('Arquivo muito grande. Máximo 5 MB.');
+    }
+
+    const ext = file.originalname.split('.').pop() ?? 'jpg';
+    const key = `crmv/${userId}/${Date.now()}.${ext}`;
+
+    await this.storage.putObject(key, file.buffer, file.mimetype);
+    await this.vetsRepository.updateCrmvPhoto(userId, key);
+
+    const photoUrl = await this.storage.getPresignedUrl(key, 3600);
+    return { photoUrl };
+  }
+
+  async getCrmvPhotoUrl(vetId: string): Promise<string | null> {
+    const vet = await this.vetsRepository.findVetById(vetId);
+    if (!vet?.crmvPhotoKey) return null;
+    return this.storage.getPresignedUrl(vet.crmvPhotoKey, 3600);
   }
 }

@@ -11,6 +11,7 @@ interface RawPendingVet {
   email: string;
   crmv: string;
   crmv_state: string;
+  crmv_photo_key: string | null;
   created_at: Date;
 }
 
@@ -25,6 +26,7 @@ interface RawOwnProfile {
   verification_status: string;
   tier: string;
   service_radius_km: number;
+  has_crmv_photo: boolean;
   specialties: Array<{ id: string; name: string; slug: string }> | null;
 }
 
@@ -207,6 +209,7 @@ export class VeterinariansRepository {
         v."verificationStatus"                                        AS verification_status,
         v.tier,
         v."serviceRadiusKm"                                           AS service_radius_km,
+        (v."crmvPhotoKey" IS NOT NULL)                                AS has_crmv_photo,
         COALESCE(
           JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
             'id',   s.id::text,
@@ -225,7 +228,7 @@ export class VeterinariansRepository {
       GROUP BY
         v.id, u.id, p."fullName", p."avatarUrl", v.bio,
         v.crmv, v."crmvState",
-        v."verificationStatus", v.tier, v."serviceRadiusKm"
+        v."verificationStatus", v.tier, v."serviceRadiusKm", v."crmvPhotoKey"
       LIMIT 1
     `;
 
@@ -240,13 +243,14 @@ export class VeterinariansRepository {
     const offset = (page - 1) * limit;
     const rows = await this.prisma.$queryRaw<RawPendingVet[]>`
       SELECT
-        v.id::text   AS vet_id,
-        u.id::text   AS user_id,
-        p."fullName" AS full_name,
+        v.id::text        AS vet_id,
+        u.id::text        AS user_id,
+        p."fullName"      AS full_name,
         u.email,
         v.crmv,
-        v."crmvState" AS crmv_state,
-        v."createdAt" AS created_at
+        v."crmvState"     AS crmv_state,
+        v."crmvPhotoKey"  AS crmv_photo_key,
+        v."createdAt"     AS created_at
       FROM veterinarians v
       JOIN users u    ON u.id = v."userId"
       JOIN profiles p ON p."userId" = u.id
@@ -272,6 +276,13 @@ export class VeterinariansRepository {
     return this.prisma.veterinarian.findUnique({
       where: { id: vetId },
       include: { user: { include: { profile: true } } },
+    });
+  }
+
+  async updateCrmvPhoto(userId: string, key: string): Promise<void> {
+    await this.prisma.veterinarian.update({
+      where: { userId },
+      data: { crmvPhotoKey: key },
     });
   }
 

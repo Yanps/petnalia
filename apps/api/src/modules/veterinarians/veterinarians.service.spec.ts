@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { VetSearchQuery } from '@petnalia/types';
 
+import type { StoragePort } from '../../shared/storage/storage.port';
 import { VeterinariansService } from './veterinarians.service';
 import { VeterinariansRepository } from './veterinarians.repository';
 
@@ -40,10 +41,16 @@ function makeRepo(rows: ReturnType<typeof makeRawRow>[], totalCount: number) {
   } as unknown as VeterinariansRepository;
 }
 
+const mockStorage: StoragePort = {
+  putObject: vi.fn(),
+  getPresignedUrl: vi.fn().mockResolvedValue('https://example.com/photo.jpg'),
+  deleteObject: vi.fn(),
+};
+
 describe('VeterinariansService.search', () => {
   it('mapeia raw rows para VetSearchResult corretamente', async () => {
     const repo = makeRepo([makeRawRow()], 1);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
 
     const result = await service.search(baseQuery);
 
@@ -62,7 +69,7 @@ describe('VeterinariansService.search', () => {
 
   it('gera slug a partir do nome e UUID', async () => {
     const repo = makeRepo([makeRawRow({ full_name: 'Dra. Ângela Côrrea' })], 1);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
 
     const { data } = await service.search(baseQuery);
     // Slug deve estar em minúsculas, sem acentos, separado por hífens
@@ -72,7 +79,7 @@ describe('VeterinariansService.search', () => {
 
   it('trata specialties null como array vazio', async () => {
     const repo = makeRepo([makeRawRow({ specialties: null })], 1);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
 
     const { data } = await service.search(baseQuery);
     expect(data[0]!.specialties).toEqual([]);
@@ -81,7 +88,7 @@ describe('VeterinariansService.search', () => {
   it('calcula paginação corretamente', async () => {
     const rows = Array.from({ length: 12 }, (_, i) => makeRawRow({ vet_id: `id-${i}` }));
     const repo = makeRepo(rows, 30);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
 
     const result = await service.search({ ...baseQuery, page: 1, limit: 12 });
 
@@ -94,7 +101,7 @@ describe('VeterinariansService.search', () => {
   it('hasMore é false na última página', async () => {
     const rows = Array.from({ length: 6 }, (_, i) => makeRawRow({ vet_id: `id-${i}` }));
     const repo = makeRepo(rows, 6);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
 
     const result = await service.search({ ...baseQuery, page: 1, limit: 12 });
 
@@ -103,7 +110,7 @@ describe('VeterinariansService.search', () => {
 
   it('retorna lista vazia quando repositório não retorna rows', async () => {
     const repo = makeRepo([], 0);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
 
     const result = await service.search(baseQuery);
 
@@ -114,7 +121,7 @@ describe('VeterinariansService.search', () => {
 
   it('repassa params de busca para o repositório', async () => {
     const repo = makeRepo([], 0);
-    const service = new VeterinariansService(repo);
+    const service = new VeterinariansService(repo, mockStorage);
     const query = { ...baseQuery, radiusKm: 50, specialtyId: 'spec-uuid-1' };
 
     await service.search(query);

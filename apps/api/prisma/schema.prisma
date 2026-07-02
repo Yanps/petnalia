@@ -151,6 +151,7 @@ model Veterinarian {
   crmv               String
   crmvState          String             @db.Char(2)
   bio                String?
+  crmvPhotoKey       String?
   verificationStatus VerificationStatus @default(pending)
   rejectionReason    String?
   tier               VetTier            @default(free)

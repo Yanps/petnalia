@@ -93,19 +93,52 @@ export function PendingVetsList({ initialVets, token }: Props) {
             borderRadius: 'var(--radius-lg)', padding: '20px 24px',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-              <div>
-                <p style={{ fontWeight: 600, color: 'var(--text)', fontSize: '1rem', margin: '0 0 4px' }}>
-                  {vet.fullName}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0 0 4px' }}>
-                  {vet.email}
-                </p>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
-                  CRMV {vet.crmvState}: <strong>{vet.crmv}</strong>
-                </p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                  Cadastrado em {new Date(vet.createdAt).toLocaleDateString('pt-BR')}
-                </p>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: 1, minWidth: 0 }}>
+                {/* CRMV photo thumbnail */}
+                <div style={{ flexShrink: 0 }}>
+                  {vet.crmvPhotoUrl ? (
+                    <a href={vet.crmvPhotoUrl} target="_blank" rel="noreferrer" title="Abrir foto do CRMV">
+                      <img
+                        src={vet.crmvPhotoUrl}
+                        alt={`CRMV de ${vet.fullName}`}
+                        style={{
+                          width: 72, height: 72, objectFit: 'cover',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid var(--border)',
+                          display: 'block',
+                        }}
+                      />
+                    </a>
+                  ) : (
+                    <div style={{
+                      width: 72, height: 72, borderRadius: 'var(--radius-md)',
+                      border: '1px dashed var(--border)',
+                      background: 'var(--surface)',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center', gap: 4,
+                    }}>
+                      <Icon name="file-text" size={18} style={{ color: 'var(--text-muted)' }} />
+                      <span style={{ fontSize: '0.625rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.2 }}>
+                        sem foto
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <p style={{ fontWeight: 600, color: 'var(--text)', fontSize: '1rem', margin: '0 0 4px' }}>
+                    {vet.fullName}
+                  </p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0 0 4px' }}>
+                    {vet.email}
+                  </p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    CRMV {vet.crmvState}: <strong>{vet.crmv}</strong>
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    Cadastrado em {new Date(vet.createdAt).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
               </div>
 
               {rejectingId !== vet.id ? (

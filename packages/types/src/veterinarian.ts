@@ -109,3 +109,9 @@ export const VetProfilePublicResponseSchema = z.object({
   serviceRadiusKm: z.number().positive(),
 });
 export type VetProfilePublicResponse = z.infer<typeof VetProfilePublicResponseSchema>;
+
+// Own profile includes private fields not visible on the public profile page
+export const VetOwnProfileResponseSchema = VetProfilePublicResponseSchema.extend({
+  crmvPhotoUploaded: z.boolean(),
+});
+export type VetOwnProfileResponse = z.infer<typeof VetOwnProfileResponseSchema>;

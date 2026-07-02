@@ -1,9 +1,30 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button, Icon } from '@petnalia/ui';
-import { getSession } from '@/lib/auth';
+import { getSession, getToken } from '@/lib/auth';
+import { CrmvPhotoUpload } from '@/components/vet/crmv-photo-upload';
 
 export const metadata: Metadata = { title: 'Painel — Veterinário' };
+
+const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
+
+interface OwnProfile {
+  verificationStatus: string;
+  crmvPhotoUploaded: boolean;
+}
+
+async function fetchOwnProfile(token: string): Promise<OwnProfile | null> {
+  try {
+    const res = await fetch(`${API}/v1/veterinarians/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as OwnProfile;
+  } catch {
+    return null;
+  }
+}
 
 const STATS = [
   { label: 'Consultas esta semana', value: '0', icon: 'calendar' as const },
@@ -13,6 +34,11 @@ const STATS = [
 
 export default async function VetPainelPage() {
   const session = (await getSession())!;
+  const token = await getToken();
+  const profile = token ? await fetchOwnProfile(token) : null;
+
+  const isPending = profile?.verificationStatus === 'pending';
+  const needsPhoto = isPending && !profile?.crmvPhotoUploaded;
 
   return (
     <div style={{ padding: '40px 40px 60px' }}>
@@ -28,6 +54,30 @@ export default async function VetPainelPage() {
           Acompanhe suas consultas, avaliações e desempenho.
         </p>
       </div>
+
+      {needsPhoto && token && (
+        <div style={{
+          marginBottom: 32,
+          background: 'var(--surface)',
+          border: '1px solid #fef08a',
+          borderRadius: 'var(--radius-xl)',
+          padding: '28px 32px',
+        }}>
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{
+              fontFamily: 'var(--font-display)', fontWeight: 700,
+              fontSize: '1.0625rem', color: 'var(--text)', margin: '0 0 6px',
+            }}>
+              Envie a foto do seu CRMV
+            </h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+              Para concluir a verificação da sua conta, envie uma foto legível do seu registro no CRMV.
+              O documento deve estar dentro da validade.
+            </p>
+          </div>
+          <CrmvPhotoUpload token={token} onSuccess={() => { /* painel reloads on next navigation */ }} />
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 40 }}>
         {STATS.map(({ label, value, icon }) => (

@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
 import { UpdateVetProfileInputSchema, VetSearchQuerySchema } from '@petnalia/types';
 
@@ -35,6 +48,22 @@ export class VeterinariansController {
   async updateProfile(@CurrentUser() user: User, @Body() body: unknown) {
     const dto = UpdateVetProfileInputSchema.parse(body);
     await this.vetsService.updateOwnProfile(user.id, dto);
+  }
+
+  @Post('crmv-photo')
+  @Roles('veterinarian')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  async uploadCrmvPhoto(
+    @CurrentUser() user: User,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.vetsService.uploadCrmvPhoto(user.id, {
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+      size: file.size,
+      originalname: file.originalname,
+    });
   }
 
   @Public()

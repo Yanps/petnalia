@@ -73,6 +73,7 @@ export const PendingVetItemSchema = z.object({
   email: z.string().email(),
   crmv: z.string(),
   crmvState: z.string().length(2),
+  crmvPhotoUrl: z.string().url().nullable(),
   createdAt: z.string().datetime(),
 });
 export type PendingVetItem = z.infer<typeof PendingVetItemSchema>;

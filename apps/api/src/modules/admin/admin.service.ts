@@ -1,6 +1,7 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 
 import { DomainError } from '../../shared/errors/domain.error';
+import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
 import { NotificationsService } from '../notifications/notifications.service';
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
 
@@ -25,25 +26,28 @@ export class AdminService {
   constructor(
     private readonly vetsRepo: VeterinariansRepository,
     private readonly notifications: NotificationsService,
+    @Inject(STORAGE_PORT) private readonly storage: StoragePort,
   ) {}
 
   async listPendingVets(page: number, limit: number) {
     const { rows, total } = await this.vetsRepo.findPendingVets(page, limit);
-    return {
-      data: rows.map((r) => ({
+
+    const data = await Promise.all(
+      rows.map(async (r) => ({
         id: r.vet_id,
         userId: r.user_id,
         fullName: r.full_name,
         email: r.email,
         crmv: r.crmv,
         crmvState: r.crmv_state,
+        crmvPhotoUrl: r.crmv_photo_key
+          ? await this.storage.getPresignedUrl(r.crmv_photo_key, 3600)
+          : null,
         createdAt: r.created_at.toISOString(),
       })),
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
-    };
+    );
+
+    return { data, total, page, limit, hasMore: page * limit < total };
   }
 
   async approveVet(vetId: string): Promise<void> {
