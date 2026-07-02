@@ -26,7 +26,7 @@ export default async function VerificacaoPage() {
   const vets = token ? await fetchPendingVets(token) : [];
 
   return (
-    <main style={{ padding: '40px 40px 60px', maxWidth: 860 }}>
+    <main className="pn-page" style={{ padding: '40px 40px 60px', maxWidth: 860 }}>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 800,

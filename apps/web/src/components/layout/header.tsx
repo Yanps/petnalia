@@ -40,7 +40,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 28, flex: 1 }}>
+        <nav className="pn-header-nav" style={{ display: 'flex', alignItems: 'center', gap: 28, flex: 1 }}>
           {NAV.map(({ href, label }) => (
             <Link key={href} href={href} style={{
               fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none',
@@ -52,26 +52,30 @@ export function Header() {
           ))}
         </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <div className="pn-header-auth" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <Link href="/entrar" style={{ textDecoration: 'none' }}>
             <Button variant="outline" size="sm">Entrar</Button>
           </Link>
           <Link href="/cadastro" style={{ textDecoration: 'none' }}>
             <Button variant="primary" size="sm">Cadastrar-se</Button>
           </Link>
-          <button
-            onClick={() => setOpen(!open)}
-            aria-label="Menu"
-            style={{
-              display: 'none',
-              padding: '6px', borderRadius: 8,
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            <Icon name={open ? 'x' : 'menu'} size={20} />
-          </button>
         </div>
+
+        {/* Hamburger — visible only on mobile via CSS */}
+        <button
+          className="pn-header-hamburger"
+          onClick={() => setOpen(!open)}
+          aria-label="Menu"
+          style={{
+            padding: '6px', borderRadius: 8,
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: 'var(--text-secondary)',
+            alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Icon name={open ? 'x' : 'menu'} size={22} />
+        </button>
       </div>
 
       {open && (

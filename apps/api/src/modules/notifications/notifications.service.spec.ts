@@ -64,7 +64,7 @@ describe('NotificationsService.enqueueEmail', () => {
       { to: 'a@b.com', type: 'vet_approved', name: 'X' },
       { to: 'a@b.com', type: 'vet_rejected', name: 'X', reason: 'CRMV vencido' },
       { to: 'a@b.com', type: 'vet_registered', name: 'X' },
-      { to: 'a@b.com', type: 'appointment_booked_tutor', name: 'X', vetName: 'Dr. Y', petName: 'Rex', startsAt: '2026-02-01T09:00:00Z' },
+      { to: 'a@b.com', type: 'appointment_booked_tutor', name: 'X', otherPartyName: 'Dr. Y', petName: 'Rex', scheduledAt: '2026-02-01T09:00:00Z' },
     ];
     const queue = makeQueue();
     const service = makeService(queue);

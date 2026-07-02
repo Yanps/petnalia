@@ -5,7 +5,7 @@ import type { Appointment } from '@petnalia/types';
 import { getToken } from '@/lib/auth';
 import { AppointmentsList } from '@/components/dashboard/appointments-list';
 
-const API = process.env.API_INTERNAL_URL ?? 'http://localhost:3001';
+const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 
 async function fetchAppointments(token: string): Promise<Appointment[]> {
   try {
@@ -25,7 +25,7 @@ export default async function TutorConsultasPage() {
   const appointments = token ? await fetchAppointments(token) : [];
 
   return (
-    <div style={{ padding: '40px 40px 60px' }}>
+    <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 800,

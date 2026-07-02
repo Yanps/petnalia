@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, Button, Icon } from '@petnalia/ui';
@@ -22,13 +23,16 @@ const NAV = [
 function VerificationBanner({ status }: { status: string }) {
   if (status === 'pending') {
     return (
-      <div style={{
-        padding: '12px 40px',
-        background: '#fefce8',
-        borderBottom: '1px solid #fef08a',
-        display: 'flex', alignItems: 'center', gap: 10,
-        fontSize: '0.875rem', color: '#713f12',
-      }}>
+      <div
+        className="pn-verification-banner"
+        style={{
+          padding: '12px 40px',
+          background: '#fefce8',
+          borderBottom: '1px solid #fef08a',
+          display: 'flex', alignItems: 'center', gap: 10,
+          fontSize: '0.875rem', color: '#713f12',
+        }}
+      >
         <Icon name="clock" size={16} style={{ flexShrink: 0 }} />
         <span>
           <strong>Conta em análise.</strong> Nossa equipe está verificando seu CRMV. Você será notificado por e-mail em até 24h.
@@ -39,13 +43,16 @@ function VerificationBanner({ status }: { status: string }) {
 
   if (status === 'rejected') {
     return (
-      <div style={{
-        padding: '12px 40px',
-        background: '#fef2f2',
-        borderBottom: '1px solid #fecaca',
-        display: 'flex', alignItems: 'center', gap: 10,
-        fontSize: '0.875rem', color: '#7f1d1d',
-      }}>
+      <div
+        className="pn-verification-banner"
+        style={{
+          padding: '12px 40px',
+          background: '#fef2f2',
+          borderBottom: '1px solid #fecaca',
+          display: 'flex', alignItems: 'center', gap: 10,
+          fontSize: '0.875rem', color: '#7f1d1d',
+        }}
+      >
         <Icon name="alert-circle" size={16} style={{ flexShrink: 0 }} />
         <span>
           <strong>Verificação não aprovada.</strong> Confira seu e-mail para saber o motivo e entre em contato se precisar de ajuda.
@@ -61,6 +68,11 @@ export function VetShell({ session, verificationStatus, children }: VetShellProp
   const pathname = usePathname();
   const router = useRouter();
   const isVerified = verificationStatus === 'verified';
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
@@ -68,20 +80,58 @@ export function VetShell({ session, verificationStatus, children }: VetShellProp
         <VerificationBanner status={verificationStatus} />
       )}
 
-      <div style={{ display: 'flex', flex: 1 }}>
-        <aside style={{
-          width: 240,
-          flexShrink: 0,
-          background: 'var(--surface)',
-          borderRight: '1px solid var(--border)',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          overflowY: 'auto',
-        }}>
-          <div style={{ padding: '24px 20px 20px' }}>
+      {/* Mobile top bar */}
+      <div className="pn-mobile-bar">
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+          <span style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: 'var(--brand)', display: 'grid', placeItems: 'center',
+          }}>
+            <Icon name="stethoscope" size={14} style={{ color: '#fff' }} />
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-display)', fontWeight: 700,
+            fontSize: '1.0625rem', color: 'var(--brand)',
+          }}>
+            PetNalia
+          </span>
+        </Link>
+        <button
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Abrir menu"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-secondary)', padding: 6,
+            borderRadius: 8, display: 'flex', alignItems: 'center',
+          }}
+        >
+          <Icon name="menu" size={22} />
+        </button>
+      </div>
+
+      {/* Drawer backdrop */}
+      <div
+        className={`pn-drawer-overlay${drawerOpen ? ' open' : ''}`}
+        onClick={closeDrawer}
+      />
+
+      <div className="pn-shell-row" style={{ display: 'flex', flex: 1 }}>
+        <aside
+          className={`pn-sidebar${drawerOpen ? ' open' : ''}`}
+          style={{
+            width: 240,
+            flexShrink: 0,
+            background: 'var(--surface)',
+            borderRight: '1px solid var(--border)',
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            overflowY: 'auto',
+          }}
+        >
+          <div style={{ padding: '24px 20px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
               <span style={{
                 width: 32, height: 32, borderRadius: 'var(--radius-md)',
@@ -96,6 +146,20 @@ export function VetShell({ session, verificationStatus, children }: VetShellProp
                 PetNalia
               </span>
             </Link>
+            {/* Close button — visible only when drawer is open on mobile */}
+            {drawerOpen && (
+              <button
+                onClick={closeDrawer}
+                aria-label="Fechar menu"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-muted)', padding: 4,
+                  borderRadius: 6, display: 'flex', alignItems: 'center',
+                }}
+              >
+                <Icon name="x" size={18} />
+              </button>
+            )}
           </div>
 
           <nav style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -123,7 +187,7 @@ export function VetShell({ session, verificationStatus, children }: VetShellProp
                   {label}
                 </div>
               ) : (
-                <Link key={href} href={href} style={{ textDecoration: 'none' }}>
+                <Link key={href} href={href} style={{ textDecoration: 'none' }} onClick={closeDrawer}>
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '10px 12px',

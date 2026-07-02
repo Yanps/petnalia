@@ -15,8 +15,8 @@ const baseSlot: AvailabilitySlot = {
   startsAt: new Date('2026-02-01T09:00:00Z'),
   endsAt: new Date('2026-02-01T10:00:00Z'),
   status: 'open',
-  modality: 'home',
-  priceCents: 15000,
+  recurrenceId: null,
+  heldUntil: null,
   createdAt: new Date('2026-01-01'),
   updatedAt: new Date('2026-01-01'),
 };
@@ -48,7 +48,11 @@ function makeService(repo = makeRepo(), redis = makeRedis()) {
 describe('AvailabilityService.getOpenSlots', () => {
   it('delega para o repositório e retorna os slots', async () => {
     const repo = makeRepo();
-    const query: AvailabilityQuery = { veterinarianId: VET_ID };
+    const query: AvailabilityQuery = {
+      veterinarianId: VET_ID,
+      from: '2026-02-01T00:00:00Z',
+      to: '2026-02-01T23:59:59Z',
+    };
     const result = await makeService(repo).getOpenSlots(query);
     expect(repo.findOpenSlots).toHaveBeenCalledWith(query);
     expect(result).toEqual([baseSlot]);
@@ -60,7 +64,7 @@ describe('AvailabilityService.createSlots', () => {
     const repo = makeRepo({ createSlots: vi.fn().mockResolvedValue(5) });
     const dto: CreateSlotsInput = {
       slots: [
-        { startsAt: '2026-02-01T09:00:00Z', endsAt: '2026-02-01T10:00:00Z', modality: 'home', priceCents: 15000 },
+        { startsAt: '2026-02-01T09:00:00Z', endsAt: '2026-02-01T10:00:00Z' },
       ],
     };
     const result = await makeService(repo).createSlots(VET_ID, dto);

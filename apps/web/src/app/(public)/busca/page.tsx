@@ -1,9 +1,11 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import type { VetSearchResult } from '@petnalia/types';
 import { Icon } from '@petnalia/ui';
 
 import { api } from '@/lib/api-client';
 import { VetResultsGrid } from '@/components/search/vet-results-grid';
+import { SearchFilters } from '@/components/search/search-filters';
 
 export const metadata: Metadata = { title: 'Buscar veterinários' };
 
@@ -28,15 +30,11 @@ interface SearchResponse {
   hasMore: boolean;
 }
 
-const SPECIALTIES = [
-  'Clínica geral',
-  'Dermatologia',
-  'Cardiologia',
-  'Ortopedia',
-  'Comportamento',
-  'Animais exóticos',
-  'Oncologia',
-] as const;
+interface Specialty {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 async function fetchVets(params: URLSearchParams): Promise<SearchResponse> {
   try {
@@ -45,6 +43,14 @@ async function fetchVets(params: URLSearchParams): Promise<SearchResponse> {
     });
   } catch {
     return { data: [], total: 0, page: 1, limit: 12, hasMore: false };
+  }
+}
+
+async function fetchSpecialties(): Promise<Specialty[]> {
+  try {
+    return await api.get<Specialty[]>('/v1/veterinarians/specialties', { cache: 'force-cache' });
+  } catch {
+    return [];
   }
 }
 
@@ -64,7 +70,10 @@ export default async function BuscaPage({ searchParams }: SearchPageProps) {
   });
   if (sp.especialidade) qs.set('specialtyId', sp.especialidade);
 
-  const { data: vets, total } = await fetchVets(qs);
+  const [{ data: vets, total }, specialties] = await Promise.all([
+    fetchVets(qs),
+    fetchSpecialties(),
+  ]);
   const usingDefault = !sp.lat && !sp.lng;
 
   return (
@@ -96,53 +105,20 @@ export default async function BuscaPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
-      <div style={{
+      <div className="pn-search-layout" style={{
         maxWidth: 1152, margin: '0 auto', padding: '32px 24px',
         display: 'flex', gap: 32, alignItems: 'flex-start',
       }}>
         {/* Filtros */}
-        <aside style={{
-          width: 240, flexShrink: 0,
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)', padding: '20px',
-          position: 'sticky', top: 80,
-        }}>
-          <p style={{
-            fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text)',
-            textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16,
-          }}>
-            Filtros
-          </p>
-
-          <div style={{ marginBottom: 24 }}>
-            <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>
-              Raio (km)
-            </p>
-            {[10, 20, 50].map((r) => (
-              <label key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}>
-                <input
-                  type="radio"
-                  name="raio"
-                  defaultChecked={r === radiusKm}
-                  style={{ accentColor: 'var(--brand)' }}
-                />
-                <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{r} km</span>
-              </label>
-            ))}
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
-            <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>
-              Especialidade
-            </p>
-            {SPECIALTIES.map((s) => (
-              <label key={s} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}>
-                <input type="checkbox" style={{ accentColor: 'var(--brand)', width: 16, height: 16 }} />
-                <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{s}</span>
-              </label>
-            ))}
-          </div>
-        </aside>
+        <Suspense fallback={<FilterSkeleton />}>
+          <SearchFilters
+            specialties={specialties}
+            currentRadius={radiusKm}
+            currentSpecialtyId={sp.especialidade}
+            lat={lat}
+            lng={lng}
+          />
+        </Suspense>
 
         {/* Resultados */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -189,5 +165,21 @@ export default async function BuscaPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
     </main>
+  );
+}
+
+function FilterSkeleton() {
+  return (
+    <aside className="pn-search-filters" style={{
+      width: 240, flexShrink: 0,
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg)', padding: '20px',
+      position: 'sticky', top: 80,
+    }}>
+      <div style={{ height: 12, background: 'var(--surface-2)', borderRadius: 4, marginBottom: 20 }} />
+      {[1, 2, 3].map((i) => (
+        <div key={i} style={{ height: 20, background: 'var(--surface-2)', borderRadius: 4, marginBottom: 10 }} />
+      ))}
+    </aside>
   );
 }

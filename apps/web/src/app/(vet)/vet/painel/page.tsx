@@ -41,7 +41,7 @@ export default async function VetPainelPage() {
   const needsPhoto = isPending && !profile?.crmvPhotoUploaded;
 
   return (
-    <div style={{ padding: '40px 40px 60px' }}>
+    <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
       <div style={{ marginBottom: 40 }}>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 800,
@@ -79,7 +79,7 @@ export default async function VetPainelPage() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 40 }}>
+      <div className="pn-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 40 }}>
         {STATS.map(({ label, value, icon }) => (
           <div key={label} style={{
             background: 'var(--surface)',
@@ -111,7 +111,7 @@ export default async function VetPainelPage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="pn-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         <div style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',

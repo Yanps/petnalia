@@ -5,7 +5,7 @@ export default async function DisponibilidadePage() {
   const token = await getToken();
 
   return (
-    <div style={{ padding: '40px 40px 60px' }}>
+    <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 800,

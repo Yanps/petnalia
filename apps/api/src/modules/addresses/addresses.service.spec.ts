@@ -13,6 +13,7 @@ const ADDR_ID = 'addr-uuid-1';
 const baseAddress: Address = {
   id: ADDR_ID,
   userId: USER_ID,
+  label: null,
   cep: '01310100',
   street: 'Av. Paulista',
   number: '1578',
@@ -20,7 +21,7 @@ const baseAddress: Address = {
   neighborhood: 'Bela Vista',
   city: 'São Paulo',
   state: 'SP',
-  geog: null,
+  serviceRadiusKm: null,
   createdAt: new Date('2026-01-01'),
   updatedAt: new Date('2026-01-01'),
 };

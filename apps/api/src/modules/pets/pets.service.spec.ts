@@ -10,7 +10,7 @@ const PET_ID = 'pet-uuid-1';
 
 const basePet: Pet = {
   id: PET_ID,
-  tutorId: TUTOR_ID,
+  ownerId: TUTOR_ID,
   name: 'Rex',
   species: 'dog',
   sex: 'male',
@@ -48,6 +48,12 @@ describe('PetsService.createPet', () => {
     name: 'Mia',
     species: 'cat',
     sex: 'female',
+    breed: null,
+    birthdate: null,
+    weightKg: null,
+    neutered: false,
+    microchip: null,
+    photoUrl: null,
   };
 
   it('passa os campos obrigatórios ao repositório', async () => {

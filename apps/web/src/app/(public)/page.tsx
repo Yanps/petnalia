@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import type { VetSearchResult } from '@petnalia/types';
 import Link from 'next/link';
-import { Button, Badge, Icon } from '@petnalia/ui';
+import { Badge, Button, Icon } from '@petnalia/ui';
 import { VetResultsGrid } from '@/components/search/vet-results-grid';
+import { HeroSearchForm } from '@/components/search/hero-search-form';
 import { MOCK_VETS } from '@/data/mock-vets';
 
 export const metadata: Metadata = {
@@ -77,31 +78,9 @@ export default function HomePage() {
               Conectamos tutores a veterinários qualificados para consultas em casa e telemedicina — sem estresse para o seu pet.
             </p>
 
-            <div style={{
-              display: 'flex', gap: 12, alignItems: 'center',
-              background: 'white', borderRadius: 'var(--radius-xl)',
-              padding: '8px 8px 8px 20px',
-              boxShadow: 'var(--shadow-lg)',
-              maxWidth: 520,
-              border: '1px solid var(--border)',
-            }}>
-              <Icon name="search" size={18} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Busque por cidade ou especialidade..."
-                style={{
-                  flex: 1, border: 'none', outline: 'none', background: 'transparent',
-                  fontSize: '0.9375rem', color: 'var(--text)',
-                  fontFamily: 'var(--font-sans)',
-                }}
-                readOnly
-              />
-              <Link href="/busca" style={{ textDecoration: 'none', flexShrink: 0 }}>
-                <Button variant="primary" size="md" iconRight="arrow-right">Buscar</Button>
-              </Link>
-            </div>
+            <HeroSearchForm />
 
-            <div style={{ display: 'flex', gap: 28, marginTop: 32 }}>
+            <div className="pn-stats-row" style={{ display: 'flex', gap: 28, marginTop: 32 }}>
               {STATS.map(({ icon, value, label }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Icon name={icon} size={15} style={{ color: 'var(--brand)' }} />
@@ -180,7 +159,7 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+          <div className="pn-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
             {HOW.map(({ icon, title, text }, i) => (
               <div key={title} style={{ textAlign: 'center' }}>
                 <div style={{
@@ -230,7 +209,7 @@ export default function HomePage() {
           <p style={{ fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.65, marginBottom: 36 }}>
             Expanda sua carteira de clientes, controle sua agenda e receba por seus atendimentos — tudo em uma só plataforma.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <div className="pn-cta-buttons" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <Link href="/para-veterinarios" style={{ textDecoration: 'none' }}>
               <Button variant="accent" size="lg" iconRight="arrow-right">Quero atender</Button>
             </Link>
