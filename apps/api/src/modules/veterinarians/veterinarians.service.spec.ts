@@ -129,3 +129,82 @@ describe('VeterinariansService.search', () => {
     expect(repo.search).toHaveBeenCalledWith(query);
   });
 });
+
+describe('VeterinariansService.uploadCrmvPhoto', () => {
+  const USER_ID = 'user-uuid-1';
+
+  function makeUploadRepo() {
+    return {
+      updateCrmvPhoto: vi.fn().mockResolvedValue(undefined),
+    } as unknown as VeterinariansRepository;
+  }
+
+  function makeUploadStorage(): StoragePort {
+    return {
+      putObject: vi.fn().mockResolvedValue(undefined),
+      getPresignedUrl: vi.fn().mockResolvedValue('https://minio/crmv/photo.jpg'),
+      deleteObject: vi.fn(),
+    };
+  }
+
+  function validFile(overrides: Partial<{ buffer: Buffer; mimetype: string; size: number; originalname: string }> = {}) {
+    return {
+      buffer: Buffer.from('fake-image-data'),
+      mimetype: 'image/jpeg',
+      size: 1024,
+      originalname: 'crmv.jpg',
+      ...overrides,
+    };
+  }
+
+  it('lança InvalidCrmvPhotoError para MIME não permitido', async () => {
+    const { InvalidCrmvPhotoError } = await import('./veterinarians.service');
+    const service = new VeterinariansService(makeUploadRepo(), makeUploadStorage());
+    await expect(
+      service.uploadCrmvPhoto(USER_ID, validFile({ mimetype: 'image/gif' })),
+    ).rejects.toThrow(InvalidCrmvPhotoError);
+  });
+
+  it('lança InvalidCrmvPhotoError para arquivo maior que 5 MB', async () => {
+    const { InvalidCrmvPhotoError } = await import('./veterinarians.service');
+    const service = new VeterinariansService(makeUploadRepo(), makeUploadStorage());
+    await expect(
+      service.uploadCrmvPhoto(USER_ID, validFile({ size: 6 * 1024 * 1024 })),
+    ).rejects.toThrow(InvalidCrmvPhotoError);
+  });
+
+  it('aceita JPEG, PNG, WebP e PDF', async () => {
+    for (const mimetype of ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']) {
+      const storage = makeUploadStorage();
+      const service = new VeterinariansService(makeUploadRepo(), storage);
+      await expect(
+        service.uploadCrmvPhoto(USER_ID, validFile({ mimetype, originalname: `crmv.${mimetype.split('/')[1]}` })),
+      ).resolves.toBeDefined();
+    }
+  });
+
+  it('salva a chave no repositório e retorna a URL pré-assinada', async () => {
+    const storage = makeUploadStorage();
+    const repo = makeUploadRepo();
+    const service = new VeterinariansService(repo, storage);
+    const result = await service.uploadCrmvPhoto(USER_ID, validFile());
+    expect(storage.putObject).toHaveBeenCalledWith(
+      expect.stringContaining(`crmv/${USER_ID}/`),
+      expect.any(Buffer),
+      'image/jpeg',
+    );
+    expect(repo.updateCrmvPhoto).toHaveBeenCalledWith(USER_ID, expect.stringContaining(`crmv/${USER_ID}/`));
+    expect(result.photoUrl).toBe('https://minio/crmv/photo.jpg');
+  });
+
+  it('a chave inclui a extensão do arquivo original', async () => {
+    const storage = makeUploadStorage();
+    const service = new VeterinariansService(makeUploadRepo(), storage);
+    await service.uploadCrmvPhoto(USER_ID, validFile({ mimetype: 'application/pdf', originalname: 'crmv.pdf' }));
+    expect(storage.putObject).toHaveBeenCalledWith(
+      expect.stringMatching(/\.pdf$/),
+      expect.any(Buffer),
+      'application/pdf',
+    );
+  });
+});
