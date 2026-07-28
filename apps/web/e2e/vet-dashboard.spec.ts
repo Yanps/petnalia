@@ -46,6 +46,32 @@ test.describe('Veterinário — onboarding e painel', () => {
     await page.close();
   });
 
+  test('vet acessa área de atendimento e ajusta o raio', async ({ vetContext }) => {
+    const page = await vetContext.newPage();
+    await page.goto('/vet/area-atendimento', { waitUntil: 'networkidle' });
+    await expect(page).toHaveURL(/\/vet\/area-atendimento/);
+    await expect(page.locator('h1')).toContainText('Área de atendimento');
+
+    const slider = page.locator('input[type="range"]');
+    await expect(slider).toBeVisible();
+    await slider.focus();
+    await slider.press('ArrowRight');
+    await slider.press('ArrowRight');
+
+    const saveButton = page.getByRole('button', { name: /Salvar raio de atendimento/ });
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
+    await expect(page.locator('text=Salvo')).toBeVisible({ timeout: 5000 });
+    await page.close();
+  });
+
+  test('sidebar tem link para área de atendimento', async ({ vetContext }) => {
+    const page = await vetContext.newPage();
+    await page.goto('/vet/painel', { waitUntil: 'networkidle' });
+    await expect(page.locator('a[href="/vet/area-atendimento"]').first()).toBeVisible();
+    await page.close();
+  });
+
   test('vet não acessa rotas de tutor', async ({ vetContext }) => {
     const page = await vetContext.newPage();
     await page.goto('/painel');

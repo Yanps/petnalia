@@ -55,3 +55,9 @@ export type { AppointmentCardProps, AppointmentStatus, AppointmentType } from '.
 
 export { PetProfileCard } from './domain/PetProfileCard';
 export type { PetProfileCardProps, PetVital } from './domain/PetProfileCard';
+
+export { CoverageMap } from './domain/CoverageMap';
+export type { CoverageMapProps, CoveragePin } from './domain/CoverageMap';
+
+export { RadiusSelector } from './domain/RadiusSelector';
+export type { RadiusSelectorProps } from './domain/RadiusSelector';

@@ -17,6 +17,7 @@ const NAV = [
   { href: '/vet/consultas', icon: 'calendar' as const, label: 'Consultas', requiresVerified: true },
   { href: '/vet/disponibilidade', icon: 'clock' as const, label: 'Disponibilidade', requiresVerified: true },
   { href: '/vet/perfil', icon: 'user' as const, label: 'Meu perfil' },
+  { href: '/vet/area-atendimento', icon: 'map-pin' as const, label: 'Área de atendimento', requiresVerified: true },
   { href: '/vet/assinatura', icon: 'star' as const, label: 'Assinatura', requiresVerified: true },
 ] as const;
 
