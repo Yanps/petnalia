@@ -111,8 +111,8 @@ export class VeterinariansService {
       totalReviews: 0,
       verificationStatus: row.verification_status as VetOwnProfileResponse['verificationStatus'],
       tier: row.tier as VetOwnProfileResponse['tier'],
-      baseCity: '',
-      baseState: '',
+      baseCity: row.base_city ?? '',
+      baseState: row.base_state ?? '',
       serviceRadiusKm: row.service_radius_km,
       crmvPhotoUploaded: row.has_crmv_photo,
     };

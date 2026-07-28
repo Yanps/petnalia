@@ -26,6 +26,8 @@ interface RawOwnProfile {
   verification_status: string;
   tier: string;
   service_radius_km: number;
+  base_city: string | null;
+  base_state: string | null;
   has_crmv_photo: boolean;
   specialties: Array<{ id: string; name: string; slug: string }> | null;
 }
@@ -198,6 +200,12 @@ export class VeterinariansRepository {
 
   async findOwnProfile(userId: string): Promise<RawOwnProfile | null> {
     const rows = await this.prisma.$queryRaw<RawOwnProfile[]>`
+      WITH vet_addr AS (
+        SELECT DISTINCT ON ("userId")
+          "userId", city, state
+        FROM addresses
+        ORDER BY "userId", "createdAt" ASC
+      )
       SELECT
         v.id::text                                                    AS vet_id,
         u.id::text                                                    AS user_id,
@@ -209,6 +217,8 @@ export class VeterinariansRepository {
         v."verificationStatus"                                        AS verification_status,
         v.tier,
         v."serviceRadiusKm"                                           AS service_radius_km,
+        a.city                                                        AS base_city,
+        a.state                                                       AS base_state,
         (v."crmvPhotoKey" IS NOT NULL)                                AS has_crmv_photo,
         COALESCE(
           JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
@@ -221,6 +231,7 @@ export class VeterinariansRepository {
       FROM veterinarians v
       JOIN users u         ON u.id       = v."userId"
       JOIN profiles p      ON p."userId" = u.id
+      LEFT JOIN vet_addr a ON a."userId" = v."userId"
       LEFT JOIN veterinarian_specialties vs ON vs."veterinarianId" = v.id
       LEFT JOIN specialties s               ON s.id = vs."specialtyId"
       WHERE v."userId" = ${userId}::uuid
@@ -228,7 +239,8 @@ export class VeterinariansRepository {
       GROUP BY
         v.id, u.id, p."fullName", p."avatarUrl", v.bio,
         v.crmv, v."crmvState",
-        v."verificationStatus", v.tier, v."serviceRadiusKm", v."crmvPhotoKey"
+        v."verificationStatus", v.tier, v."serviceRadiusKm", v."crmvPhotoKey",
+        a.city, a.state
       LIMIT 1
     `;
 

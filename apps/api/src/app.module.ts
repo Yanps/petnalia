@@ -13,7 +13,6 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
-import { GeoModule } from './modules/geo/geo.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PetsModule } from './modules/pets/pets.module';
@@ -36,7 +35,6 @@ import { VeterinariansModule } from './modules/veterinarians/veterinarians.modul
     UsersModule,
     PetsModule,
     VeterinariansModule,
-    GeoModule,
     AvailabilityModule,
     AppointmentsModule,
     ReviewsModule,

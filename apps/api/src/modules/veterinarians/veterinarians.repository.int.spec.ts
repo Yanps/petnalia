@@ -4,7 +4,6 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
 import { PrismaModule } from '../../shared/prisma/prisma.module';
 import { PrismaService } from '../../shared/prisma/prisma.service';
-import { VeterinariansModule } from './veterinarians.module';
 import { VeterinariansRepository } from './veterinarians.repository';
 import { setupTestDatabase, type TestDatabase } from '../../../test/helpers/database';
 
@@ -71,11 +70,8 @@ describe('VeterinariansRepository.search (integração)', () => {
     process.env['JWT_REFRESH_SECRET'] = 'test-refresh-secret-min-32-chars!!!!';
 
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        PrismaModule,
-        VeterinariansModule,
-      ],
+      imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule],
+      providers: [VeterinariansRepository],
     }).compile();
 
     await moduleRef.init();

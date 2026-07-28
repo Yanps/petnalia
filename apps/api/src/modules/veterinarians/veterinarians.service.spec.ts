@@ -131,6 +131,57 @@ describe('VeterinariansService.search', () => {
   });
 });
 
+describe('VeterinariansService.getOwnProfile', () => {
+  const USER_ID = 'user-uuid-1';
+
+  function makeOwnProfileRow(overrides: Record<string, unknown> = {}) {
+    return {
+      vet_id: 'aaaaaaaa-0000-0000-0000-000000000001',
+      user_id: USER_ID,
+      full_name: 'Dra. Ana Beatriz',
+      avatar_url: null,
+      bio: 'Clínica geral.',
+      crmv: '12345',
+      crmv_state: 'SP',
+      verification_status: 'verified',
+      tier: 'free',
+      service_radius_km: 15,
+      base_city: 'São Paulo',
+      base_state: 'SP',
+      has_crmv_photo: false,
+      specialties: [],
+      ...overrides,
+    };
+  }
+
+  function makeOwnProfileRepo(row: ReturnType<typeof makeOwnProfileRow> | null) {
+    return {
+      findOwnProfile: vi.fn().mockResolvedValue(row),
+    } as unknown as VeterinariansRepository;
+  }
+
+  it('retorna baseCity/baseState reais do endereço cadastrado', async () => {
+    const repo = makeOwnProfileRepo(makeOwnProfileRow());
+    const service = new VeterinariansService(repo, mockStorage);
+
+    const result = await service.getOwnProfile(USER_ID);
+
+    expect(result.baseCity).toBe('São Paulo');
+    expect(result.baseState).toBe('SP');
+    expect(result.serviceRadiusKm).toBe(15);
+  });
+
+  it('retorna string vazia quando o veterinário ainda não tem endereço cadastrado', async () => {
+    const repo = makeOwnProfileRepo(makeOwnProfileRow({ base_city: null, base_state: null }));
+    const service = new VeterinariansService(repo, mockStorage);
+
+    const result = await service.getOwnProfile(USER_ID);
+
+    expect(result.baseCity).toBe('');
+    expect(result.baseState).toBe('');
+  });
+});
+
 describe('VeterinariansService.uploadCrmvPhoto', () => {
   const USER_ID = 'user-uuid-1';
 

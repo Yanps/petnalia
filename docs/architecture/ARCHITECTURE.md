@@ -160,8 +160,8 @@ apps/api/
 │   │   ├── reviews/            # ReviewsModule
 │   │   ├── notifications/      # NotificationsModule
 │   │   ├── subscriptions/      # SubscriptionsModule
-│   │   ├── geo/                # GeoModule (PostGIS)
 │   │   └── admin/              # AdminModule
+│   │       # PostGIS spatial SQL lives inline in VeterinariansRepository (see §4.4) — no standalone GeoModule
 │   ├── shared/
 │   │   ├── prisma/             # PrismaModule + PrismaService (extends client)
 │   │   ├── redis/              # Redis + cache module
@@ -282,13 +282,12 @@ Each backend module is a bounded context. The web `features/` folders mirror the
 | **AuthModule** | Registration, login, JWT issue, refresh-token rotation + reuse detection, password reset, (future) magic link & Google OAuth, role assignment. | RefreshToken (Redis/DB) | `user.registered` | Users, Notifications |
 | **UsersModule** | User + Profile CRUD, account settings, soft delete, audit. | User, Profile | `profile.updated` | Auth, Pets |
 | **PetsModule** | Pet CRUD for tutores, photos, medical metadata. | Pet | `pet.created` | Users, Storage |
-| **VeterinariansModule** | Vet profile, specialties, CRMV, verification state machine, base coordinates + service radius, premium tier flags. | Veterinarian, VeterinarianSpecialty | `vet.submitted_for_review`, `vet.verified` | Geo, Subscriptions, Admin |
-| **AppointmentsModule** | Booking lifecycle (request→confirm→complete/cancel), slot reservation, conflict checks, status machine. | Appointment | `appointment.requested/confirmed/cancelled/completed` | Availability, Notifications, Geo |
+| **VeterinariansModule** | Vet profile, specialties, CRMV, verification state machine, base coordinates + service radius, premium tier flags. Owns the PostGIS radius search (fused spatial + relational query — see §4.4). | Veterinarian, VeterinarianSpecialty | `vet.submitted_for_review`, `vet.verified` | Subscriptions, Admin |
+| **AppointmentsModule** | Booking lifecycle (request→confirm→complete/cancel), slot reservation, conflict checks, status machine. | Appointment | `appointment.requested/confirmed/cancelled/completed` | Availability, Notifications |
 | **AvailabilityModule** | Vet recurring schedules + concrete `AvailabilitySlot` generation, slot locking, exceptions/blackouts. | AvailabilitySlot | `slot.booked`, `slot.released` | Appointments |
 | **ReviewsModule** | Post-appointment reviews + ratings, aggregate scores, moderation hooks. | Review | `review.created` | Appointments, Veterinarians |
 | **NotificationsModule** | Notification records + delivery dispatch (email MVP; WhatsApp/push future). Listens to domain events → enqueues jobs. | Notification | — (consumer) | Queue, Mailer, all modules |
 | **SubscriptionsModule** | Vet premium plans, billing webhooks (Stripe-ready), plan entitlements, lifecycle events. | Subscription | `subscription.activated/cancelled/payment_failed` | Veterinarians, Notifications |
-| **GeoModule** | PostGIS spatial queries: match tutor address → vets within radius; reverse geocode; distance calc; **future polygon service areas**. | Address (geo columns) | — | Veterinarians, Appointments |
 | **AdminModule** | CRMV verification queue + approve/reject, user management, appointment oversight, platform metrics. | — (cross-cutting) | `vet.verified/rejected` | Veterinarians, Users, Appointments |
 
 **Cross-module communication:** synchronous calls go through injected service ports; asynchronous/side-effectful work is decoupled via **domain events → BullMQ queues** (e.g. `appointment.confirmed` → Notifications enqueues an email + a reminder). Notifications never block the request path.
@@ -349,9 +348,9 @@ Appointment 1───1 Review               (post-visit)
 - **Vet base:** `Address.geog = geography(Point,4326)` + `serviceRadiusKm`.
 - **Tutor address:** `geography(Point,4326)`.
 - **Match query (radius MVP):**
-  `ST_DWithin(vet.geog, :tutorPoint, vet.serviceRadiusKm * 1000)` — `geography` gives true meters; GIST index makes it index-assisted. Distance shown via `ST_Distance`.
-- **Future polygon areas:** swap/augment the radius predicate with `ST_Contains(vet.serviceArea, :tutorPoint)`. The column already exists nullable; `GeoRepository` branches on its presence so the API contract doesn't change.
-- All spatial SQL lives **only** in `GeoModule`'s `GeoRepository` (raw parameterized `$queryRaw`), keeping Prisma models clean and the rest of the app DB-engine-agnostic.
+  `ST_DWithin(vet.geog, :tutorPoint, radiusKm * 1000)` — `geography` gives true meters; GIST index makes it index-assisted. Distance shown via `ST_Distance`.
+- **Future polygon areas:** swap/augment the radius predicate with `ST_Contains(vet.serviceArea, :tutorPoint)`. The column already exists nullable.
+- **Revised from the original plan:** we initially isolated all spatial SQL behind a standalone `GeoModule`/`GeoRepository` (ADR-002 as first written). In practice, `VeterinariansRepository.search()` fuses the spatial predicate with the relational joins (users, profiles, reviews aggregation, specialties) and pagination into **one raw `$queryRaw`** — splitting it into a separate `GeoRepository` call would mean two round-trips (nearby IDs, then hydrate) for a hot, latency-sensitive endpoint with no other consumer of pure spatial search. We chose the single fused query for performance and removed the empty `GeoModule` stub. Prisma models still keep the `geog`/`serviceArea` columns as `Unsupported(...)`, so raw SQL stays contained to repositories (`VeterinariansRepository` today); if a second spatial use case appears, extract the shared predicate into a `GeoRepository` at that point.
 
 ---
 
@@ -506,7 +505,7 @@ Each uses `turbo prune --scope=<app>` to produce a minimal context, then install
 
 **ADR-001 · Zod-first shared contracts.** A single `@petnalia/types` package holds Zod schemas; types are *inferred*, validation is *runtime*, and both API and web consume them. Rejected: separate DTO classes + manual TS interfaces (drift risk), full OpenAPI codegen (heavier toolchain). Trade-off: discipline required to keep schemas in `types`, not inline.
 
-**ADR-002 · PostGIS behind a repository, not in Prisma models.** Prisma lacks first-class geography support; modeling it as `Unsupported` + isolating spatial SQL in `GeoRepository` keeps the ORM ergonomic while enabling indexed `ST_DWithin`/`ST_Contains`. Trade-off: spatial queries are raw SQL (well-contained, parameterized).
+**ADR-002 · PostGIS behind repositories, not in Prisma models.** Prisma lacks first-class geography support; modeling it as `Unsupported` + keeping spatial SQL inside the owning feature repository (`VeterinariansRepository`, raw parameterized `$queryRaw`) keeps the ORM ergonomic while enabling indexed `ST_DWithin`/`ST_Distance`. Revised from the original design of a standalone `GeoModule`/`GeoRepository`: with a single spatial consumer, the fused query (spatial predicate + relational joins + pagination in one round-trip) outperforms splitting it across two repositories and two queries — see §4.4. Trade-off: spatial queries are raw SQL (well-contained, parameterized); if a second spatial use case appears, extract the shared predicate into a dedicated `GeoRepository` then.
 
 **ADR-003 · Refresh-token rotation with reuse detection.** Stateless access + rotating, hashed refresh tokens with session families gives security (theft detection) without sticky sessions. Trade-off: a Redis round-trip on refresh.
 

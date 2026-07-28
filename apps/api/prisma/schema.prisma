@@ -1,7 +1,8 @@
 // PetNalia — Prisma Schema
 //
 // PostGIS geography columns are declared as Unsupported("geography(...)").
-// All spatial SQL lives exclusively in GeoRepository using $queryRaw.
+// Spatial SQL lives in the owning feature repository (VeterinariansRepository)
+// via $queryRaw, fused with the relational query for a single round-trip.
 // See ADR-002 and ARCHITECTURE.md §4.4.
 //
 // Migrations: use `prisma migrate dev --create-only` then hand-edit the
