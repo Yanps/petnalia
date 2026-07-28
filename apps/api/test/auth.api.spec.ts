@@ -1,10 +1,17 @@
+import { createHash } from 'node:crypto';
+
 import type { INestApplication } from '@nestjs/common';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 
+import { PrismaService } from '../src/shared/prisma/prisma.service';
 import { setupTestDatabase, type TestDatabase } from './helpers/database';
 import { createTestApp } from './helpers/app-factory';
 import { makeRegisterInput } from './factories/user.factory';
+
+function hashResetToken(raw: string): string {
+  return createHash('sha256').update(raw).digest('hex');
+}
 
 const REFRESH_COOKIE = 'petnalia_refresh';
 
@@ -199,6 +206,108 @@ describe('Auth API (integração)', () => {
       );
 
       expect(res.status).toBe(204);
+    });
+  });
+
+  // ── POST /v1/auth/forgot-password ───────────────────────────────────────────
+
+  describe('POST /v1/auth/forgot-password', () => {
+    it('204 quando o e-mail existe', async () => {
+      const { body: input } = await register();
+      const res = await post('/v1/auth/forgot-password').send({ email: input.email });
+      expect(res.status).toBe(204);
+    });
+
+    it('204 quando o e-mail não existe (evita enumeração de contas)', async () => {
+      const res = await post('/v1/auth/forgot-password').send({ email: 'naoexiste@petnalia.test' });
+      expect(res.status).toBe(204);
+    });
+
+    it('422 VALIDATION_ERROR para e-mail em formato inválido', async () => {
+      const res = await post('/v1/auth/forgot-password').send({ email: 'not-an-email' });
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
+
+  // ── POST /v1/auth/reset-password ─────────────────────────────────────────────
+
+  describe('POST /v1/auth/reset-password', () => {
+    async function seedResetToken(email: string, rawToken: string, expiresAt = new Date(Date.now() + 3_600_000)) {
+      const prisma = app.get(PrismaService);
+      const user = await prisma.user.findUniqueOrThrow({ where: { email } });
+      await prisma.passwordResetToken.create({
+        data: { userId: user.id, tokenHash: hashResetToken(rawToken), expiresAt },
+      });
+    }
+
+    it('204 e permite login com a nova senha quando o token é válido', async () => {
+      const { body: input } = await register();
+      await seedResetToken(input.email, 'raw-reset-token-valido');
+
+      const res = await post('/v1/auth/reset-password').send({
+        token: 'raw-reset-token-valido',
+        password: 'novaSenhaForte123',
+      });
+      expect(res.status).toBe(204);
+
+      const oldLogin = await login(input.email, input.password);
+      expect(oldLogin.status).toBe(401);
+
+      const newLogin = await login(input.email, 'novaSenhaForte123');
+      expect(newLogin.status).toBe(200);
+    });
+
+    it('204 revoga as sessões existentes (refresh token antigo passa a ser inválido)', async () => {
+      const { res: regRes, body: input } = await register();
+      const refreshCookie = extractRefreshCookie(regRes);
+      await seedResetToken(input.email, 'raw-reset-token-revoga');
+
+      await post('/v1/auth/reset-password').send({
+        token: 'raw-reset-token-revoga',
+        password: 'novaSenhaForte123',
+      });
+
+      const res = await post('/v1/auth/refresh').set('Cookie', `${REFRESH_COOKIE}=${refreshCookie}`);
+      expect(res.status).toBe(401);
+    });
+
+    it('400 AUTH_INVALID_RESET_TOKEN para token inexistente', async () => {
+      const res = await post('/v1/auth/reset-password').send({
+        token: 'token-que-nao-existe',
+        password: 'novaSenhaForte123',
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('AUTH_INVALID_RESET_TOKEN');
+    });
+
+    it('400 AUTH_INVALID_RESET_TOKEN quando o token já foi usado', async () => {
+      const { body: input } = await register();
+      await seedResetToken(input.email, 'raw-reset-token-unico');
+
+      await post('/v1/auth/reset-password').send({ token: 'raw-reset-token-unico', password: 'senha1234' });
+      const res2 = await post('/v1/auth/reset-password').send({ token: 'raw-reset-token-unico', password: 'senha5678' });
+
+      expect(res2.status).toBe(400);
+      expect(res2.body.error.code).toBe('AUTH_INVALID_RESET_TOKEN');
+    });
+
+    it('400 AUTH_INVALID_RESET_TOKEN quando o token expirou', async () => {
+      const { body: input } = await register();
+      await seedResetToken(input.email, 'raw-reset-token-expirado', new Date('2020-01-01'));
+
+      const res = await post('/v1/auth/reset-password').send({
+        token: 'raw-reset-token-expirado',
+        password: 'novaSenhaForte123',
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('AUTH_INVALID_RESET_TOKEN');
+    });
+
+    it('422 VALIDATION_ERROR para senha curta demais', async () => {
+      const res = await post('/v1/auth/reset-password').send({ token: 'qualquer', password: '123' });
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
     });
   });
 

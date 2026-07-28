@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decodeJwt } from 'jose';
 import { api } from '@/lib/api-client';
-import { LoginSchema, RegisterSchema, RegisterVetSchema, ForgotPasswordSchema } from './schema';
+import { LoginSchema, RegisterSchema, RegisterVetSchema, ForgotPasswordSchema, ResetPasswordSchema } from './schema';
 
 interface AuthTokens {
   readonly accessToken: string;
@@ -78,6 +78,20 @@ export async function registerAction(formData: FormData) {
 export async function forgotPasswordAction(formData: FormData) {
   const data = ForgotPasswordSchema.parse({ email: formData.get('email') });
   await api.post('/v1/auth/forgot-password', data);
+}
+
+export async function resetPasswordAction(formData: FormData) {
+  const data = ResetPasswordSchema.parse({
+    password: formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
+  });
+
+  await api.post('/v1/auth/reset-password', {
+    token: String(formData.get('token') ?? ''),
+    password: data.password,
+  });
+
+  redirect('/entrar?senha=redefinida');
 }
 
 export async function logoutAction() {

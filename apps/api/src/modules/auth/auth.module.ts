@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { PasswordResetTokensRepository } from './password-reset-tokens.repository';
 import { TokensRepository } from './tokens.repository';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
@@ -26,7 +27,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     NotificationsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokensRepository, JwtStrategy],
+  providers: [AuthService, TokensRepository, PasswordResetTokensRepository, JwtStrategy],
   exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

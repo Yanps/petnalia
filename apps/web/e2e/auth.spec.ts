@@ -63,4 +63,42 @@ test.describe('Autenticação', () => {
     await page.waitForTimeout(1500);
     await expect(page).toHaveURL(/\/entrar/);
   });
+
+  test('link "Esqueci a senha" leva a /recuperar-senha', async ({ page }) => {
+    await page.goto('/entrar', { waitUntil: 'networkidle' });
+    await page.click('a[href="/recuperar-senha"]');
+    await expect(page).toHaveURL(/\/recuperar-senha/);
+  });
+
+  test('recuperar-senha mostra confirmação após enviar e-mail existente', async ({ page }) => {
+    await page.goto('/recuperar-senha', { waitUntil: 'networkidle' });
+    await page.fill('input[name="email"]', 'ana@petnalia.com');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('text=receberá um link')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('recuperar-senha mostra confirmação mesmo para e-mail inexistente (evita enumeração)', async ({ page }) => {
+    await page.goto('/recuperar-senha', { waitUntil: 'networkidle' });
+    await page.fill('input[name="email"]', 'naoexiste@petnalia.com');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('text=receberá um link')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('redefinir-senha sem token mostra link inválido', async ({ page }) => {
+    await page.goto('/redefinir-senha', { waitUntil: 'networkidle' });
+    await expect(page.locator('text=Link de redefinição inválido')).toBeVisible();
+  });
+
+  test('redefinir-senha com token mostra formulário de nova senha', async ({ page }) => {
+    await page.goto('/redefinir-senha?token=qualquer-coisa', { waitUntil: 'networkidle' });
+    await expect(page.locator('h1')).toContainText('Escolha uma nova senha');
+  });
+
+  test('redefinir-senha valida que as senhas coincidem', async ({ page }) => {
+    await page.goto('/redefinir-senha?token=token-de-teste', { waitUntil: 'networkidle' });
+    await page.fill('input[name="password"]', 'senhaNova123');
+    await page.fill('input[name="confirmPassword"]', 'senhaDiferente123');
+    await page.click('button[type="submit"]');
+    await expect(page.locator('text=não coincidem')).toBeVisible({ timeout: 3000 });
+  });
 });

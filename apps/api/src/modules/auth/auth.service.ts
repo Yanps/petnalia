@@ -12,10 +12,14 @@ import {
   AccountSuspendedError,
   EmailTakenError,
   InvalidCredentialsError,
+  InvalidResetTokenError,
   TokenExpiredError,
   TokenRevokedError,
 } from './auth.errors';
+import { PasswordResetTokensRepository } from './password-reset-tokens.repository';
 import { TokensRepository } from './tokens.repository';
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1_000; // 1h
 
 function parseTtlMs(ttl: string): number {
   const m = ttl.match(/^(\d+)([smhd])$/);
@@ -46,6 +50,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly usersRepo: UsersRepository,
     private readonly tokensRepo: TokensRepository,
+    private readonly passwordResetTokensRepo: PasswordResetTokensRepository,
     private readonly notifications: NotificationsService,
   ) {
     this.refreshTtlMs = parseTtlMs(config.get('JWT_REFRESH_TTL', '30d'));
@@ -125,6 +130,38 @@ export class AuthService {
     if (stored && !stored.revokedAt) {
       await this.tokensRepo.revoke(stored.id);
     }
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersRepo.findByEmail(email);
+    if (!user || user.status !== 'active') return; // never reveal whether the e-mail exists
+
+    const rawToken = generateRawToken();
+    await this.passwordResetTokensRepo.create({
+      userId: user.id,
+      tokenHash: hashToken(rawToken),
+      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    });
+
+    void this.notifications.enqueueEmail({
+      to: user.email,
+      type: 'password_reset',
+      name: user.profile?.fullName ?? user.email,
+      resetToken: rawToken,
+    });
+  }
+
+  async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    const stored = await this.passwordResetTokensRepo.findByHash(hashToken(rawToken));
+    if (!stored || stored.usedAt || stored.expiresAt < new Date()) {
+      throw new InvalidResetTokenError();
+    }
+
+    const passwordHash = await argonHash(newPassword);
+    await this.usersRepo.update(stored.userId, { passwordHash });
+    await this.passwordResetTokensRepo.markUsed(stored.id);
+    // Password changed — kill every existing session for safety.
+    await this.tokensRepo.revokeAllForUser(stored.userId);
   }
 
   private async issueTokens(userId: string, email: string, role: string, name: string): Promise<IssuedTokens> {

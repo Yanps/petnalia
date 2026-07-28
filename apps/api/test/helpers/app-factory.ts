@@ -14,11 +14,17 @@ import { AllExceptionsFilter } from '../../src/shared/filters/all-exceptions.fil
 import { JwtAuthGuard } from '../../src/shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../src/shared/guards/roles.guard';
 import { PrismaModule } from '../../src/shared/prisma/prisma.module';
+import { QueueModule } from '../../src/shared/queue/queue.module';
+import { MailerModule } from '../../src/shared/mailer/mailer.module';
+import { StorageModule } from '../../src/shared/storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    QueueModule,
+    MailerModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     VeterinariansModule,

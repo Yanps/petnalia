@@ -5,9 +5,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
 import { PrismaModule } from '../../shared/prisma/prisma.module';
 import { UsersRepository } from '../users/users.repository';
-import { UsersModule } from '../users/users.module';
 import { TokensRepository } from './tokens.repository';
-import { AuthModule } from './auth.module';
 import { setupTestDatabase, type TestDatabase } from '../../../test/helpers/database';
 
 function hashToken(raw: string): string {
@@ -30,12 +28,8 @@ describe('TokensRepository (integração)', () => {
     process.env['JWT_REFRESH_TTL'] = '30d';
 
     const moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        PrismaModule,
-        UsersModule,
-        AuthModule,
-      ],
+      imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule],
+      providers: [TokensRepository, UsersRepository],
     }).compile();
 
     await moduleRef.init();

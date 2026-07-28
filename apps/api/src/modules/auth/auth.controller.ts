@@ -9,7 +9,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { LoginInputSchema, RegisterInputSchema, RegisterVetInputSchema } from '@petnalia/types';
+import {
+  ForgotPasswordInputSchema,
+  LoginInputSchema,
+  RegisterInputSchema,
+  RegisterVetInputSchema,
+  ResetPasswordInputSchema,
+} from '@petnalia/types';
 
 import { Public } from '../../shared/decorators/public.decorator';
 import { AuthService } from './auth.service';
@@ -84,6 +90,22 @@ export class AuthController {
     const raw = (req.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE];
     if (raw) await this.authService.logout(raw);
     res.clearCookie(REFRESH_COOKIE, { path: '/v1/auth' });
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async forgotPassword(@Body() body: unknown): Promise<void> {
+    const dto = ForgotPasswordInputSchema.parse(body);
+    await this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resetPassword(@Body() body: unknown): Promise<void> {
+    const dto = ResetPasswordInputSchema.parse(body);
+    await this.authService.resetPassword(dto.token, dto.password);
   }
 
   private setRefreshCookie(res: Response, token: string): void {

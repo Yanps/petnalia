@@ -1,12 +1,8 @@
 import type { Metadata } from 'next';
+import { ForgotPasswordForm } from '@/features/auth/forgot-password-form';
 
 export const metadata: Metadata = { title: 'Recuperar senha' };
 
 export default function RecuperarSenhaPage() {
-  return (
-    <main>
-      <h1>Recuperar senha</h1>
-      {/* TODO: ForgotPasswordForm */}
-    </main>
-  );
+  return <ForgotPasswordForm />;
 }

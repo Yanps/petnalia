@@ -47,6 +47,17 @@ export const AuthTokensSchema = z.object({
 });
 export type AuthTokens = z.infer<typeof AuthTokensSchema>;
 
+export const ForgotPasswordInputSchema = z.object({
+  email: z.string().email(),
+});
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordInputSchema>;
+
+export const ResetPasswordInputSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(128),
+});
+export type ResetPasswordInput = z.infer<typeof ResetPasswordInputSchema>;
+
 export const UpdateProfileInputSchema = ProfileSchema.pick({
   fullName: true,
   phone: true,

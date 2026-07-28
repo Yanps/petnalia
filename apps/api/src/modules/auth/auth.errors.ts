@@ -39,3 +39,13 @@ export class TokenRevokedError extends DomainError {
     );
   }
 }
+
+export class InvalidResetTokenError extends DomainError {
+  constructor() {
+    super(
+      'AUTH_INVALID_RESET_TOKEN',
+      'Este link de recuperação é inválido ou expirou. Solicite um novo.',
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+}

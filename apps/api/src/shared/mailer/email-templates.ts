@@ -5,7 +5,8 @@ export type EmailType =
   | 'appointment_booked_tutor'
   | 'appointment_booked_vet'
   | 'appointment_confirmed'
-  | 'appointment_cancelled';
+  | 'appointment_cancelled'
+  | 'password_reset';
 
 export interface EmailJobPayload {
   to: string;
@@ -16,6 +17,7 @@ export interface EmailJobPayload {
   scheduledAt?: string;
   petName?: string;
   otherPartyName?: string;
+  resetToken?: string;
 }
 
 function base(title: string, body: string): string {
@@ -179,6 +181,23 @@ export function renderEmail(payload: EmailJobPayload): { subject: string; html: 
         ${btn('Ver minhas consultas', `${BASE_URL}/consultas`)}
       `);
       return { subject, html, text: `A consulta para ${payload.scheduledAt ?? 'data combinada'} foi cancelada.` };
+    }
+
+    case 'password_reset': {
+      const subject = 'Redefinição de senha — PetNalia';
+      const resetUrl = `${BASE_URL}/redefinir-senha?token=${payload.resetToken}`;
+      const html = base(subject, `
+        ${greeting(payload.name)}
+        <p style="font-size:15px;color:#334155;line-height:1.7;margin:0 0 16px">
+          Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para
+          escolher uma nova senha. Este link expira em <strong>1 hora</strong>.
+        </p>
+        ${btn('Redefinir senha', resetUrl)}
+        <p style="font-size:13px;color:#94a3b8;line-height:1.6;margin:16px 0 0">
+          Se você não solicitou essa alteração, ignore este e-mail — sua senha continua a mesma.
+        </p>
+      `);
+      return { subject, html, text: `Redefina sua senha acessando: ${resetUrl} (válido por 1 hora).` };
     }
   }
 }

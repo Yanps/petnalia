@@ -4,10 +4,12 @@ import type { User } from '@prisma/client';
 
 import { AuthService } from './auth.service';
 import { UsersRepository } from '../users/users.repository';
+import { PasswordResetTokensRepository } from './password-reset-tokens.repository';
 import { TokensRepository } from './tokens.repository';
 import {
   EmailTakenError,
   InvalidCredentialsError,
+  InvalidResetTokenError,
   AccountSuspendedError,
   TokenExpiredError,
   TokenRevokedError,
@@ -67,14 +69,34 @@ function makeTokensRepo(overrides: Partial<Record<keyof TokensRepository, unknow
   } as unknown as TokensRepository;
 }
 
+function makePasswordResetTokensRepo(
+  overrides: Partial<Record<keyof PasswordResetTokensRepository, unknown>> = {},
+): PasswordResetTokensRepository {
+  return {
+    create: vi.fn().mockResolvedValue({ id: 'reset-token-1' }),
+    findByHash: vi.fn().mockResolvedValue(null),
+    markUsed: vi.fn().mockResolvedValue({}),
+    ...overrides,
+  } as unknown as PasswordResetTokensRepository;
+}
+
 const mockNotifications = { enqueueEmail: vi.fn().mockResolvedValue(undefined) };
 
-function makeService(usersRepo: UsersRepository, tokensRepo: TokensRepository): AuthService {
+beforeEach(() => {
+  mockNotifications.enqueueEmail.mockClear();
+});
+
+function makeService(
+  usersRepo: UsersRepository,
+  tokensRepo: TokensRepository,
+  passwordResetTokensRepo: PasswordResetTokensRepository = makePasswordResetTokensRepo(),
+): AuthService {
   return new AuthService(
     mockJwtService as never,
     mockConfig as never,
     usersRepo,
     tokensRepo,
+    passwordResetTokensRepo,
     mockNotifications as never,
   );
 }
@@ -211,5 +233,84 @@ describe('AuthService.logout', () => {
 
     await expect(service.logout('token-inexistente')).resolves.toBeUndefined();
     expect(tokensRepo.revoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.forgotPassword', () => {
+  it('cria token de reset e enfileira e-mail quando usuário existe e está ativo', async () => {
+    const usersRepo = makeUsersRepo({ findByEmail: vi.fn().mockResolvedValue(baseUser) });
+    const resetRepo = makePasswordResetTokensRepo();
+    const service = makeService(usersRepo, makeTokensRepo(), resetRepo);
+
+    await service.forgotPassword('ana@petnalia.com');
+
+    expect(resetRepo.create).toHaveBeenCalledOnce();
+    expect(mockNotifications.enqueueEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'ana@petnalia.com', type: 'password_reset' }),
+    );
+  });
+
+  it('não cria token nem enfileira e-mail quando usuário não existe (evita enumeração)', async () => {
+    const usersRepo = makeUsersRepo({ findByEmail: vi.fn().mockResolvedValue(null) });
+    const resetRepo = makePasswordResetTokensRepo();
+    const service = makeService(usersRepo, makeTokensRepo(), resetRepo);
+
+    await expect(service.forgotPassword('naoexiste@petnalia.com')).resolves.toBeUndefined();
+    expect(resetRepo.create).not.toHaveBeenCalled();
+    expect(mockNotifications.enqueueEmail).not.toHaveBeenCalled();
+  });
+
+  it('não cria token para conta suspensa (evita enumeração de status)', async () => {
+    const suspended = { ...baseUser, status: 'suspended' as const };
+    const usersRepo = makeUsersRepo({ findByEmail: vi.fn().mockResolvedValue(suspended) });
+    const resetRepo = makePasswordResetTokensRepo();
+    const service = makeService(usersRepo, makeTokensRepo(), resetRepo);
+
+    await service.forgotPassword('ana@petnalia.com');
+    expect(resetRepo.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.resetPassword', () => {
+  const futureDate = new Date(Date.now() + 60 * 60 * 1_000);
+
+  it('atualiza a senha, marca o token como usado e revoga sessões existentes', async () => {
+    const stored = { id: 'reset-token-1', userId: baseUser.id, usedAt: null, expiresAt: futureDate };
+    const resetRepo = makePasswordResetTokensRepo({ findByHash: vi.fn().mockResolvedValue(stored) });
+    const usersRepo = makeUsersRepo();
+    const tokensRepo = makeTokensRepo();
+    const service = makeService(usersRepo, tokensRepo, resetRepo);
+
+    await service.resetPassword('raw-reset-token', 'novaSenha123');
+
+    expect(usersRepo.update).toHaveBeenCalledWith(baseUser.id, { passwordHash: '$argon2id$hashed' });
+    expect(resetRepo.markUsed).toHaveBeenCalledWith('reset-token-1');
+    expect(tokensRepo.revokeAllForUser).toHaveBeenCalledWith(baseUser.id);
+  });
+
+  it('lança InvalidResetTokenError quando token não existe', async () => {
+    const resetRepo = makePasswordResetTokensRepo({ findByHash: vi.fn().mockResolvedValue(null) });
+    const service = makeService(makeUsersRepo(), makeTokensRepo(), resetRepo);
+
+    await expect(service.resetPassword('token-invalido', 'novaSenha123'))
+      .rejects.toBeInstanceOf(InvalidResetTokenError);
+  });
+
+  it('lança InvalidResetTokenError quando token já foi usado', async () => {
+    const used = { id: 'reset-token-1', userId: baseUser.id, usedAt: new Date(), expiresAt: futureDate };
+    const resetRepo = makePasswordResetTokensRepo({ findByHash: vi.fn().mockResolvedValue(used) });
+    const service = makeService(makeUsersRepo(), makeTokensRepo(), resetRepo);
+
+    await expect(service.resetPassword('raw-token', 'novaSenha123'))
+      .rejects.toBeInstanceOf(InvalidResetTokenError);
+  });
+
+  it('lança InvalidResetTokenError quando token expirou', async () => {
+    const expired = { id: 'reset-token-1', userId: baseUser.id, usedAt: null, expiresAt: new Date('2020-01-01') };
+    const resetRepo = makePasswordResetTokensRepo({ findByHash: vi.fn().mockResolvedValue(expired) });
+    const service = makeService(makeUsersRepo(), makeTokensRepo(), resetRepo);
+
+    await expect(service.resetPassword('raw-token', 'novaSenha123'))
+      .rejects.toBeInstanceOf(InvalidResetTokenError);
   });
 });
