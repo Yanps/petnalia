@@ -68,4 +68,70 @@ test.describe('Tutor — consultas e avaliação', () => {
     await expect(page.locator('text=Rex').first()).toBeVisible();
     await page.close();
   });
+
+  test('novo endereço: cidade fica desabilitada até selecionar o estado', async ({ tutorContext }) => {
+    const page = await tutorContext.newPage();
+    await page.goto('/perfil', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Adicionar endereço' }).click();
+
+    const stateSelect = page.locator('select').nth(0);
+    const citySelect = page.locator('select').nth(1);
+    await expect(citySelect).toBeDisabled();
+
+    await stateSelect.selectOption('SP');
+    await expect(citySelect).toBeEnabled({ timeout: 5000 });
+
+    const optionCount = await citySelect.locator('option').count();
+    expect(optionCount).toBeGreaterThan(1);
+
+    await citySelect.selectOption('São Paulo');
+    await expect(citySelect).toHaveValue('São Paulo');
+    await page.close();
+  });
+
+  test('novo endereço: CEP preenche estado e cidade automaticamente', async ({ tutorContext }) => {
+    const page = await tutorContext.newPage();
+    await page.goto('/perfil', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Adicionar endereço' }).click();
+
+    await page.fill('input[placeholder="00000-000"]', '01310100');
+    await page.waitForTimeout(2500);
+
+    await expect(page.locator('select').nth(0)).toHaveValue('SP');
+    await expect(page.locator('select').nth(1)).toHaveValue('São Paulo');
+    await page.close();
+  });
+
+  test('novo endereço: rua mostra aviso até estado e cidade serem selecionados', async ({ tutorContext }) => {
+    const page = await tutorContext.newPage();
+    await page.goto('/perfil', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Adicionar endereço' }).click();
+
+    await page.fill('input[placeholder="Ex: Rua das Flores"]', 'Paulista');
+    await expect(page.locator('text=Selecione o estado e a cidade')).toBeVisible();
+    await page.close();
+  });
+
+  test('novo endereço: rua busca sugestões e autocompleta bairro/CEP', async ({ tutorContext }) => {
+    const page = await tutorContext.newPage();
+    await page.goto('/perfil', { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Adicionar endereço' }).click();
+
+    await page.locator('select').nth(0).selectOption('SP');
+    await expect(page.locator('select').nth(1)).toBeEnabled({ timeout: 5000 });
+    await page.locator('select').nth(1).selectOption('São Paulo');
+
+    const streetInput = page.locator('input[placeholder="Ex: Rua das Flores"]');
+    await streetInput.fill('Paulista');
+    await page.waitForTimeout(1200);
+
+    const suggestion = page.locator('button:has-text("CEP")').first();
+    await expect(suggestion).toBeVisible({ timeout: 3000 });
+    await suggestion.click();
+
+    await expect(streetInput).not.toHaveValue('Paulista');
+    await expect(page.locator('input[placeholder="Ex: Jardim Paulista"]')).not.toHaveValue('');
+    await expect(page.locator('input[placeholder="00000-000"]')).not.toHaveValue('');
+    await page.close();
+  });
 });
