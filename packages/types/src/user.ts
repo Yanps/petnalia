@@ -66,6 +66,20 @@ export const UpdateProfileInputSchema = ProfileSchema.pick({
 }).partial();
 export type UpdateProfileInput = z.infer<typeof UpdateProfileInputSchema>;
 
+export const UserMeResponseSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  role: RoleSchema,
+  status: z.enum(['active', 'suspended', 'deleted']),
+  fullName: z.string(),
+  phone: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  cpf: z.string().nullable(),
+  locale: z.string(),
+  createdAt: z.string().datetime(),
+});
+export type UserMeResponse = z.infer<typeof UserMeResponseSchema>;
+
 // Vet-specific registration — extends base register with CRMV; role is always 'veterinarian'
 export const RegisterVetInputSchema = z.object({
   email: z.string().email(),

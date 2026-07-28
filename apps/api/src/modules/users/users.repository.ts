@@ -57,6 +57,10 @@ export class UsersRepository {
     return this.prisma.user.update({ where: { id }, data });
   }
 
+  updateProfile(userId: string, data: Prisma.ProfileUpdateInput) {
+    return this.prisma.profile.update({ where: { userId }, data });
+  }
+
   softDelete(id: string) {
     return this.prisma.user.update({
       where: { id },

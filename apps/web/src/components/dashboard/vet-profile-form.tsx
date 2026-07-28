@@ -192,16 +192,16 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
 
   return (
     <div style={{ padding: '40px 40px 60px' }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{
-          fontFamily: 'var(--font-display)', fontWeight: 800,
-          fontSize: '1.875rem', color: 'var(--text)', letterSpacing: '-0.02em',
-        }}>
-          Perfil do veterinário
-        </h1>
-      </div>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{
+            fontFamily: 'var(--font-display)', fontWeight: 800,
+            fontSize: '1.875rem', color: 'var(--text)', letterSpacing: '-0.02em',
+          }}>
+            Perfil do veterinário
+          </h1>
+        </div>
 
-      <div style={{ maxWidth: 640 }}>
         <div style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',

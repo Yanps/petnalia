@@ -89,6 +89,16 @@ describe('UsersRepository (integração)', () => {
     });
   });
 
+  describe('updateProfile', () => {
+    it('atualiza os campos informados do perfil', async () => {
+      const user = await repo.create(seed);
+      const updated = await repo.updateProfile(user.id, { fullName: 'Ana Souza', cpf: '11144477735' });
+
+      expect(updated.fullName).toBe('Ana Souza');
+      expect(updated.cpf).toBe('11144477735');
+    });
+  });
+
   describe('softDelete', () => {
     it('marca status como deleted e registra deletedAt', async () => {
       const user = await repo.create(seed);

@@ -115,6 +115,7 @@ model Profile {
   fullName  String
   phone     String?
   avatarUrl String?
+  cpf       String?
   locale    String   @default("pt-BR")
   createdAt DateTime @default(now()) @db.Timestamptz
   updatedAt DateTime @updatedAt @db.Timestamptz
