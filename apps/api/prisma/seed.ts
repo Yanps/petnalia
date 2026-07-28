@@ -61,6 +61,7 @@ async function clearAll() {
   await prisma.address.deleteMany();
   await prisma.veterinarian.deleteMany();
   await prisma.refreshToken.deleteMany();
+  await prisma.passwordResetToken.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.user.deleteMany();
