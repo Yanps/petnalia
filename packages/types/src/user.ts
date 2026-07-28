@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { zCpf } from '@petnalia/validation';
 
-import { RoleSchema } from './common.js';
+import { PaginatedResponseSchema, RoleSchema } from './common.js';
 
 export const UserSchema = z.object({
   id: z.string().uuid(),
@@ -107,3 +107,17 @@ export const RejectVetInputSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 export type RejectVetInput = z.infer<typeof RejectVetInputSchema>;
+
+// Admin — user management
+export const AdminUserListItemSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  fullName: z.string(),
+  role: RoleSchema,
+  status: z.enum(['active', 'suspended', 'deleted']),
+  createdAt: z.string().datetime(),
+});
+export type AdminUserListItem = z.infer<typeof AdminUserListItemSchema>;
+
+export const AdminUserListResponseSchema = PaginatedResponseSchema(AdminUserListItemSchema);
+export type AdminUserListResponse = z.infer<typeof AdminUserListResponseSchema>;

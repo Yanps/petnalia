@@ -67,4 +67,17 @@ export class UsersRepository {
       data: { status: 'deleted', deletedAt: new Date() },
     });
   }
+
+  async findAllPaginated(page: number, limit: number) {
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        include: { profile: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.user.count(),
+    ]);
+    return { rows, total };
+  }
 }

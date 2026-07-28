@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Appointment, AppointmentStatus } from '@prisma/client';
-import type { CreateAppointmentInput } from '@petnalia/types';
+import type { AdminAppointmentsQuery, CreateAppointmentInput } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';
 
@@ -72,6 +72,31 @@ export class AppointmentsRepository {
     } catch {
       return null;
     }
+  }
+
+  async findAllForAdmin(params: AdminAppointmentsQuery) {
+    const where = {
+      deletedAt: null,
+      ...(params.status ? { status: params.status } : {}),
+    };
+
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.appointment.findMany({
+        where,
+        include: {
+          tutor: { include: { profile: true } },
+          veterinarian: { include: { user: { include: { profile: true } } } },
+          pet: { select: { name: true } },
+          slot: { select: { startsAt: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (params.page - 1) * params.limit,
+        take: params.limit,
+      }),
+      this.prisma.appointment.count({ where }),
+    ]);
+
+    return { rows, total };
   }
 
   async findParticipants(appointmentId: string) {

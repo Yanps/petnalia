@@ -1,8 +1,12 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import type { AdminAppointmentListResponse, AdminAppointmentsQuery, AdminUserListResponse } from '@petnalia/types';
 
 import { DomainError } from '../../shared/errors/domain.error';
 import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
+import { AppointmentsRepository } from '../appointments/appointments.repository';
 import { NotificationsService } from '../notifications/notifications.service';
+import { UsersRepository } from '../users/users.repository';
+import { UserNotFoundError } from '../users/users.errors';
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
 
 export class VetNotFoundError extends DomainError {
@@ -21,12 +25,24 @@ export class VetNotPendingError extends DomainError {
   }
 }
 
+export class CannotSuspendSelfError extends DomainError {
+  constructor() {
+    super(
+      'ADMIN_CANNOT_SUSPEND_SELF',
+      'Você não pode suspender a própria conta.',
+      HttpStatus.CONFLICT,
+    );
+  }
+}
+
 @Injectable()
 export class AdminService {
   constructor(
     private readonly vetsRepo: VeterinariansRepository,
     private readonly notifications: NotificationsService,
     @Inject(STORAGE_PORT) private readonly storage: StoragePort,
+    private readonly usersRepo: UsersRepository,
+    private readonly appointmentsRepo: AppointmentsRepository,
   ) {}
 
   async listPendingVets(page: number, limit: number) {
@@ -79,5 +95,62 @@ export class AdminService {
       name: vet.user.profile?.fullName ?? vet.user.email,
       reason,
     });
+  }
+
+  async listUsers(page: number, limit: number): Promise<AdminUserListResponse> {
+    const { rows, total } = await this.usersRepo.findAllPaginated(page, limit);
+
+    return {
+      items: rows.map((u) => ({
+        id: u.id,
+        email: u.email,
+        fullName: u.profile?.fullName ?? u.email,
+        role: u.role,
+        status: u.status,
+        createdAt: u.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async suspendUser(adminId: string, userId: string): Promise<void> {
+    if (adminId === userId) throw new CannotSuspendSelfError();
+
+    const user = await this.usersRepo.findById(userId);
+    if (!user) throw new UserNotFoundError();
+
+    await this.usersRepo.update(userId, { status: 'suspended' });
+  }
+
+  async reactivateUser(userId: string): Promise<void> {
+    const user = await this.usersRepo.findById(userId);
+    if (!user) throw new UserNotFoundError();
+
+    await this.usersRepo.update(userId, { status: 'active' });
+  }
+
+  async listAppointments(query: AdminAppointmentsQuery): Promise<AdminAppointmentListResponse> {
+    const { rows, total } = await this.appointmentsRepo.findAllForAdmin(query);
+
+    return {
+      items: rows.map((a) => ({
+        id: a.id,
+        tutorName: a.tutor.profile?.fullName ?? a.tutor.email,
+        vetName: a.veterinarian.user.profile?.fullName ?? a.veterinarian.user.email,
+        petName: a.pet.name,
+        status: a.status,
+        modality: a.modality,
+        priceCents: a.priceCents,
+        scheduledAt: a.slot.startsAt.toISOString(),
+        createdAt: a.createdAt.toISOString(),
+      })),
+      total,
+      page: query.page,
+      limit: query.limit,
+      totalPages: Math.ceil(total / query.limit),
+    };
   }
 }

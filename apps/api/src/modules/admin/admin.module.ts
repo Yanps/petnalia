@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 
+import { AppointmentsModule } from '../appointments/appointments.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersModule } from '../users/users.module';
 import { VeterinariansModule } from '../veterinarians/veterinarians.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
 @Module({
-  imports: [VeterinariansModule, NotificationsModule],
+  imports: [VeterinariansModule, NotificationsModule, UsersModule, AppointmentsModule],
   controllers: [AdminController],
   providers: [AdminService],
 })

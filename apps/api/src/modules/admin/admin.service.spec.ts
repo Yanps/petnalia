@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import type { StoragePort } from '../../shared/storage/storage.port';
+import { AppointmentsRepository } from '../appointments/appointments.repository';
 import { NotificationsService } from '../notifications/notifications.service';
+import { UsersRepository } from '../users/users.repository';
+import { UserNotFoundError } from '../users/users.errors';
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
-import { AdminService, VetNotFoundError, VetNotPendingError } from './admin.service';
+import { AdminService, CannotSuspendSelfError, VetNotFoundError, VetNotPendingError } from './admin.service';
 
 const VET_ID = 'vet-uuid-1';
 const USER_ID = 'user-uuid-1';
@@ -41,12 +44,39 @@ function makeStorage(overrides: Partial<StoragePort> = {}): StoragePort {
   };
 }
 
+const baseAdminUser = {
+  id: USER_ID,
+  email: 'tutor@petnalia.com',
+  role: 'tutor' as const,
+  status: 'active' as const,
+  profile: { fullName: 'Ana Tutora' },
+  createdAt: new Date('2026-01-01'),
+};
+
+function makeUsersRepo(overrides: Partial<UsersRepository> = {}) {
+  return {
+    findById: vi.fn().mockResolvedValue(baseAdminUser),
+    update: vi.fn().mockResolvedValue(baseAdminUser),
+    findAllPaginated: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+    ...overrides,
+  } as unknown as UsersRepository;
+}
+
+function makeAppointmentsRepo(overrides: Partial<AppointmentsRepository> = {}) {
+  return {
+    findAllForAdmin: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+    ...overrides,
+  } as unknown as AppointmentsRepository;
+}
+
 function makeService(
   vetsRepo = makeVetsRepo(),
   notifications = makeNotifications(),
   storage = makeStorage(),
+  usersRepo = makeUsersRepo(),
+  appointmentsRepo = makeAppointmentsRepo(),
 ) {
-  return new AdminService(vetsRepo, notifications, storage);
+  return new AdminService(vetsRepo, notifications, storage, usersRepo, appointmentsRepo);
 }
 
 describe('AdminService.listPendingVets', () => {
@@ -176,5 +206,118 @@ describe('AdminService.rejectVet', () => {
     expect(notifications.enqueueEmail).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'vet_rejected', reason: 'CRMV vencido' }),
     );
+  });
+});
+
+describe('AdminService.listUsers', () => {
+  it('mapeia usuários para o formato paginado', async () => {
+    const usersRepo = makeUsersRepo({
+      findAllPaginated: vi.fn().mockResolvedValue({ rows: [baseAdminUser], total: 1 }),
+    });
+    const result = await makeService(makeVetsRepo(), makeNotifications(), makeStorage(), usersRepo)
+      .listUsers(1, 20);
+
+    expect(result).toEqual({
+      items: [{
+        id: USER_ID,
+        email: 'tutor@petnalia.com',
+        fullName: 'Ana Tutora',
+        role: 'tutor',
+        status: 'active',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      }],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+  });
+});
+
+describe('AdminService.suspendUser', () => {
+  const ADMIN_ID = 'admin-uuid-1';
+
+  it('suspende o usuário quando ele existe', async () => {
+    const usersRepo = makeUsersRepo();
+    await makeService(makeVetsRepo(), makeNotifications(), makeStorage(), usersRepo)
+      .suspendUser(ADMIN_ID, USER_ID);
+
+    expect(usersRepo.update).toHaveBeenCalledWith(USER_ID, { status: 'suspended' });
+  });
+
+  it('lança CannotSuspendSelfError quando o admin tenta suspender a si mesmo', async () => {
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo());
+    await expect(service.suspendUser(ADMIN_ID, ADMIN_ID)).rejects.toThrow(CannotSuspendSelfError);
+  });
+
+  it('lança UserNotFoundError quando o usuário não existe', async () => {
+    const usersRepo = makeUsersRepo({ findById: vi.fn().mockResolvedValue(null) });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), usersRepo);
+    await expect(service.suspendUser(ADMIN_ID, USER_ID)).rejects.toThrow(UserNotFoundError);
+  });
+});
+
+describe('AdminService.reactivateUser', () => {
+  it('reativa o usuário quando ele existe', async () => {
+    const usersRepo = makeUsersRepo();
+    await makeService(makeVetsRepo(), makeNotifications(), makeStorage(), usersRepo)
+      .reactivateUser(USER_ID);
+
+    expect(usersRepo.update).toHaveBeenCalledWith(USER_ID, { status: 'active' });
+  });
+
+  it('lança UserNotFoundError quando o usuário não existe', async () => {
+    const usersRepo = makeUsersRepo({ findById: vi.fn().mockResolvedValue(null) });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), usersRepo);
+    await expect(service.reactivateUser(USER_ID)).rejects.toThrow(UserNotFoundError);
+  });
+});
+
+describe('AdminService.listAppointments', () => {
+  it('mapeia consultas para o formato paginado', async () => {
+    const row = {
+      id: 'apt-uuid-1',
+      tutor: { email: 'tutor@petnalia.com', profile: { fullName: 'Ana Tutora' } },
+      veterinarian: { user: { email: 'vet@petnalia.com', profile: { fullName: 'Dr. Bruno' } } },
+      pet: { name: 'Rex' },
+      status: 'confirmed' as const,
+      modality: 'home' as const,
+      priceCents: 15000,
+      slot: { startsAt: new Date('2026-02-01T09:00:00.000Z') },
+      createdAt: new Date('2026-01-15T00:00:00.000Z'),
+    };
+    const appointmentsRepo = makeAppointmentsRepo({
+      findAllForAdmin: vi.fn().mockResolvedValue({ rows: [row], total: 1 }),
+    });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), appointmentsRepo);
+
+    const result = await service.listAppointments({ page: 1, limit: 20 });
+
+    expect(result).toEqual({
+      items: [{
+        id: 'apt-uuid-1',
+        tutorName: 'Ana Tutora',
+        vetName: 'Dr. Bruno',
+        petName: 'Rex',
+        status: 'confirmed',
+        modality: 'home',
+        priceCents: 15000,
+        scheduledAt: '2026-02-01T09:00:00.000Z',
+        createdAt: '2026-01-15T00:00:00.000Z',
+      }],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
+  });
+
+  it('repassa o filtro de status para o repositório', async () => {
+    const appointmentsRepo = makeAppointmentsRepo();
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), appointmentsRepo);
+
+    await service.listAppointments({ page: 1, limit: 20, status: 'cancelled' });
+
+    expect(appointmentsRepo.findAllForAdmin).toHaveBeenCalledWith({ page: 1, limit: 20, status: 'cancelled' });
   });
 });

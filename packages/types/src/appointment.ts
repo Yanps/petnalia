@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { AppointmentStatusSchema, ModalitySchema } from './common.js';
+import { AppointmentStatusSchema, ModalitySchema, PaginatedResponseSchema, PaginationQuerySchema } from './common.js';
 
 export const AppointmentSchema = z.object({
   id: z.string().uuid(),
@@ -40,3 +40,25 @@ export const HoldSlotResponseSchema = z.object({
   expiresAt: z.string().datetime(),
 });
 export type HoldSlotResponse = z.infer<typeof HoldSlotResponseSchema>;
+
+// Admin — cross-cutting appointment oversight
+export const AdminAppointmentsQuerySchema = PaginationQuerySchema.extend({
+  status: AppointmentStatusSchema.optional(),
+});
+export type AdminAppointmentsQuery = z.infer<typeof AdminAppointmentsQuerySchema>;
+
+export const AdminAppointmentListItemSchema = z.object({
+  id: z.string().uuid(),
+  tutorName: z.string(),
+  vetName: z.string(),
+  petName: z.string(),
+  status: AppointmentStatusSchema,
+  modality: ModalitySchema,
+  priceCents: z.number().int().nonnegative(),
+  scheduledAt: z.string().datetime(),
+  createdAt: z.string().datetime(),
+});
+export type AdminAppointmentListItem = z.infer<typeof AdminAppointmentListItemSchema>;
+
+export const AdminAppointmentListResponseSchema = PaginatedResponseSchema(AdminAppointmentListItemSchema);
+export type AdminAppointmentListResponse = z.infer<typeof AdminAppointmentListResponseSchema>;

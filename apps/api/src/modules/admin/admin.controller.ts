@@ -9,8 +9,10 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { RejectVetInputSchema } from '@petnalia/types';
+import { AdminAppointmentsQuerySchema, PaginationQuerySchema, RejectVetInputSchema } from '@petnalia/types';
+import type { User } from '@prisma/client';
 
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { AdminService } from './admin.service';
 
@@ -44,5 +46,32 @@ export class AdminController {
   ): Promise<void> {
     const dto = RejectVetInputSchema.parse(body);
     await this.adminService.rejectVet(id, dto.reason);
+  }
+
+  @Get('users')
+  listUsers(@Query() rawQuery: unknown) {
+    const query = PaginationQuerySchema.parse(rawQuery);
+    return this.adminService.listUsers(query.page, query.limit);
+  }
+
+  @Post('users/:id/suspend')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async suspendUser(
+    @CurrentUser() admin: User,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.adminService.suspendUser(admin.id, id);
+  }
+
+  @Post('users/:id/reactivate')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async reactivateUser(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.adminService.reactivateUser(id);
+  }
+
+  @Get('appointments')
+  listAppointments(@Query() rawQuery: unknown) {
+    const query = AdminAppointmentsQuerySchema.parse(rawQuery);
+    return this.adminService.listAppointments(query);
   }
 }
