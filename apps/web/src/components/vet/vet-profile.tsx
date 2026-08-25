@@ -74,7 +74,7 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
     t === 'avaliacoes' ? `Avaliações (${vet.totalReviews})` : TABS.find((x) => x.id === t)!.label;
 
   return (
-    <div style={{ maxWidth: 1152, margin: '0 auto', padding: '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start' }}>
+    <div className="pn-vet-profile-layout" style={{ maxWidth: 1152, margin: '0 auto', padding: '40px 24px', display: 'flex', gap: 40, alignItems: 'flex-start' }}>
       {/* Main content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Breadcrumb */}

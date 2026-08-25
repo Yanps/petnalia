@@ -1,0 +1,28 @@
+import type { Metadata } from 'next';
+import { getToken } from '@/lib/auth';
+import { CreateSlotsForm } from '@/components/dashboard/create-slots-form';
+
+export const metadata: Metadata = { title: 'Disponibilidade — Pet sitter' };
+
+export default async function PetSitterDisponibilidadePage() {
+  const token = await getToken();
+
+  return (
+    <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{
+          fontFamily: 'var(--font-display)', fontWeight: 800,
+          fontSize: '1.875rem', color: 'var(--text)', letterSpacing: '-0.02em',
+          marginBottom: 8,
+        }}>
+          Disponibilidade
+        </h1>
+        <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
+          Adicione os horários em que você está disponível para atender tutores.
+        </p>
+      </div>
+
+      <CreateSlotsForm token={token ?? ''} endpoint="/v1/pet-sitter-availability/slots" />
+    </div>
+  );
+}

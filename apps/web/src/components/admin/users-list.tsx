@@ -10,6 +10,7 @@ const ROLE_LABEL: Record<AdminUserListItem['role'], string> = {
   tutor: 'Tutor',
   veterinarian: 'Veterinário',
   admin: 'Admin',
+  pet_sitter: 'Pet sitter',
 };
 
 const STATUS_LABEL: Record<AdminUserListItem['status'], string> = {

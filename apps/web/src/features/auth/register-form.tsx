@@ -2,10 +2,11 @@
 
 import { useTransition, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Button, Icon } from '@petnalia/ui';
 import { registerAction } from './actions';
 
-type Role = 'TUTOR' | 'VETERINARIAN';
+type Role = 'TUTOR' | 'VETERINARIAN' | 'PET_SITTER';
 
 const BRAZIL_STATES = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA',
@@ -26,6 +27,12 @@ const ROLES: { id: Role; label: string; description: string; icon: React.ReactNo
     description: 'Quero atender pets',
     icon: <Icon name="stethoscope" size={20} />,
   },
+  {
+    id: 'PET_SITTER',
+    label: 'Sou pet sitter',
+    description: 'Quero hospedar e passear com pets',
+    icon: <Icon name="paw-print" size={20} />,
+  },
 ];
 
 const fieldStyle: React.CSSProperties = {
@@ -41,10 +48,18 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--text)', marginBottom: 6,
 };
 
+function roleFromParam(value: string | null): Role {
+  const normalized = value?.toLowerCase();
+  if (normalized === 'veterinarian') return 'VETERINARIAN';
+  if (normalized === 'pet_sitter' || normalized === 'pet-sitter') return 'PET_SITTER';
+  return 'TUTOR';
+}
+
 export function RegisterForm() {
+  const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>(undefined);
-  const [role, setRole] = useState<Role>('TUTOR');
+  const [role, setRole] = useState<Role>(() => roleFromParam(searchParams.get('role')));
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -61,7 +76,7 @@ export function RegisterForm() {
   }
 
   return (
-    <div style={{ width: '100%', maxWidth: 440 }}>
+    <div style={{ width: '100%', maxWidth: 560 }}>
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 700,
@@ -70,26 +85,26 @@ export function RegisterForm() {
           Crie sua conta
         </h1>
         <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
-          {role === 'TUTOR'
-            ? 'Gratuito para tutores, sem cartão de crédito.'
-            : 'Cadastre seu CRMV — a aprovação é feita em até 24h.'}
+          {role === 'TUTOR' && 'Gratuito para tutores, sem cartão de crédito.'}
+          {role === 'VETERINARIAN' && 'Cadastre seu CRMV — a aprovação é feita em até 24h.'}
+          {role === 'PET_SITTER' && 'Gratuito para pet sitters, comece a receber pedidos hoje.'}
         </p>
       </div>
 
-      <div style={{
+      <div className="pn-auth-card" style={{
         background: 'white', borderRadius: 'var(--radius-xl)',
-        border: '1px solid var(--border)', padding: '32px',
+        border: '1px solid var(--border)', padding: '36px 40px',
         boxShadow: 'var(--shadow-md)',
       }}>
         {/* Role selector */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+        <div className="pn-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
           {ROLES.map(({ id, label, description, icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setRole(id)}
               style={{
-                padding: '14px 12px', borderRadius: 'var(--radius-md)',
+                padding: '16px 14px', borderRadius: 'var(--radius-md)',
                 border: `2px solid ${role === id ? 'var(--brand)' : 'var(--border)'}`,
                 background: role === id ? 'var(--teal-50)' : 'var(--surface)',
                 cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
@@ -178,7 +193,11 @@ export function RegisterForm() {
           )}
 
           <Button type="submit" variant="primary" size="lg" block disabled={pending} style={{ marginTop: 4 }}>
-            {pending ? 'Criando conta...' : role === 'VETERINARIAN' ? 'Cadastrar e aguardar verificação' : 'Criar conta grátis'}
+            {pending
+              ? 'Criando conta...'
+              : role === 'VETERINARIAN'
+                ? 'Cadastrar e aguardar verificação'
+                : 'Criar conta grátis'}
           </Button>
 
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>

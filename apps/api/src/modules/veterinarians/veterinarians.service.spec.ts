@@ -123,7 +123,7 @@ describe('VeterinariansService.search', () => {
   it('repassa params de busca para o repositório', async () => {
     const repo = makeRepo([], 0);
     const service = new VeterinariansService(repo, mockStorage);
-    const query = { ...baseQuery, radiusKm: 50, specialtyId: 'spec-uuid-1' };
+    const query = { ...baseQuery, radiusKm: 50, specialtyIds: ['spec-uuid-1'] };
 
     await service.search(query);
 

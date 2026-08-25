@@ -1,15 +1,20 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Busca de veterinários', () => {
-  test('landing page exibe veterinários em destaque', async ({ page }) => {
+  test('landing page exibe veterinários e pet sitters em destaque num carrossel', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
-    await expect(page.locator('text=Veterinários disponíveis agora')).toBeVisible();
-    // VetCards must show full name (not truncated)
+    await expect(page.locator('text=Profissionais disponíveis agora')).toBeVisible();
+    // 3 VetCards + 2 PetSitterCards in a single scroll row, sharing the .vn-vetcard hook class
     const cards = page.locator('.vn-vetcard');
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(5);
     // Names should not be just initials — at least 5 chars visible
     const firstName = await cards.first().locator('h3').textContent();
     expect(firstName?.length ?? 0).toBeGreaterThan(5);
+    // All cards share one flex row, so they must all render at the same height
+    // (no ragged heights when a vet's specialty text wraps to two lines, etc.)
+    const heights = await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
+    const [firstHeight, ...rest] = heights;
+    for (const h of rest) expect(Math.abs(h - firstHeight)).toBeLessThan(1);
   });
 
   test('página de busca carrega com resultados', async ({ page }) => {
@@ -63,9 +68,24 @@ test.describe('Busca de veterinários', () => {
 
   test('campo de busca redireciona para /busca', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
-    await page.fill('input[type="search"], input[placeholder*="especialidade"], input[placeholder*="cidade"]', 'Cardiologia');
+    await page.fill('input[placeholder="Especialidade"]', 'Cardiologia');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/\/busca/);
+  });
+
+  test('aba Pet sitter mostra só o campo de local', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await expect(page.locator('input[placeholder="Especialidade"]')).toBeVisible();
+
+    await page.click('button:has-text("Pet sitter")');
+    await expect(page.locator('input[placeholder="Especialidade"]')).toBeHidden();
+    await expect(page.locator('input[placeholder="Cidade ou região"]')).toBeVisible();
+  });
+
+  test('busca por pet sitter retorna resultados', async ({ page }) => {
+    await page.goto('/busca?tipo=pet-sitter', { waitUntil: 'networkidle' });
+    await expect(page.locator('h1')).toContainText('Pet sitters próximos');
+    await expect(page.locator('body')).toContainText(/pet sitter(s)? encontrado/);
   });
 });

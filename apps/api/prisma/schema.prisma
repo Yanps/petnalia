@@ -24,6 +24,7 @@ enum Role {
   tutor
   veterinarian
   admin
+  pet_sitter
 }
 
 enum UserStatus {
@@ -49,6 +50,13 @@ enum VetTier {
   premium
 }
 
+enum PetSitterModerationStatus {
+  clean
+  flagged
+  confirmed_violation
+  dismissed
+}
+
 enum AppointmentStatus {
   requested
   confirmed
@@ -67,6 +75,13 @@ enum SlotStatus {
   held
   booked
   blocked
+}
+
+enum PetSitterBookingStatus {
+  requested
+  confirmed
+  completed
+  cancelled
 }
 
 enum SubscriptionStatus {
@@ -98,10 +113,13 @@ model User {
   profile          Profile?
   pets             Pet[]
   veterinarian     Veterinarian?
+  petSitter        PetSitter?
   addresses        Address[]
   notifications    Notification[]
   reviewsAuthored  Review[]        @relation("ReviewAuthor")
+  petSitterReviewsAuthored PetSitterReview[] @relation("PetSitterReviewAuthor")
   appointments     Appointment[]   @relation("TutorAppointments")
+  petSitterBookings PetSitterBooking[] @relation("TutorPetSitterBookings")
   refreshTokens    RefreshToken[]
   passwordResetTokens PasswordResetToken[]
 
@@ -143,6 +161,7 @@ model Pet {
 
   owner        User          @relation(fields: [ownerId], references: [id])
   appointments Appointment[]
+  petSitterBookings PetSitterBooking[]
 
   @@index([ownerId])
   @@map("pets")
@@ -220,6 +239,7 @@ model Address {
 
   user         User          @relation(fields: [userId], references: [id])
   appointments Appointment[]
+  petSitterBookings PetSitterBooking[]
 
   @@index([userId])
   @@map("addresses")
@@ -353,4 +373,102 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+// Minimal slice: own account + self-service profile edit + booking, no
+// verification or reviews yet. GIST index added by hand-edited migration
+// — see ADR-002.
+model PetSitter {
+  id                String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String                     @unique @db.Uuid
+  fullName          String
+  bio               String?
+  avatarUrl         String?
+  services          String[]                   @default([])
+  baseCity          String?
+  baseState         String?                    @db.Char(2)
+  geog              Unsupported("geography(Point, 4326)")?
+  moderationStatus  PetSitterModerationStatus  @default(clean)
+  flagReason        String?
+  moderatorNote     String?
+  violationCount    Int                        @default(0)
+  deletedAt         DateTime?                  @db.Timestamptz
+  createdAt         DateTime                   @default(now()) @db.Timestamptz
+  updatedAt         DateTime                   @updatedAt @db.Timestamptz
+
+  user              User                       @relation(fields: [userId], references: [id])
+  availabilitySlots PetSitterAvailabilitySlot[]
+  bookings          PetSitterBooking[]
+  reviews           PetSitterReview[]
+
+  @@index([moderationStatus])
+  @@map("pet_sitters")
+}
+
+model PetSitterAvailabilitySlot {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  petSitterId String     @db.Uuid
+  startsAt    DateTime   @db.Timestamptz
+  endsAt      DateTime   @db.Timestamptz
+  status      SlotStatus @default(open)
+  heldUntil   DateTime?  @db.Timestamptz
+  createdAt   DateTime   @default(now()) @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @db.Timestamptz
+
+  petSitter PetSitter         @relation(fields: [petSitterId], references: [id])
+  booking   PetSitterBooking?
+
+  @@index([petSitterId, startsAt])
+  @@map("pet_sitter_availability_slots")
+}
+
+// No priceCents/payment: pet sitter bookings stay free while the platform has
+// no billing model for this role — see the monetization decision in the
+// pet sitter moderation feature's history. addressId is optional (unlike vet
+// Appointment, where it's required) because only "passeio"/"visita_domiciliar"
+// bring the sitter to the tutor's address — "hospedagem"/"day_care" have the
+// pet go to the sitter instead.
+model PetSitterBooking {
+  id          String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tutorId     String                  @db.Uuid
+  petSitterId String                  @db.Uuid
+  petId       String                  @db.Uuid
+  addressId   String?                 @db.Uuid
+  slotId      String                  @unique @db.Uuid
+  service     String
+  status      PetSitterBookingStatus  @default(requested)
+  notes       String?
+  createdAt   DateTime                @default(now()) @db.Timestamptz
+  updatedAt   DateTime                @updatedAt @db.Timestamptz
+  deletedAt   DateTime?               @db.Timestamptz
+
+  tutor     User                      @relation("TutorPetSitterBookings", fields: [tutorId], references: [id])
+  petSitter PetSitter                 @relation(fields: [petSitterId], references: [id])
+  pet       Pet                       @relation(fields: [petId], references: [id])
+  address   Address?                  @relation(fields: [addressId], references: [id])
+  slot      PetSitterAvailabilitySlot @relation(fields: [slotId], references: [id])
+  review    PetSitterReview?
+
+  @@index([petSitterId, status])
+  @@index([tutorId, status])
+  @@map("pet_sitter_bookings")
+}
+
+model PetSitterReview {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId   String    @unique @db.Uuid
+  authorId    String    @db.Uuid
+  petSitterId String    @db.Uuid
+  rating      Int
+  text        String?
+  publishedAt DateTime? @db.Timestamptz
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+
+  booking   PetSitterBooking @relation(fields: [bookingId], references: [id])
+  author    User             @relation("PetSitterReviewAuthor", fields: [authorId], references: [id])
+  petSitter PetSitter        @relation(fields: [petSitterId], references: [id])
+
+  @@index([petSitterId])
+  @@map("pet_sitter_reviews")
 }

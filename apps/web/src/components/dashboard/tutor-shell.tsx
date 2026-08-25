@@ -15,6 +15,7 @@ interface TutorShellProps {
 const NAV = [
   { href: '/painel', icon: 'home' as const, label: 'Painel' },
   { href: '/consultas', icon: 'calendar' as const, label: 'Consultas' },
+  { href: '/reservas', icon: 'heart-handshake' as const, label: 'Reservas com pet sitter' },
   { href: '/pets', icon: 'paw-print' as const, label: 'Meus pets' },
   { href: '/perfil', icon: 'user' as const, label: 'Meu perfil' },
 ] as const;

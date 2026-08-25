@@ -53,11 +53,17 @@ export const UpdateVetProfileInputSchema = z.object({
 });
 export type UpdateVetProfileInput = z.infer<typeof UpdateVetProfileInputSchema>;
 
+const zStringArray = z.preprocess(
+  (v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v]),
+  z.array(z.string().uuid()).optional(),
+);
+
 export const VetSearchQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
   radiusKm: z.coerce.number().positive().max(200).default(20),
-  specialtyId: z.string().uuid().optional(),
+  specialtyIds: zStringArray,
+  q: z.string().trim().min(1).max(120).optional(),
   modality: z.enum(['home', 'online', 'any']).default('any'),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().min(1).max(50).default(12),

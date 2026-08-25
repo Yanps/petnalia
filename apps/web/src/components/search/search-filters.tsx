@@ -13,28 +13,43 @@ interface Specialty {
 interface SearchFiltersProps {
   readonly specialties: readonly Specialty[];
   readonly currentRadius: number;
-  readonly currentSpecialtyId: string | undefined;
+  readonly currentSpecialtyIds: readonly string[];
   readonly lat: number;
   readonly lng: number;
 }
 
-export function SearchFilters({ specialties, currentRadius, currentSpecialtyId, lat, lng }: SearchFiltersProps) {
+export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds, lat, lng }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [specialtyQuery, setSpecialtyQuery] = useState('');
 
-  const activeCount = (currentRadius !== 20 ? 1 : 0) + (currentSpecialtyId ? 1 : 0);
+  const filteredSpecialties = specialtyQuery.trim()
+    ? specialties.filter((s) => s.name.toLowerCase().includes(specialtyQuery.trim().toLowerCase()))
+    : specialties;
 
-  function updateParams(updates: Record<string, string | null>) {
+  const activeCount = (currentRadius !== 20 ? 1 : 0) + currentSpecialtyIds.length;
+
+  function updateParams(updates: Record<string, string | readonly string[] | null>) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(updates)) {
-      if (value === null) {
-        params.delete(key);
+      params.delete(key);
+      if (value === null) continue;
+      if (Array.isArray(value)) {
+        for (const v of value) params.append(key, v);
       } else {
-        params.set(key, value);
+        params.set(key, value as string);
       }
     }
     router.push(`/busca?${params.toString()}`);
+    setPanelOpen(false);
+  }
+
+  function toggleSpecialty(id: string, checked: boolean) {
+    const next = checked
+      ? [...currentSpecialtyIds, id]
+      : currentSpecialtyIds.filter((x) => x !== id);
+    updateParams({ especialidade: next });
   }
 
   const filterContent = (
@@ -65,22 +80,48 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyId, 
           <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>
             Especialidade
           </p>
-          {specialties.map((s) => (
-            <label
-              key={s.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}
-            >
-              <input
-                type="checkbox"
-                checked={currentSpecialtyId === s.id}
-                onChange={(e) =>
-                  updateParams({ especialidade: e.target.checked ? s.id : null })
-                }
-                style={{ accentColor: 'var(--brand)', width: 16, height: 16, cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{s.name}</span>
-            </label>
-          ))}
+
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'var(--surface-2)', borderRadius: 'var(--radius-md)',
+            padding: '6px 10px', border: '1px solid var(--border)',
+            marginBottom: 12,
+          }}>
+            <Icon name="search" size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <input
+              type="text"
+              value={specialtyQuery}
+              onChange={(e) => setSpecialtyQuery(e.target.value)}
+              placeholder="Buscar especialidade..."
+              style={{
+                flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent',
+                fontSize: '0.8125rem', color: 'var(--text)', fontFamily: 'inherit',
+              }}
+            />
+          </div>
+
+          <div style={{ maxHeight: 260, overflowY: 'auto', paddingRight: 4 }}>
+            {filteredSpecialties.length === 0 ? (
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                Nenhuma especialidade encontrada.
+              </p>
+            ) : (
+              filteredSpecialties.map((s) => (
+                <label
+                  key={s.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={currentSpecialtyIds.includes(s.id)}
+                    onChange={(e) => toggleSpecialty(s.id, e.target.checked)}
+                    style={{ accentColor: 'var(--brand)', width: 16, height: 16, cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: '0.875rem', color: 'var(--text)' }}>{s.name}</span>
+                </label>
+              ))
+            )}
+          </div>
         </div>
       )}
     </>

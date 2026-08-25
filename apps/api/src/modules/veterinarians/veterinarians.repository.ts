@@ -74,11 +74,24 @@ export class VeterinariansRepository {
     const offset = (params.page - 1) * params.limit;
     const radiusMeters = params.radiusKm * 1000;
 
-    const specialtyFilter = params.specialtyId
+    const specialtyFilter = params.specialtyIds?.length
       ? Prisma.sql`AND EXISTS (
           SELECT 1 FROM veterinarian_specialties vs2
           WHERE vs2."veterinarianId" = v.id
-            AND vs2."specialtyId" = ${params.specialtyId}::uuid
+            AND vs2."specialtyId" = ANY(${params.specialtyIds}::uuid[])
+        )`
+      : Prisma.empty;
+
+    const textFilter = params.q
+      ? Prisma.sql`AND (
+          p."fullName" ILIKE ${'%' + params.q + '%'}
+          OR v.bio ILIKE ${'%' + params.q + '%'}
+          OR EXISTS (
+            SELECT 1 FROM veterinarian_specialties vs3
+            JOIN specialties s3 ON s3.id = vs3."specialtyId"
+            WHERE vs3."veterinarianId" = v.id
+              AND s3.name ILIKE ${'%' + params.q + '%'}
+          )
         )`
       : Prisma.empty;
 
@@ -132,6 +145,7 @@ export class VeterinariansRepository {
           ${radiusMeters}::float8
         )
         ${specialtyFilter}
+        ${textFilter}
       GROUP BY
         v.id, p."fullName", p."avatarUrl", v.bio,
         v."verificationStatus", v.tier, v."serviceRadiusKm",

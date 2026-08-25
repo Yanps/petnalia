@@ -4,7 +4,7 @@ import { Button, Icon } from '@petnalia/ui';
 
 export const metadata: Metadata = {
   title: 'Planos — PetNalia',
-  description: 'Conheça os planos gratuitos para tutores e as opções para veterinários que queiram ampliar sua carteira de clientes.',
+  description: 'Conheça os planos gratuitos para tutores e pet sitters, e as opções para veterinários que queiram ampliar sua carteira de clientes.',
 };
 
 export const revalidate = 3600;
@@ -14,6 +14,13 @@ const TUTOR_BENEFITS = [
   { icon: 'calendar' as const, text: 'Agendamento gratuito' },
   { icon: 'paw-print' as const, text: 'Cadastro de pets ilimitado' },
   { icon: 'star' as const, text: 'Avaliação de atendimentos' },
+] as const;
+
+const PET_SITTER_BENEFITS = [
+  { icon: 'search' as const, text: 'Apareça na busca por local' },
+  { icon: 'paw-print' as const, text: 'Ofereça hospedagem, passeio e day care' },
+  { icon: 'map-pin' as const, text: 'Defina sua cidade de atendimento' },
+  { icon: 'user' as const, text: 'Perfil com bio e serviços' },
 ] as const;
 
 const VET_PLANS = [
@@ -78,7 +85,7 @@ export default function PlanosPage() {
           fontSize: '1.0625rem', color: 'var(--text-secondary)',
           lineHeight: 1.65, maxWidth: 540, margin: '0 auto',
         }}>
-          Para tutores, a PetNalia é sempre gratuita. Veterinários têm opções de plano para crescer no ritmo que preferem.
+          Para tutores, a PetNalia é sempre gratuita. Pet sitters também usam a plataforma sem custo. Veterinários têm opções de plano para crescer no ritmo que preferem.
         </p>
       </section>
 
@@ -134,6 +141,56 @@ export default function PlanosPage() {
             </div>
           </div>
 
+          <div style={{
+            background: 'var(--teal-50)',
+            border: '1px solid var(--teal-200)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '40px 48px',
+            marginBottom: 64,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 40, flexWrap: 'wrap' }}>
+              <div style={{ maxWidth: 480 }}>
+                <p style={{
+                  fontSize: '0.8125rem', fontWeight: 600, color: 'var(--brand)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10,
+                }}>
+                  Para pet sitters
+                </p>
+                <h2 style={{
+                  fontFamily: 'var(--font-display)', fontWeight: 800,
+                  fontSize: '1.625rem', color: 'var(--text)', letterSpacing: '-0.015em', marginBottom: 12,
+                }}>
+                  Grátis
+                </h2>
+                <p style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 24 }}>
+                  Pet sitters usam a PetNalia sem custo. Cadastre seus serviços e apareça para tutores da sua região.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {PET_SITTER_BENEFITS.map(({ icon, text }) => (
+                    <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Icon name={icon} size={16} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                <p style={{
+                  fontFamily: 'var(--font-display)', fontWeight: 800,
+                  fontSize: '3rem', color: 'var(--brand)', letterSpacing: '-0.03em', lineHeight: 1,
+                }}>
+                  R$ 0
+                </p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>sem custo</p>
+                <Link href="/cadastro?role=pet_sitter" style={{ textDecoration: 'none' }}>
+                  <Button variant="primary" size="md" iconRight="arrow-right">
+                    Criar conta gratuita
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <p style={{
               fontSize: '0.8125rem', fontWeight: 600, color: 'var(--brand)',
@@ -152,7 +209,7 @@ export default function PlanosPage() {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          <div className="pn-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
             {VET_PLANS.map(({ name, price, period, highlight, features, cta }) => (
               <div key={name} style={{
                 padding: '32px 28px',

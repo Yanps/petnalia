@@ -27,7 +27,7 @@ export function Footer() {
       marginTop: 'auto',
     }}>
       <div style={{ maxWidth: 1152, margin: '0 auto', padding: '48px 24px 32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }}>
+        <div className="pn-footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }}>
           <div>
             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: 16 }}>
               <span style={{
@@ -71,8 +71,11 @@ export function Footer() {
             © {new Date().getFullYear()} PetNalia. Todos os direitos reservados.
           </p>
           <div style={{ display: 'flex', gap: 20 }}>
-            {['Privacidade', 'Termos de uso'].map((label) => (
-              <Link key={label} href="#" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
+            {[
+              { href: '/privacidade', label: 'Privacidade' },
+              { href: '/termos', label: 'Termos de uso' },
+            ].map(({ href, label }) => (
+              <Link key={href} href={href} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textDecoration: 'none' }}>
                 {label}
               </Link>
             ))}

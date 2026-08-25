@@ -90,7 +90,7 @@ export default async function TutorPainelPage() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 40 }}>
+      <div className="pn-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 40 }}>
         {stats.map(({ label, value, icon }) => (
           <div key={label} style={{
             background: 'var(--surface)',
@@ -122,7 +122,7 @@ export default async function TutorPainelPage() {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="pn-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Próximas consultas */}
         <div style={{
           background: 'var(--surface)',

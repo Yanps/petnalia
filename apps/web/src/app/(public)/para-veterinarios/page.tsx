@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Badge, Button, Icon } from '@petnalia/ui';
 
 export const metadata: Metadata = {
@@ -93,10 +94,26 @@ export default function ParaVeterinariosPage() {
     <main>
       {/* Hero */}
       <section style={{
+        position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(160deg, var(--teal-800) 0%, var(--teal-600) 55%, var(--teal-500) 100%)',
         padding: '96px 24px 80px',
       }}>
-        <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Image
+            src="/images/vet-plans.jpeg"
+            alt="Veterinária em consultório com equipamentos de atendimento e o logo da PetNalia ao fundo"
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(160deg, rgba(19,78,74,0.93) 0%, rgba(15,118,110,0.87) 55%, rgba(13,148,136,0.8) 100%)',
+          }} />
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
           <Badge variant="brand" icon="stethoscope" style={{ marginBottom: 24, background: 'rgba(255,255,255,0.15)', color: '#fff', borderColor: 'rgba(255,255,255,0.25)' }}>
             Para veterinários
           </Badge>
@@ -266,7 +283,7 @@ export default function ParaVeterinariosPage() {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          <div className="pn-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
             {PLANS.map(({ name, price, period, highlight, features }) => (
               <div key={name} style={{
                 padding: '32px 28px',

@@ -596,6 +596,7 @@ textarea.vn-input { height: auto; min-height: 96px; padding: var(--space-3) var(
 
 /* ---- Card ---- */
 .vn-card {
+  display: flex; flex-direction: column; height: 100%;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
   transition: box-shadow var(--dur-base) var(--ease-standard),

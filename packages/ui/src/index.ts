@@ -50,6 +50,21 @@ export type { AlertProps, AlertVariant } from './feedback/Alert';
 export { VetCard } from './domain/VetCard';
 export type { VetCardProps } from './domain/VetCard';
 
+export { VetCardSkeleton } from './domain/VetCardSkeleton';
+export { VetResultsGridSkeleton } from './domain/VetResultsGridSkeleton';
+export type { VetResultsGridSkeletonProps } from './domain/VetResultsGridSkeleton';
+
+export { PetSitterCard } from './domain/PetSitterCard';
+export type { PetSitterCardProps, PetSitterServiceTag } from './domain/PetSitterCard';
+
+export { PetSitterCardSkeleton } from './domain/PetSitterCardSkeleton';
+
+export { PetSitterResultsGrid } from './domain/PetSitterResultsGrid';
+export type { PetSitterResultItem, PetSitterResultsGridProps } from './domain/PetSitterResultsGrid';
+
+export { PetSitterResultsGridSkeleton } from './domain/PetSitterResultsGridSkeleton';
+export type { PetSitterResultsGridSkeletonProps } from './domain/PetSitterResultsGridSkeleton';
+
 export { AppointmentCard } from './domain/AppointmentCard';
 export type { AppointmentCardProps, AppointmentStatus, AppointmentType } from './domain/AppointmentCard';
 

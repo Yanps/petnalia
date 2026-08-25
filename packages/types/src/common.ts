@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-export const RoleSchema = z.enum(['tutor', 'veterinarian', 'admin']);
+export const RoleSchema = z.enum(['tutor', 'veterinarian', 'admin', 'pet_sitter']);
 export type Role = z.infer<typeof RoleSchema>;
 
 export const AppointmentStatusSchema = z.enum([
@@ -85,3 +85,10 @@ export const CoordinatesSchema = z.object({
   lng: z.number().min(-180).max(180),
 });
 export type Coordinates = z.infer<typeof CoordinatesSchema>;
+
+export const GeoSuggestionSchema = z.object({
+  label: z.string(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+export type GeoSuggestion = z.infer<typeof GeoSuggestionSchema>;

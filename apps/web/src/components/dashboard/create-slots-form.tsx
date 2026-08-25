@@ -10,6 +10,7 @@ interface Slot {
 
 interface Props {
   token: string;
+  endpoint?: string;
 }
 
 function formatSlotLabel(slot: Slot): string {
@@ -18,7 +19,7 @@ function formatSlotLabel(slot: Slot): string {
   return `${s.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })} · ${s.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} – ${e.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
-export function CreateSlotsForm({ token }: Props) {
+export function CreateSlotsForm({ token, endpoint = '/v1/availability/slots' }: Props) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
@@ -54,7 +55,7 @@ export function CreateSlotsForm({ token }: Props) {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/availability/slots`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -101,7 +102,7 @@ export function CreateSlotsForm({ token }: Props) {
           Adicionar horário
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <div className="pn-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>
               Início

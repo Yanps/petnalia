@@ -39,7 +39,7 @@ export function VetCard({
 }: VetCardProps): React.JSX.Element {
   return (
     <Card interactive className={['vn-vetcard', className].filter(Boolean).join(' ')} {...rest}>
-      <div style={{ display: 'flex', gap: 'var(--space-4)', padding: 'var(--space-5)' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-4)', padding: 'var(--space-5)', flex: 1 }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <Avatar src={photo} name={name} size="xl" />
           {verified && (

@@ -168,7 +168,7 @@ export default async function AssinaturaPage({
         </div>
       </div>
 
-      <div style={{
+      <div className="pn-grid-3" style={{
         display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 960,
       }}>
         {PLANS.map(({ key, name, price, period, features, ...rest }) => {

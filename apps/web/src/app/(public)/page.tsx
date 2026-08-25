@@ -1,10 +1,31 @@
 import type { Metadata } from 'next';
-import type { VetSearchResult } from '@petnalia/types';
+import type { PetSitterSearchResponse, Specialty, VetSearchResult } from '@petnalia/types';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Badge, Button, Icon } from '@petnalia/ui';
-import { VetResultsGrid } from '@/components/search/vet-results-grid';
-import { HeroSearchForm } from '@/components/search/hero-search-form';
+import { api } from '@/lib/api-client';
+import { FeaturedProsCarousel } from '@/components/search/featured-pros-carousel';
+import { MainSearchBar } from '@/components/search/main-search-bar';
 import { MOCK_VETS } from '@/data/mock-vets';
+
+async function fetchSpecialties(): Promise<Specialty[]> {
+  try {
+    return await api.get<Specialty[]>('/v1/veterinarians/specialties', { cache: 'force-cache' });
+  } catch {
+    return [];
+  }
+}
+
+async function fetchFeaturedPetSitters(): Promise<PetSitterSearchResponse['data']> {
+  try {
+    const response = await api.get<PetSitterSearchResponse>(
+      '/v1/pet-sitters/search?lat=-23.5505&lng=-46.6333&radiusKm=50&page=1&limit=2',
+    );
+    return response.data;
+  } catch {
+    return [];
+  }
+}
 
 export const metadata: Metadata = {
   title: 'PetNalia — Veterinário a domicílio',
@@ -25,7 +46,12 @@ const HOW = [
   { icon: 'home' as const, title: 'Receba em casa', text: 'O veterinário vai até você, sem estresse para o seu pet.' },
 ] as const;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [specialties, featuredSitters] = await Promise.all([
+    fetchSpecialties(),
+    fetchFeaturedPetSitters(),
+  ]);
+
   const featuredVets: VetSearchResult[] = MOCK_VETS.slice(0, 3).map((v) => ({
     id: v.id,
     slug: v.slug,
@@ -51,45 +77,87 @@ export default function HomePage() {
     <main>
       {/* Hero */}
       <section style={{
+        position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(160deg, var(--teal-50) 0%, var(--teal-100) 15%, white 60%)',
-        padding: '80px 24px 72px',
       }}>
-        <div style={{ maxWidth: 1152, margin: '0 auto' }}>
-          <div style={{ maxWidth: 640 }}>
-            <Badge variant="brand" icon="paw-print" style={{ marginBottom: 20 }}>
-              Cuidado veterinário a domicílio
-            </Badge>
+        {/* Mobile/tablet (<=1600px): photo sits as a full-bleed background behind the content,
+            faded with an overlay so the text stays legible instead of pushing it down. */}
+        <div className="pn-hero-image-mobile" style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          <Image
+            src="/images/vet-home.png"
+            alt="Veterinária examinando um cão em atendimento domiciliar, com um gato ao lado no sofá"
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: 'cover', objectPosition: '62% 30%' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, rgba(240,253,250,0.75) 0%, rgba(240,253,250,0.65) 40%, rgba(255,255,255,0.5) 75%, rgba(255,255,255,0.35) 100%)',
+          }} />
+        </div>
 
-            <h1 style={{
-              fontFamily: 'var(--font-display)', fontWeight: 800,
-              fontSize: 'clamp(2rem, 5vw, 3.25rem)', lineHeight: 1.12,
-              color: 'var(--text)', letterSpacing: '-0.02em',
-              marginBottom: 20,
-            }}>
-              Veterinário a domicílio,<br />
-              <span style={{ color: 'var(--brand)' }}>cuidado que chega</span><br />
-              até você.
-            </h1>
+        {/* position:relative here (not on the 1152 wrapper below) so the desktop image's `right: 0`
+            bleeds to the true viewport edge — text stays aligned with the 1152 grid used by every
+            other section, and the breakpoint (1601px) guarantees enough clearance between the two
+            regardless of that alignment. */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ maxWidth: 1152, margin: '0 auto' }}>
+            <div style={{ padding: '80px 24px 72px', position: 'relative' }}>
+              <div style={{ maxWidth: 640 }}>
+                <Badge variant="brand" icon="paw-print" style={{ marginBottom: 20 }}>
+                  Cuidado veterinário a domicílio
+                </Badge>
 
-            <p style={{
-              fontSize: '1.125rem', color: 'var(--text-secondary)',
-              lineHeight: 1.65, marginBottom: 36, maxWidth: 480,
-            }}>
-              Conectamos tutores a veterinários qualificados para consultas em casa e telemedicina — sem estresse para o seu pet.
-            </p>
+                <h1 style={{
+                  fontFamily: 'var(--font-display)', fontWeight: 800,
+                  fontSize: 'clamp(2rem, 5vw, 3.25rem)', lineHeight: 1.12,
+                  color: 'var(--text)', letterSpacing: '-0.02em',
+                  marginBottom: 20,
+                }}>
+                  Veterinário a domicílio,<br />
+                  <span style={{ color: 'var(--brand)' }}>cuidado que chega</span><br />
+                  até você.
+                </h1>
 
-            <HeroSearchForm />
+                <p style={{
+                  fontSize: '1.125rem', color: 'var(--text-secondary)',
+                  lineHeight: 1.65, marginBottom: 36, maxWidth: 480,
+                }}>
+                  Conectamos tutores a veterinários qualificados para consultas em casa e telemedicina — sem estresse para o seu pet.
+                </p>
+              </div>
 
-            <div className="pn-stats-row" style={{ display: 'flex', gap: 28, marginTop: 32 }}>
-              {STATS.map(({ icon, value, label }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Icon name={icon} size={15} style={{ color: 'var(--brand)' }} />
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                    <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{value}</strong> {label}
-                  </span>
-                </div>
-              ))}
+              <MainSearchBar specialties={specialties} />
+
+              <div className="pn-stats-row" style={{ display: 'flex', gap: 28, marginTop: 32 }}>
+                {STATS.map(({ icon, value, label }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon name={icon} size={15} style={{ color: 'var(--brand)' }} />
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                      <strong style={{ color: 'var(--text)', fontWeight: 600 }}>{value}</strong> {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* Desktop (>1600px): image bleeds to the true viewport edge, independent of the 1152
+              text column above (see pn-hero-image-mobile sibling above for the stacked fallback). */}
+          <div className="pn-hero-image-desktop" style={{
+            position: 'absolute', top: 0, bottom: 0, right: 0, width: 720,
+            WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 34%)',
+            maskImage: 'linear-gradient(90deg, transparent 0%, black 34%)',
+          }}>
+            <Image
+              src="/images/vet-home.png"
+              alt="Veterinária examinando um cão em atendimento domiciliar, com um gato ao lado no sofá"
+              fill
+              priority
+              sizes="(min-width: 2200px) 1000px, (min-width: 1920px) 880px, 720px"
+              style={{ objectFit: 'cover', objectPosition: '100% 30%' }}
+            />
           </div>
         </div>
       </section>
@@ -120,7 +188,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured vets */}
+      {/* Featured vets & pet sitters */}
       <section style={{ padding: '72px 24px' }}>
         <div style={{ maxWidth: 1152, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
@@ -132,7 +200,7 @@ export default function HomePage() {
                 fontFamily: 'var(--font-display)', fontWeight: 700,
                 fontSize: '1.75rem', color: 'var(--text)', letterSpacing: '-0.015em',
               }}>
-                Veterinários disponíveis agora
+                Profissionais disponíveis agora
               </h2>
             </div>
             <Link href="/busca" style={{ textDecoration: 'none' }}>
@@ -140,7 +208,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <VetResultsGrid vets={featuredVets} columns={3} />
+          <FeaturedProsCarousel vets={featuredVets} sitters={featuredSitters} />
         </div>
       </section>
 
@@ -192,33 +260,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA vets */}
+      {/* CTA profissionais */}
       <section style={{
         padding: '72px 24px',
         background: 'linear-gradient(135deg, var(--teal-800) 0%, var(--teal-600) 100%)',
       }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
-          <Icon name="stethoscope" size={40} style={{ color: 'rgba(255,255,255,0.7)', marginBottom: 20 }} />
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800,
             fontSize: '2rem', color: 'white',
             letterSpacing: '-0.02em', marginBottom: 16,
           }}>
-            Você é veterinário?
+            Você cuida de pets?
           </h2>
-          <p style={{ fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.65, marginBottom: 36 }}>
-            Expanda sua carteira de clientes, controle sua agenda e receba por seus atendimentos — tudo em uma só plataforma.
+          <p style={{
+            fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)',
+            lineHeight: 1.65, marginBottom: 40, maxWidth: 620, marginLeft: 'auto', marginRight: 'auto',
+          }}>
+            Veterinários e pet sitters também encontram novos clientes na PetNalia — cada um com um plano feito sob medida.
           </p>
-          <div className="pn-cta-buttons" style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <Link href="/para-veterinarios" style={{ textDecoration: 'none' }}>
-              <Button variant="accent" size="lg" iconRight="arrow-right">Quero atender</Button>
-            </Link>
-            <Link href="/planos" style={{ textDecoration: 'none' }}>
-              <Button variant="ghost" size="lg" style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
-                Ver planos
-              </Button>
-            </Link>
+
+          <div className="pn-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 32 }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: 'var(--radius-xl)', padding: '32px 28px',
+            }}>
+              <Icon name="stethoscope" size={32} style={{ color: 'rgba(255,255,255,0.85)', marginBottom: 16 }} />
+              <h3 style={{
+                fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: '1.125rem', color: 'white', marginBottom: 8,
+              }}>
+                Sou veterinário
+              </h3>
+              <p style={{ fontSize: '0.9375rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: 24 }}>
+                Expanda sua carteira de clientes, controle sua agenda e receba por seus atendimentos.
+              </p>
+              <Link href="/para-veterinarios" style={{ textDecoration: 'none' }}>
+                <Button variant="accent" size="md" iconRight="arrow-right" block>Quero atender</Button>
+              </Link>
+            </div>
+
+            <div style={{
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: 'var(--radius-xl)', padding: '32px 28px',
+            }}>
+              <Icon name="paw-print" size={32} style={{ color: 'rgba(255,255,255,0.85)', marginBottom: 16 }} />
+              <h3 style={{
+                fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: '1.125rem', color: 'white', marginBottom: 8,
+              }}>
+                Sou pet sitter
+              </h3>
+              <p style={{ fontSize: '0.9375rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: 24 }}>
+                Ofereça hospedagem, passeios e day care para tutores da sua região — cadastro gratuito.
+              </p>
+              <Link href="/cadastro?role=pet_sitter" style={{ textDecoration: 'none' }}>
+                <Button variant="accent" size="md" iconRight="arrow-right" block>Quero atender</Button>
+              </Link>
+            </div>
           </div>
+
+          <Link href="/planos" style={{ textDecoration: 'none' }}>
+            <Button variant="ghost" size="md" style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
+              Ver planos
+            </Button>
+          </Link>
         </div>
       </section>
     </main>

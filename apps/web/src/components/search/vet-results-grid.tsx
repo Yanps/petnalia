@@ -13,11 +13,14 @@ export function VetResultsGrid({ vets, columns = 3 }: VetResultsGridProps) {
   const router = useRouter();
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(${columns}, 1fr)`,
-      gap: 20,
-    }}>
+    <div
+      className={columns === 3 ? 'pn-grid-3' : 'pn-grid-2'}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap: 20,
+      }}
+    >
       {vets.map((vet) => (
         <div
           key={vet.id}

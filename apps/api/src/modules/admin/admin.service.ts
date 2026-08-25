@@ -1,10 +1,18 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import type { AdminAppointmentListResponse, AdminAppointmentsQuery, AdminUserListResponse } from '@petnalia/types';
+import type {
+  AdminAppointmentListResponse,
+  AdminAppointmentsQuery,
+  AdminUserListResponse,
+  FlaggedPetSitterListResponse,
+  ReviewedPetSitterListResponse,
+} from '@petnalia/types';
 
 import { DomainError } from '../../shared/errors/domain.error';
 import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
 import { AppointmentsRepository } from '../appointments/appointments.repository';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PetSitterNotFlaggedError, PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
+import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
 import { UsersRepository } from '../users/users.repository';
 import { UserNotFoundError } from '../users/users.errors';
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
@@ -43,6 +51,7 @@ export class AdminService {
     @Inject(STORAGE_PORT) private readonly storage: StoragePort,
     private readonly usersRepo: UsersRepository,
     private readonly appointmentsRepo: AppointmentsRepository,
+    private readonly petSittersRepo: PetSittersRepository,
   ) {}
 
   async listPendingVets(page: number, limit: number) {
@@ -152,5 +161,86 @@ export class AdminService {
       limit: query.limit,
       totalPages: Math.ceil(total / query.limit),
     };
+  }
+
+  async listFlaggedPetSitters(page: number, limit: number): Promise<FlaggedPetSitterListResponse> {
+    const { rows, total } = await this.petSittersRepo.findFlaggedPaginated(page, limit);
+
+    return {
+      items: rows.map((s) => ({
+        id: s.id,
+        fullName: s.fullName,
+        bio: s.bio,
+        flagReason: s.flagReason,
+        violationCount: s.violationCount,
+        updatedAt: s.updatedAt.toISOString(),
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async listReviewedPetSitters(page: number, limit: number): Promise<ReviewedPetSitterListResponse> {
+    const { rows, total } = await this.petSittersRepo.findReviewedPaginated(page, limit);
+
+    return {
+      items: rows.map((s) => ({
+        id: s.id,
+        fullName: s.fullName,
+        moderationStatus: s.moderationStatus,
+        flagReason: s.flagReason,
+        moderatorNote: s.moderatorNote,
+        violationCount: s.violationCount,
+        updatedAt: s.updatedAt.toISOString(),
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /** A second confirmed violation auto-suspends the account — the first
+   * offense only gets a warning email asking for a correction (see
+   * pet_sitter_bio_violation), since one keyword match can be a misjudged
+   * borderline case, but a repeat after an explicit warning is deliberate. */
+  async confirmPetSitterViolation(petSitterId: string, moderatorNote?: string): Promise<void> {
+    const sitter = await this.petSittersRepo.findWithUser(petSitterId);
+    if (!sitter) throw new PetSitterNotFoundError();
+    if (sitter.moderationStatus !== 'flagged') throw new PetSitterNotFlaggedError();
+
+    const updated = await this.petSittersRepo.confirmViolation(petSitterId, moderatorNote);
+    const reason = moderatorNote ?? sitter.flagReason;
+
+    if (updated.violationCount >= 2) {
+      await this.usersRepo.update(sitter.userId, { status: 'suspended' });
+      void this.notifications.enqueueEmail({
+        to: sitter.user.email,
+        type: 'pet_sitter_suspended',
+        name: sitter.user.profile?.fullName ?? sitter.user.email,
+        ...(reason && { reason }),
+      });
+      return;
+    }
+
+    void this.notifications.enqueueEmail({
+      to: sitter.user.email,
+      type: 'pet_sitter_bio_violation',
+      name: sitter.user.profile?.fullName ?? sitter.user.email,
+      ...(reason && { reason }),
+    });
+  }
+
+  async dismissPetSitterFlag(petSitterId: string, moderatorNote?: string): Promise<void> {
+    const sitter = await this.petSittersRepo.findWithUser(petSitterId);
+    if (!sitter) throw new PetSitterNotFoundError();
+    if (sitter.moderationStatus !== 'flagged') throw new PetSitterNotFlaggedError();
+
+    // Dismissed as a false positive — the sitter was never aware of the flag,
+    // so no notification is sent here (unlike a confirmed violation), and the
+    // violation count (used to decide auto-suspension) is not incremented.
+    await this.petSittersRepo.dismissFlag(petSitterId, moderatorNote);
   }
 }

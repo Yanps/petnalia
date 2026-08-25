@@ -5,6 +5,10 @@ interface GeoPoint {
   lng: number;
 }
 
+export interface GeoSuggestion extends GeoPoint {
+  label: string;
+}
+
 @Injectable()
 export class GeocoderService {
   private readonly logger = new Logger(GeocoderService.name);
@@ -51,6 +55,34 @@ export class GeocoderService {
     } catch (err) {
       this.logger.warn(`Geocodificação falhou para CEP ${cep}: ${String(err)}`);
       return null;
+    }
+  }
+
+  async suggestPlaces(query: string, limit = 5): Promise<GeoSuggestion[]> {
+    if (query.trim().length < 3) return [];
+
+    try {
+      const url = new URL('https://nominatim.openstreetmap.org/search');
+      url.searchParams.set('q', query);
+      url.searchParams.set('format', 'json');
+      url.searchParams.set('limit', String(limit));
+      url.searchParams.set('countrycodes', 'br');
+
+      const res = await fetch(url.toString(), {
+        headers: { 'User-Agent': 'PetNalia/1.0 (petnalia.com.br)' },
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (!res.ok) return [];
+
+      const data = (await res.json()) as Array<{ display_name: string; lat: string; lon: string }>;
+      return data.map((d) => ({
+        label: d.display_name,
+        lat: parseFloat(d.lat),
+        lng: parseFloat(d.lon),
+      }));
+    } catch (err) {
+      this.logger.warn(`Sugestão de local falhou para "${query}": ${String(err)}`);
+      return [];
     }
   }
 }

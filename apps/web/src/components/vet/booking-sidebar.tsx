@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { Address, AvailabilitySlot, HoldSlotResponse, Pet, VetProfilePublicResponse } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 import type { Session } from '@/lib/auth';
@@ -216,8 +217,8 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 20 }}>
             {selectedSlot ? `${formatDate(new Date(selectedSlot.startsAt))} às ${formatTime(selectedSlot.startsAt)}` : ''}
           </p>
-          <a
-            href="/tutor/consultas"
+          <Link
+            href="/consultas"
             style={{
               display: 'inline-block',
               padding: '10px 20px',
@@ -231,7 +232,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
             }}
           >
             Ver minhas consultas
-          </a>
+          </Link>
         </div>
       </aside>
     );
@@ -385,7 +386,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
               {pets.length === 0 ? (
                 <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 12 }}>
                   Nenhum pet cadastrado.{' '}
-                  <a href="/tutor/pets" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Adicionar pet</a>
+                  <Link href="/pets" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Adicionar pet</Link>
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
@@ -407,7 +408,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
               {addresses.length === 0 ? (
                 <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 12 }}>
                   Nenhum endereço cadastrado.{' '}
-                  <a href="/tutor/perfil" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Adicionar endereço</a>
+                  <Link href="/perfil" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Adicionar endereço</Link>
                 </p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>

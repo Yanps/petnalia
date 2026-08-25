@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Avatar, Button, Icon } from '@petnalia/ui';
 import type { Session } from '@/lib/auth';
+import { logoutAction } from '@/features/auth/actions';
 
 interface VetShellProps {
   readonly session: Session;
@@ -67,7 +68,6 @@ function VerificationBanner({ status }: { status: string }) {
 
 export function VetShell({ session, verificationStatus, children }: VetShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const isVerified = verificationStatus === 'verified';
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -232,15 +232,17 @@ export function VetShell({ session, verificationStatus, children }: VetShellProp
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              iconLeft="arrow-right"
-              onClick={() => router.push('/entrar')}
-              style={{ justifyContent: 'flex-start', width: '100%', color: 'var(--text-secondary)' }}
-            >
-              Sair
-            </Button>
+            <form action={logoutAction} style={{ width: '100%' }}>
+              <Button
+                type="submit"
+                variant="ghost"
+                size="sm"
+                iconLeft="arrow-right"
+                style={{ justifyContent: 'flex-start', width: '100%', color: 'var(--text-secondary)' }}
+              >
+                Sair
+              </Button>
+            </form>
           </div>
         </aside>
 

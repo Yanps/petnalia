@@ -9,7 +9,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { AdminAppointmentsQuerySchema, PaginationQuerySchema, RejectVetInputSchema } from '@petnalia/types';
+import {
+  AdminAppointmentsQuerySchema,
+  ModerationDecisionInputSchema,
+  PaginationQuerySchema,
+  RejectVetInputSchema,
+} from '@petnalia/types';
 import type { User } from '@prisma/client';
 
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -73,5 +78,37 @@ export class AdminController {
   listAppointments(@Query() rawQuery: unknown) {
     const query = AdminAppointmentsQuerySchema.parse(rawQuery);
     return this.adminService.listAppointments(query);
+  }
+
+  @Get('pet-sitters/flagged')
+  listFlaggedPetSitters(@Query() rawQuery: unknown) {
+    const query = PaginationQuerySchema.parse(rawQuery);
+    return this.adminService.listFlaggedPetSitters(query.page, query.limit);
+  }
+
+  @Get('pet-sitters/reviewed')
+  listReviewedPetSitters(@Query() rawQuery: unknown) {
+    const query = PaginationQuerySchema.parse(rawQuery);
+    return this.adminService.listReviewedPetSitters(query.page, query.limit);
+  }
+
+  @Post('pet-sitters/:id/confirm-violation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async confirmPetSitterViolation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: unknown,
+  ): Promise<void> {
+    const dto = ModerationDecisionInputSchema.parse(body ?? {});
+    await this.adminService.confirmPetSitterViolation(id, dto.moderatorNote);
+  }
+
+  @Post('pet-sitters/:id/dismiss')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async dismissPetSitterFlag(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: unknown,
+  ): Promise<void> {
+    const dto = ModerationDecisionInputSchema.parse(body ?? {});
+    await this.adminService.dismissPetSitterFlag(id, dto.moderatorNote);
   }
 }

@@ -4,6 +4,7 @@ const CREDS = {
   tutor: { email: 'ana@petnalia.com', password: 'petnalia123' },
   vet: { email: 'dra.beatriz@petnalia.com', password: 'petnalia123' },
   admin: { email: 'admin@petnalia.com', password: 'petnalia123' },
+  sitter: { email: 'carla.sitter@petnalia.com', password: 'petnalia123' },
 } as const;
 
 async function login(context: BrowserContext, role: keyof typeof CREDS) {
@@ -22,6 +23,7 @@ export const test = base.extend<{
   tutorContext: BrowserContext;
   vetContext: BrowserContext;
   adminContext: BrowserContext;
+  sitterContext: BrowserContext;
 }>({
   tutorContext: async ({ browser }, use) => {
     const ctx = await browser.newContext();
@@ -38,6 +40,12 @@ export const test = base.extend<{
   adminContext: async ({ browser }, use) => {
     const ctx = await browser.newContext();
     await login(ctx, 'admin');
+    await use(ctx);
+    await ctx.close();
+  },
+  sitterContext: async ({ browser }, use) => {
+    const ctx = await browser.newContext();
+    await login(ctx, 'sitter');
     await use(ctx);
     await ctx.close();
   },

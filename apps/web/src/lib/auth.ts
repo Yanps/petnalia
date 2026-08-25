@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import { redirect } from 'next/navigation';
 
-export type UserRole = 'TUTOR' | 'VETERINARIAN' | 'ADMIN';
+export type UserRole = 'TUTOR' | 'VETERINARIAN' | 'ADMIN' | 'PET_SITTER';
 
 export interface Session {
   readonly userId: string;
@@ -31,6 +31,7 @@ function normalizeRole(role: string): UserRole | null {
     tutor: 'TUTOR',
     veterinarian: 'VETERINARIAN',
     admin: 'ADMIN',
+    pet_sitter: 'PET_SITTER',
   };
   return map[role.toLowerCase()] ?? null;
 }

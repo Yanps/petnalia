@@ -29,6 +29,43 @@ test.describe('Autenticação', () => {
     await expect(page).toHaveURL(/\/admin\//);
   });
 
+  test('pet sitter faz login e vai para /pet-sitter/painel', async ({ page }) => {
+    await doLogin(page, 'carla.sitter@petnalia.com', 'petnalia123');
+    await expect(page).toHaveURL(/\/pet-sitter\/painel/);
+    await expect(page.locator('h1')).toContainText('Olá, Carla Mendonça');
+  });
+
+  test('cadastro como pet sitter cria conta e permite editar perfil', async ({ page }) => {
+    const email = `sitter.e2e.${Date.now()}@petnalia.com`;
+
+    await page.goto('/cadastro', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+    await page.click('text=Sou pet sitter');
+    await page.fill('#name', 'Sitter E2E');
+    await page.fill('#reg-email', email);
+    await page.fill('#reg-password', 'senha12345');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(2500);
+    await expect(page).toHaveURL(/\/entrar/);
+
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', 'senha12345');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(2500);
+    await expect(page).toHaveURL(/\/pet-sitter\/painel/);
+
+    await page.click('text=Meu perfil');
+    await page.waitForTimeout(1500);
+    await expect(page).toHaveURL(/\/pet-sitter\/perfil/);
+
+    await page.fill('textarea', 'Bio de teste via Playwright.');
+    await page.click('text=Passeio');
+    await page.fill('#baseCity', 'São Paulo');
+    await page.selectOption('#baseState', 'SP');
+    await page.click('button[type="submit"]:has-text("Salvar")');
+    await expect(page.locator('text=Perfil atualizado com sucesso')).toBeVisible({ timeout: 5000 });
+  });
+
   test('credenciais inválidas mostram erro', async ({ page }) => {
     await page.goto('/entrar', { waitUntil: 'networkidle' });
     await page.waitForTimeout(1500);

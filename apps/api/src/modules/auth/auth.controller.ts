@@ -14,6 +14,7 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
   RegisterVetInputSchema,
+  RegisterPetSitterInputSchema,
   ResetPasswordInputSchema,
 } from '@petnalia/types';
 
@@ -49,6 +50,19 @@ export class AuthController {
   ) {
     const dto = RegisterVetInputSchema.parse(body);
     const { tokens, rawRefreshToken } = await this.authService.registerVet(dto);
+    this.setRefreshCookie(res, rawRefreshToken);
+    return tokens;
+  }
+
+  @Public()
+  @Post('register/pet-sitter')
+  @HttpCode(HttpStatus.CREATED)
+  async registerPetSitter(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const dto = RegisterPetSitterInputSchema.parse(body);
+    const { tokens, rawRefreshToken } = await this.authService.registerPetSitter(dto);
     this.setRefreshCookie(res, rawRefreshToken);
     return tokens;
   }

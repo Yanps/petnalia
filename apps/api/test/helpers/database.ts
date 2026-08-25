@@ -33,6 +33,8 @@ export async function setupTestDatabase(): Promise<TestDatabase> {
     url,
     clear: async () => {
       await prisma.$executeRaw`TRUNCATE TABLE "users" CASCADE`;
+      // Standalone tables with no FK to "users" aren't reached by the cascade above.
+      await prisma.$executeRaw`TRUNCATE TABLE "pet_sitters"`;
     },
     teardown: async () => {
       await prisma.$disconnect();

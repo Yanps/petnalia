@@ -48,6 +48,14 @@ async function setGeoPoint(addressId: string, lat: number, lng: number) {
   `;
 }
 
+async function setPetSitterGeoPoint(petSitterId: string, lat: number, lng: number) {
+  await prisma.$executeRaw`
+    UPDATE pet_sitters
+    SET geog = ST_SetSRID(ST_MakePoint(${lng}::float8, ${lat}::float8), 4326)::geography
+    WHERE id = ${petSitterId}::uuid
+  `;
+}
+
 // ── Clear ─────────────────────────────────────────────────────────────────────
 
 async function clearAll() {
@@ -55,11 +63,14 @@ async function clearAll() {
   await prisma.review.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.availabilitySlot.deleteMany();
+  await prisma.petSitterBooking.deleteMany();
+  await prisma.petSitterAvailabilitySlot.deleteMany();
   await prisma.subscription.deleteMany();
   await prisma.veterinarianSpecialty.deleteMany();
   await prisma.pet.deleteMany();
   await prisma.address.deleteMany();
   await prisma.veterinarian.deleteMany();
+  await prisma.petSitter.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.passwordResetToken.deleteMany();
   await prisma.notification.deleteMany();
@@ -71,13 +82,46 @@ async function clearAll() {
 // ── Specialties ───────────────────────────────────────────────────────────────
 
 const SPECIALTIES = [
-  { name: 'Clínica Geral',       slug: 'clinica-geral' },
-  { name: 'Dermatologia',        slug: 'dermatologia' },
-  { name: 'Ortopedia',           slug: 'ortopedia' },
-  { name: 'Odontologia',         slug: 'odontologia' },
-  { name: 'Cardiologia',         slug: 'cardiologia' },
-  { name: 'Oncologia',           slug: 'oncologia' },
-  { name: 'Comportamento Animal',slug: 'comportamento-animal' },
+  { name: 'Clínica Geral',                          slug: 'clinica-geral' },
+  { name: 'Dermatologia',                           slug: 'dermatologia' },
+  { name: 'Ortopedia',                              slug: 'ortopedia' },
+  { name: 'Odontologia',                            slug: 'odontologia' },
+  { name: 'Cardiologia',                            slug: 'cardiologia' },
+  { name: 'Oncologia',                              slug: 'oncologia' },
+  { name: 'Comportamento Animal',                   slug: 'comportamento-animal' },
+  { name: 'Clínica Médica de Pequenos Animais',     slug: 'clinica-medica-pequenos-animais' },
+  { name: 'Clínica de Felinos',                     slug: 'clinica-felinos' },
+  { name: 'Clínica de Caninos',                     slug: 'clinica-caninos' },
+  { name: 'Medicina Interna',                       slug: 'medicina-interna' },
+  { name: 'Cirurgia Veterinária',                   slug: 'cirurgia-veterinaria' },
+  { name: 'Cirurgia de Tecidos Moles',               slug: 'cirurgia-tecidos-moles' },
+  { name: 'Ortopedia e Traumatologia',               slug: 'ortopedia-e-traumatologia' },
+  { name: 'Neurocirurgia',                          slug: 'neurocirurgia' },
+  { name: 'Anestesiologia',                         slug: 'anestesiologia' },
+  { name: 'Medicina Intensiva / UTI',               slug: 'medicina-intensiva-uti' },
+  { name: 'Emergência Veterinária',                 slug: 'emergencia-veterinaria' },
+  { name: 'Medicina da Dor',                        slug: 'medicina-da-dor' },
+  { name: 'Pneumologia',                            slug: 'pneumologia' },
+  { name: 'Gastroenterologia',                      slug: 'gastroenterologia' },
+  { name: 'Hepatologia',                            slug: 'hepatologia' },
+  { name: 'Nefrologia',                             slug: 'nefrologia' },
+  { name: 'Urologia',                               slug: 'urologia' },
+  { name: 'Endocrinologia',                         slug: 'endocrinologia' },
+  { name: 'Neurologia',                             slug: 'neurologia' },
+  { name: 'Alergologia',                            slug: 'alergologia' },
+  { name: 'Oftalmologia',                           slug: 'oftalmologia' },
+  { name: 'Odontologia Veterinária',                slug: 'odontologia-veterinaria' },
+  { name: 'Hematologia',                            slug: 'hematologia' },
+  { name: 'Imunologia',                             slug: 'imunologia' },
+  { name: 'Infectologia',                           slug: 'infectologia' },
+  { name: 'Reumatologia',                           slug: 'reumatologia' },
+  { name: 'Nutrologia / Nutrição Clínica',          slug: 'nutrologia-nutricao-clinica' },
+  { name: 'Reprodução Animal / Teriogenologia',     slug: 'reproducao-animal-teriogenologia' },
+  { name: 'Obstetrícia Veterinária',                slug: 'obstetricia-veterinaria' },
+  { name: 'Neonatologia',                           slug: 'neonatologia' },
+  { name: 'Geriatria Veterinária',                  slug: 'geriatria-veterinaria' },
+  { name: 'Medicina Preventiva',                    slug: 'medicina-preventiva' },
+  { name: 'Cuidados Paliativos',                    slug: 'cuidados-paliativos' },
 ];
 
 // ── Seed ─────────────────────────────────────────────────────────────────────
@@ -307,6 +351,73 @@ async function main() {
   });
   console.log('  ✓ 3 veterinários criados (2 verificados, 1 pendente)');
 
+  // ── Pet Sitters ──────────────────────────────────────────────────────────
+
+  const userCarla = await prisma.user.create({
+    data: {
+      email: 'carla.sitter@petnalia.com',
+      passwordHash: pwd,
+      role: 'pet_sitter',
+      profile: { create: { fullName: 'Carla Mendonça' } },
+    },
+  });
+  const sitterCarla = await prisma.petSitter.create({
+    data: {
+      userId: userCarla.id,
+      fullName: 'Carla Mendonça',
+      bio: 'Cuido de cães e gatos há 6 anos. Ofereço hospedagem na minha casa e visitas diárias. ' +
+           'Atendo na região da Vila Madalena e arredores.',
+      services: ['hospedagem', 'visita_domiciliar'],
+      baseCity: 'São Paulo',
+      baseState: 'SP',
+    },
+  });
+  await setPetSitterGeoPoint(sitterCarla.id, -23.5505, -46.6910);
+
+  const userRoberto = await prisma.user.create({
+    data: {
+      email: 'roberto.sitter@petnalia.com',
+      passwordHash: pwd,
+      role: 'pet_sitter',
+      profile: { create: { fullName: 'Roberto Lima' } },
+    },
+  });
+  const sitterRoberto = await prisma.petSitter.create({
+    data: {
+      userId: userRoberto.id,
+      fullName: 'Roberto Lima',
+      bio: 'Passeador profissional certificado. Passeios individuais ou em grupos pequenos, ' +
+           'sempre com fotos e relatório do passeio.',
+      services: ['passeio', 'day_care'],
+      baseCity: 'São Paulo',
+      baseState: 'SP',
+    },
+  });
+  await setPetSitterGeoPoint(sitterRoberto.id, -23.5738, -46.6395);
+
+  const userFernanda = await prisma.user.create({
+    data: {
+      email: 'fernanda.sitter@petnalia.com',
+      passwordHash: pwd,
+      role: 'pet_sitter',
+      profile: { create: { fullName: 'Fernanda Torres' } },
+    },
+  });
+  const sitterFernanda = await prisma.petSitter.create({
+    data: {
+      userId: userFernanda.id,
+      fullName: 'Fernanda Torres',
+      bio: 'Day care completo com área externa, socialização entre pets e monitoramento por câmera. ' +
+           'Também ofereço hospedagem para viagens.',
+      services: ['day_care', 'hospedagem', 'passeio'],
+      baseCity: 'São Paulo',
+      baseState: 'SP',
+    },
+  });
+  await setPetSitterGeoPoint(sitterFernanda.id, -23.5335, -46.6420);
+
+  console.log('  ✓ 3 pet sitters criados com conta própria (Vila Madalena, Vila Mariana, Santana)');
+
   // ── Future Availability Slots ────────────────────────────────────────────
 
   const weekdays = nextWeekdays(5);
@@ -413,6 +524,9 @@ async function main() {
   console.log('  Vet ✓   → dra.beatriz@petnalia.com (premium, Vila Mariana/Moema)');
   console.log('  Vet ✓   → dr.marcos@petnalia.com   (free, Pinheiros)');
   console.log('  Vet ⏳  → dra.julia@petnalia.com   (pending, sem foto de CRMV)');
+  console.log('  Sitter  → carla.sitter@petnalia.com    (Vila Madalena)');
+  console.log('  Sitter  → roberto.sitter@petnalia.com  (Vila Mariana)');
+  console.log('  Sitter  → fernanda.sitter@petnalia.com (Santana)');
 }
 
 main()

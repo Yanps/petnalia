@@ -14,6 +14,7 @@ interface AuthTokens {
 function roleToRedirect(role: unknown): string {
   const r = typeof role === 'string' ? role.toLowerCase() : '';
   if (r === 'veterinarian') return '/vet/painel';
+  if (r === 'pet_sitter') return '/pet-sitter/painel';
   if (r === 'admin') return '/admin/verificacao';
   return '/painel';
 }
@@ -58,6 +59,19 @@ export async function registerAction(formData: FormData) {
       crmvState: data.crmvState.toUpperCase(),
     });
     redirect('/entrar?cadastro=pendente');
+  } else if (role === 'PET_SITTER') {
+    const data = RegisterSchema.parse({
+      name:     formData.get('name'),
+      email:    formData.get('email'),
+      password: formData.get('password'),
+      role,
+    });
+    await api.post('/v1/auth/register/pet-sitter', {
+      fullName: data.name,
+      email:    data.email,
+      password: data.password,
+    });
+    redirect('/entrar');
   } else {
     const data = RegisterSchema.parse({
       name:     formData.get('name'),

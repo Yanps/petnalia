@@ -3,7 +3,7 @@ import type { Appointment } from '@petnalia/types';
 import { getToken } from '@/lib/auth';
 import { AppointmentsList } from '@/components/dashboard/appointments-list';
 
-const API = process.env.API_INTERNAL_URL ?? 'http://localhost:3001';
+const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 
 async function fetchAppointments(token: string): Promise<Appointment[]> {
   try {

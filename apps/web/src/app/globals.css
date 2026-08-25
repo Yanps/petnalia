@@ -97,6 +97,87 @@
   display: none;
 }
 
+/* ── Featured pros carousel: up to 3 cards per view, scroll-snap otherwise ── */
+.pn-carousel-track {
+  scrollbar-width: none;
+}
+.pn-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+.pn-carousel-item {
+  flex: 0 0 calc((100% - 40px) / 3);
+  min-width: 0;
+}
+.pn-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--text);
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+}
+.pn-carousel-arrow:hover {
+  background: var(--teal-50);
+  border-color: var(--border-strong);
+}
+.pn-carousel-arrow--prev { left: -20px; }
+.pn-carousel-arrow--next { right: -20px; }
+
+@media (max-width: 900px) {
+  .pn-carousel-item {
+    flex-basis: calc((100% - 20px) / 2);
+  }
+}
+@media (max-width: 600px) {
+  .pn-carousel-item {
+    flex-basis: 90%;
+  }
+  .pn-carousel-arrow--prev { left: 4px; }
+  .pn-carousel-arrow--next { right: 4px; }
+}
+
+/* ── Home hero: mobile-first stacked image. The text column stays aligned to the
+   same 1152px grid as every other section, so the split (bleeding, independently
+   positioned) image only kicks in once the viewport is wide enough that the two
+   never collide — see the comment above pn-hero-image-desktop in page.tsx. ── */
+.pn-hero-image-desktop {
+  display: none;
+}
+.pn-hero-image-mobile {
+  display: block;
+}
+
+@media (min-width: 1601px) {
+  .pn-hero-image-desktop {
+    display: block;
+  }
+  .pn-hero-image-mobile {
+    display: none;
+  }
+}
+
+/* Wider screens have more room to the right of the 1152-centered text column, so
+   the bleed image can widen in steps (each checked against the text's worst-case
+   right edge — see the comment in page.tsx) to reveal more of the room. */
+@media (min-width: 1920px) {
+  .pn-hero-image-desktop {
+    width: 880px !important;
+  }
+}
+@media (min-width: 2200px) {
+  .pn-hero-image-desktop {
+    width: 1000px !important;
+  }
+}
+
 @media (max-width: 768px) {
   /* ── Shell: mobile top bar ── */
   .pn-mobile-bar {
@@ -133,17 +214,38 @@
     flex-direction: column !important;
   }
 
+  /* ── Vet profile: main content + booking sidebar stack vertically ── */
+  .pn-vet-profile-layout {
+    flex-direction: column !important;
+  }
+
+  /* ── Main search bar: fields + button stack vertically ── */
+  .pn-search-bar-form {
+    flex-wrap: wrap !important;
+  }
+  .pn-search-bar-form > button {
+    width: 100% !important;
+  }
+
   /* ── Page content: reduced padding ── */
   .pn-page {
     padding: 24px 16px 40px !important;
   }
 
+  .pn-auth-card {
+    padding: 24px 20px !important;
+  }
+
   /* ── Grids ── */
   .pn-grid-3 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
   .pn-grid-2 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .pn-footer-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 32px !important;
   }
 
   /* ── Search: stack layout ── */

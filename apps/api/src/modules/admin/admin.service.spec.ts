@@ -3,9 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { StoragePort } from '../../shared/storage/storage.port';
 import { AppointmentsRepository } from '../appointments/appointments.repository';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
 import { UsersRepository } from '../users/users.repository';
 import { UserNotFoundError } from '../users/users.errors';
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+import { PetSitterNotFlaggedError, PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
 import { AdminService, CannotSuspendSelfError, VetNotFoundError, VetNotPendingError } from './admin.service';
 
 const VET_ID = 'vet-uuid-1';
@@ -69,14 +71,26 @@ function makeAppointmentsRepo(overrides: Partial<AppointmentsRepository> = {}) {
   } as unknown as AppointmentsRepository;
 }
 
+function makePetSittersRepo(overrides: Partial<PetSittersRepository> = {}) {
+  return {
+    findFlaggedPaginated: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+    findReviewedPaginated: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+    findWithUser: vi.fn().mockResolvedValue(null),
+    confirmViolation: vi.fn().mockResolvedValue({ violationCount: 1 }),
+    dismissFlag: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as PetSittersRepository;
+}
+
 function makeService(
   vetsRepo = makeVetsRepo(),
   notifications = makeNotifications(),
   storage = makeStorage(),
   usersRepo = makeUsersRepo(),
   appointmentsRepo = makeAppointmentsRepo(),
+  petSittersRepo = makePetSittersRepo(),
 ) {
-  return new AdminService(vetsRepo, notifications, storage, usersRepo, appointmentsRepo);
+  return new AdminService(vetsRepo, notifications, storage, usersRepo, appointmentsRepo, petSittersRepo);
 }
 
 describe('AdminService.listPendingVets', () => {
@@ -319,5 +333,151 @@ describe('AdminService.listAppointments', () => {
     await service.listAppointments({ page: 1, limit: 20, status: 'cancelled' });
 
     expect(appointmentsRepo.findAllForAdmin).toHaveBeenCalledWith({ page: 1, limit: 20, status: 'cancelled' });
+  });
+});
+
+const SITTER_ID = 'sitter-uuid-1';
+const SITTER_USER_ID = 'sitter-user-uuid-1';
+
+const baseFlaggedSitter = {
+  id: SITTER_ID,
+  userId: SITTER_USER_ID,
+  fullName: 'Carla Sitter',
+  moderationStatus: 'flagged' as const,
+  flagReason: 'crmv',
+  violationCount: 0,
+  user: {
+    email: 'carla@petnalia.com',
+    profile: { fullName: 'Carla Sitter' },
+  },
+};
+
+describe('AdminService.listFlaggedPetSitters', () => {
+  it('mapeia os campos esperados, incluindo violationCount', async () => {
+    const petSittersRepo = makePetSittersRepo({
+      findFlaggedPaginated: vi.fn().mockResolvedValue({
+        rows: [{ id: SITTER_ID, fullName: 'Carla Sitter', bio: 'bio suspeita', flagReason: 'crmv', violationCount: 1, updatedAt: new Date('2026-01-10') }],
+        total: 1,
+      }),
+    });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), makeAppointmentsRepo(), petSittersRepo);
+
+    const result = await service.listFlaggedPetSitters(1, 20);
+
+    expect(result.items).toEqual([{
+      id: SITTER_ID,
+      fullName: 'Carla Sitter',
+      bio: 'bio suspeita',
+      flagReason: 'crmv',
+      violationCount: 1,
+      updatedAt: '2026-01-10T00:00:00.000Z',
+    }]);
+    expect(result.total).toBe(1);
+  });
+});
+
+describe('AdminService.listReviewedPetSitters', () => {
+  it('mapeia perfis já revisados (confirmados ou descartados)', async () => {
+    const petSittersRepo = makePetSittersRepo({
+      findReviewedPaginated: vi.fn().mockResolvedValue({
+        rows: [{
+          id: SITTER_ID, fullName: 'Carla Sitter', moderationStatus: 'confirmed_violation',
+          flagReason: 'crmv', moderatorNote: 'Remova a menção', violationCount: 1, updatedAt: new Date('2026-01-10'),
+        }],
+        total: 1,
+      }),
+    });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), makeAppointmentsRepo(), petSittersRepo);
+
+    const result = await service.listReviewedPetSitters(1, 20);
+
+    expect(result.items[0]).toEqual({
+      id: SITTER_ID,
+      fullName: 'Carla Sitter',
+      moderationStatus: 'confirmed_violation',
+      flagReason: 'crmv',
+      moderatorNote: 'Remova a menção',
+      violationCount: 1,
+      updatedAt: '2026-01-10T00:00:00.000Z',
+    });
+  });
+});
+
+describe('AdminService.confirmPetSitterViolation', () => {
+  it('lança PetSitterNotFoundError quando o perfil não existe', async () => {
+    const petSittersRepo = makePetSittersRepo({ findWithUser: vi.fn().mockResolvedValue(null) });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), makeAppointmentsRepo(), petSittersRepo);
+
+    await expect(service.confirmPetSitterViolation(SITTER_ID)).rejects.toThrow(PetSitterNotFoundError);
+  });
+
+  it('lança PetSitterNotFlaggedError quando o perfil não está sinalizado', async () => {
+    const petSittersRepo = makePetSittersRepo({
+      findWithUser: vi.fn().mockResolvedValue({ ...baseFlaggedSitter, moderationStatus: 'clean' }),
+    });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), makeAppointmentsRepo(), petSittersRepo);
+
+    await expect(service.confirmPetSitterViolation(SITTER_ID)).rejects.toThrow(PetSitterNotFlaggedError);
+  });
+
+  it('na 1ª violação confirmada, envia e-mail de aviso e não suspende a conta', async () => {
+    const notifications = makeNotifications();
+    const usersRepo = makeUsersRepo();
+    const petSittersRepo = makePetSittersRepo({
+      findWithUser: vi.fn().mockResolvedValue(baseFlaggedSitter),
+      confirmViolation: vi.fn().mockResolvedValue({ ...baseFlaggedSitter, violationCount: 1 }),
+    });
+    const service = makeService(makeVetsRepo(), notifications, makeStorage(), usersRepo, makeAppointmentsRepo(), petSittersRepo);
+
+    await service.confirmPetSitterViolation(SITTER_ID, 'Remova a menção ao CRMV');
+
+    expect(petSittersRepo.confirmViolation).toHaveBeenCalledWith(SITTER_ID, 'Remova a menção ao CRMV');
+    expect(usersRepo.update).not.toHaveBeenCalled();
+    expect(notifications.enqueueEmail).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'carla@petnalia.com',
+      type: 'pet_sitter_bio_violation',
+      reason: 'Remova a menção ao CRMV',
+    }));
+  });
+
+  it('na 2ª violação confirmada, suspende a conta e envia e-mail de suspensão', async () => {
+    const notifications = makeNotifications();
+    const usersRepo = makeUsersRepo();
+    const petSittersRepo = makePetSittersRepo({
+      findWithUser: vi.fn().mockResolvedValue(baseFlaggedSitter),
+      confirmViolation: vi.fn().mockResolvedValue({ ...baseFlaggedSitter, violationCount: 2 }),
+    });
+    const service = makeService(makeVetsRepo(), notifications, makeStorage(), usersRepo, makeAppointmentsRepo(), petSittersRepo);
+
+    await service.confirmPetSitterViolation(SITTER_ID);
+
+    expect(usersRepo.update).toHaveBeenCalledWith(SITTER_USER_ID, { status: 'suspended' });
+    expect(notifications.enqueueEmail).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'carla@petnalia.com',
+      type: 'pet_sitter_suspended',
+    }));
+    expect(notifications.enqueueEmail).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'pet_sitter_bio_violation' }));
+  });
+});
+
+describe('AdminService.dismissPetSitterFlag', () => {
+  it('lança PetSitterNotFlaggedError quando o perfil não está sinalizado', async () => {
+    const petSittersRepo = makePetSittersRepo({
+      findWithUser: vi.fn().mockResolvedValue({ ...baseFlaggedSitter, moderationStatus: 'dismissed' }),
+    });
+    const service = makeService(makeVetsRepo(), makeNotifications(), makeStorage(), makeUsersRepo(), makeAppointmentsRepo(), petSittersRepo);
+
+    await expect(service.dismissPetSitterFlag(SITTER_ID)).rejects.toThrow(PetSitterNotFlaggedError);
+  });
+
+  it('descarta a sinalização sem notificar o sitter nem incrementar violações', async () => {
+    const notifications = makeNotifications();
+    const petSittersRepo = makePetSittersRepo({ findWithUser: vi.fn().mockResolvedValue(baseFlaggedSitter) });
+    const service = makeService(makeVetsRepo(), notifications, makeStorage(), makeUsersRepo(), makeAppointmentsRepo(), petSittersRepo);
+
+    await service.dismissPetSitterFlag(SITTER_ID, 'Falso positivo — tosa criativa');
+
+    expect(petSittersRepo.dismissFlag).toHaveBeenCalledWith(SITTER_ID, 'Falso positivo — tosa criativa');
+    expect(notifications.enqueueEmail).not.toHaveBeenCalled();
   });
 });

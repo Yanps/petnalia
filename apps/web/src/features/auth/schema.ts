@@ -10,7 +10,7 @@ export const RegisterSchema = z.object({
   name:     z.string().min(2, 'Nome muito curto'),
   email:    z.string().email('E-mail inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
-  role:     z.enum(['TUTOR', 'VETERINARIAN']),
+  role:     z.enum(['TUTOR', 'VETERINARIAN', 'PET_SITTER']),
 });
 export type RegisterData = z.infer<typeof RegisterSchema>;
 

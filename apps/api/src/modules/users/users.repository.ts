@@ -53,6 +53,19 @@ export class UsersRepository {
     });
   }
 
+  createPetSitter(input: { email: string; passwordHash: string; fullName: string }) {
+    return this.prisma.user.create({
+      data: {
+        email: input.email,
+        passwordHash: input.passwordHash,
+        role: 'pet_sitter',
+        profile: { create: { fullName: input.fullName } },
+        petSitter: { create: { fullName: input.fullName } },
+      },
+      include: { profile: true },
+    });
+  }
+
   update(id: string, data: Prisma.UserUpdateInput) {
     return this.prisma.user.update({ where: { id }, data });
   }
@@ -65,6 +78,13 @@ export class UsersRepository {
     return this.prisma.user.update({
       where: { id },
       data: { status: 'deleted', deletedAt: new Date() },
+    });
+  }
+
+  findAllByRole(role: 'admin' | 'tutor' | 'veterinarian' | 'pet_sitter') {
+    return this.prisma.user.findMany({
+      where: { role, status: 'active', deletedAt: null },
+      include: { profile: true },
     });
   }
 

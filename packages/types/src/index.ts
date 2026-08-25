@@ -8,3 +8,7 @@ export * from './review.js';
 export * from './subscription.js';
 export * from './notification.js';
 export * from './address.js';
+export * from './pet-sitter.js';
+export * from './pet-sitter-availability.js';
+export * from './pet-sitter-booking.js';
+export * from './pet-sitter-review.js';

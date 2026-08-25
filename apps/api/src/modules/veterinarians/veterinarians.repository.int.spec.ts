@@ -141,7 +141,11 @@ describe('VeterinariansRepository.search (integração)', () => {
         lng: SP.lng,
       });
 
-      const specialty = await prisma.specialty.create({ data: { name: 'Dermatologia', slug: 'dermatologia' } });
+      const specialty = await prisma.specialty.upsert({
+        where: { slug: 'dermatologia' },
+        create: { name: 'Dermatologia', slug: 'dermatologia' },
+        update: {},
+      });
       await prisma.$executeRaw`
         INSERT INTO veterinarian_specialties ("veterinarianId", "specialtyId")
         VALUES (${vet.id}::uuid, ${specialty.id}::uuid)
@@ -176,7 +180,7 @@ describe('VeterinariansRepository.search (integração)', () => {
   });
 
   describe('filtros', () => {
-    it('filtra por especialidade quando specialtyId fornecido', async () => {
+    it('filtra por especialidade quando specialtyIds fornecido', async () => {
       await seedVet(prisma, { email: 'sem@test.com', fullName: 'Dr. Sem Especialidade', lat: SP.lat, lng: SP.lng });
       const { vet } = await seedVet(prisma, {
         email: 'com@test.com',
@@ -185,16 +189,99 @@ describe('VeterinariansRepository.search (integração)', () => {
         lng: SP.lng,
       });
 
-      const specialty = await prisma.specialty.create({ data: { name: 'Cardiologia', slug: 'cardiologia' } });
+      const specialty = await prisma.specialty.upsert({
+        where: { slug: 'cardiologia' },
+        create: { name: 'Cardiologia', slug: 'cardiologia' },
+        update: {},
+      });
       await prisma.$executeRaw`
         INSERT INTO veterinarian_specialties ("veterinarianId", "specialtyId")
         VALUES (${vet.id}::uuid, ${specialty.id}::uuid)
       `;
 
-      const { rows } = await repo.search({ ...baseParams, specialtyId: specialty.id });
+      const { rows } = await repo.search({ ...baseParams, specialtyIds: [specialty.id] });
 
       expect(rows).toHaveLength(1);
       expect(rows[0]!.full_name).toBe('Dr. Com Especialidade');
+    });
+
+    it('filtra por múltiplas especialidades (OR entre elas)', async () => {
+      const { vet: vetCardio } = await seedVet(prisma, {
+        email: 'cardio@test.com',
+        fullName: 'Dr. Cardiologista',
+        lat: SP.lat,
+        lng: SP.lng,
+      });
+      const { vet: vetDerma } = await seedVet(prisma, {
+        email: 'derma@test.com',
+        fullName: 'Dr. Dermatologista',
+        lat: SP.lat + 0.01,
+        lng: SP.lng,
+      });
+      await seedVet(prisma, {
+        email: 'nenhuma@test.com',
+        fullName: 'Dr. Sem Nenhuma Dessas',
+        lat: SP.lat + 0.02,
+        lng: SP.lng,
+      });
+
+      const cardio = await prisma.specialty.upsert({
+        where: { slug: 'cardiologia' },
+        create: { name: 'Cardiologia', slug: 'cardiologia' },
+        update: {},
+      });
+      const derma = await prisma.specialty.upsert({
+        where: { slug: 'dermatologia' },
+        create: { name: 'Dermatologia', slug: 'dermatologia' },
+        update: {},
+      });
+      await prisma.$executeRaw`
+        INSERT INTO veterinarian_specialties ("veterinarianId", "specialtyId")
+        VALUES (${vetCardio.id}::uuid, ${cardio.id}::uuid)
+      `;
+      await prisma.$executeRaw`
+        INSERT INTO veterinarian_specialties ("veterinarianId", "specialtyId")
+        VALUES (${vetDerma.id}::uuid, ${derma.id}::uuid)
+      `;
+
+      const { rows } = await repo.search({ ...baseParams, specialtyIds: [cardio.id, derma.id] });
+
+      expect(rows.map((r) => r.full_name).sort()).toEqual(['Dr. Cardiologista', 'Dr. Dermatologista']);
+    });
+
+    it('filtra por texto (q) no nome do veterinário', async () => {
+      await seedVet(prisma, { email: 'ana@test.com', fullName: 'Dra. Ana Ferreira', lat: SP.lat, lng: SP.lng });
+      await seedVet(prisma, { email: 'bia@test.com', fullName: 'Dr. Bruno Alves', lat: SP.lat, lng: SP.lng });
+
+      const { rows } = await repo.search({ ...baseParams, q: 'Ferreira' });
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.full_name).toBe('Dra. Ana Ferreira');
+    });
+
+    it('filtra por texto (q) no nome da especialidade', async () => {
+      const { vet } = await seedVet(prisma, {
+        email: 'onco@test.com',
+        fullName: 'Dr. Sem Match No Nome',
+        lat: SP.lat,
+        lng: SP.lng,
+      });
+      await seedVet(prisma, { email: 'outro@test.com', fullName: 'Dr. Outro', lat: SP.lat, lng: SP.lng });
+
+      const oncologia = await prisma.specialty.upsert({
+        where: { slug: 'oncologia' },
+        create: { name: 'Oncologia', slug: 'oncologia' },
+        update: {},
+      });
+      await prisma.$executeRaw`
+        INSERT INTO veterinarian_specialties ("veterinarianId", "specialtyId")
+        VALUES (${vet.id}::uuid, ${oncologia.id}::uuid)
+      `;
+
+      const { rows } = await repo.search({ ...baseParams, q: 'oncolog' });
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.full_name).toBe('Dr. Sem Match No Nome');
     });
 
     it('exclui vet com verificationStatus != verified', async () => {

@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { hash as argonHash, verify as argonVerify } from 'argon2';
-import type { LoginInput, RegisterInput, RegisterVetInput, AuthTokens } from '@petnalia/types';
+import type { LoginInput, RegisterInput, RegisterVetInput, RegisterPetSitterInput, AuthTokens } from '@petnalia/types';
 
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersRepository } from '../users/users.repository';
@@ -90,6 +90,21 @@ export class AuthService {
       to: dto.email,
       type: 'vet_registered',
       name: dto.fullName,
+    });
+
+    return this.issueTokens(user.id, user.email, user.role, dto.fullName);
+  }
+
+  async registerPetSitter(dto: RegisterPetSitterInput): Promise<IssuedTokens> {
+    const existing = await this.usersRepo.findByEmail(dto.email);
+    if (existing) throw new EmailTakenError();
+
+    const passwordHash = await argonHash(dto.password);
+
+    const user = await this.usersRepo.createPetSitter({
+      email: dto.email,
+      passwordHash,
+      fullName: dto.fullName,
     });
 
     return this.issueTokens(user.id, user.email, user.role, dto.fullName);

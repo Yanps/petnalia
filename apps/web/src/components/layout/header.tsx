@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Button, Icon } from '@petnalia/ui';
+import { Avatar, Button, Icon } from '@petnalia/ui';
+import type { Session } from '@/lib/auth';
+import { logoutAction } from '@/features/auth/actions';
 
 const NAV = [
   { href: '/busca', label: 'Buscar veterinários' },
@@ -11,7 +13,20 @@ const NAV = [
   { href: '/planos', label: 'Planos' },
 ] as const;
 
-export function Header() {
+function dashboardHref(role: Session['role']): string {
+  switch (role) {
+    case 'TUTOR': return '/painel';
+    case 'VETERINARIAN': return '/vet/painel';
+    case 'PET_SITTER': return '/pet-sitter/painel';
+    case 'ADMIN': return '/admin/verificacao';
+  }
+}
+
+interface HeaderProps {
+  readonly session?: Session | null;
+}
+
+export function Header({ session = null }: HeaderProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -53,12 +68,26 @@ export function Header() {
         </nav>
 
         <div className="pn-header-auth" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <Link href="/entrar" style={{ textDecoration: 'none' }}>
-            <Button variant="outline" size="sm">Entrar</Button>
-          </Link>
-          <Link href="/cadastro" style={{ textDecoration: 'none' }}>
-            <Button variant="primary" size="sm">Cadastrar-se</Button>
-          </Link>
+          {session ? (
+            <>
+              <Link href={dashboardHref(session.role)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+                <Avatar name={session.name} size="sm" />
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>{session.name}</span>
+              </Link>
+              <form action={logoutAction}>
+                <Button type="submit" variant="ghost" size="sm">Sair</Button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Link href="/entrar" style={{ textDecoration: 'none' }}>
+                <Button variant="outline" size="sm">Entrar</Button>
+              </Link>
+              <Link href="/cadastro" style={{ textDecoration: 'none' }}>
+                <Button variant="primary" size="sm">Cadastrar-se</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Hamburger — visible only on mobile via CSS */}
@@ -93,14 +122,26 @@ export function Header() {
               {label}
             </Link>
           ))}
-          <div style={{ display: 'flex', gap: 12, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-            <Link href="/entrar" style={{ flex: 1, textDecoration: 'none' }}>
-              <Button variant="outline" size="sm" block>Entrar</Button>
-            </Link>
-            <Link href="/cadastro" style={{ flex: 1, textDecoration: 'none' }}>
-              <Button variant="primary" size="sm" block>Cadastrar-se</Button>
-            </Link>
-          </div>
+          {session ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+              <Link href={dashboardHref(session.role)} onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+                <Avatar name={session.name} size="sm" />
+                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>{session.name}</span>
+              </Link>
+              <form action={logoutAction}>
+                <Button type="submit" variant="ghost" size="sm" block>Sair</Button>
+              </form>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 12, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+              <Link href="/entrar" style={{ flex: 1, textDecoration: 'none' }}>
+                <Button variant="outline" size="sm" block>Entrar</Button>
+              </Link>
+              <Link href="/cadastro" style={{ flex: 1, textDecoration: 'none' }}>
+                <Button variant="primary" size="sm" block>Cadastrar-se</Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </header>

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-type UserRole = 'TUTOR' | 'VETERINARIAN' | 'ADMIN';
+type UserRole = 'TUTOR' | 'VETERINARIAN' | 'ADMIN' | 'PET_SITTER';
 
 interface JwtClaims {
   sub: string;
@@ -18,11 +18,14 @@ const VET_PROTECTED_SEGMENTS = new Set([
   'disponibilidade',
 ]);
 
+const PET_SITTER_PROTECTED_SEGMENTS = new Set(['painel', 'perfil']);
+
 function normalizeRole(role: string): UserRole | null {
   const map: Record<string, UserRole> = {
     tutor: 'TUTOR',
     veterinarian: 'VETERINARIAN',
     admin: 'ADMIN',
+    pet_sitter: 'PET_SITTER',
   };
   return map[role.toLowerCase()] ?? null;
 }
@@ -34,6 +37,8 @@ function matchRequiredRole(pathname: string): UserRole | null {
   }
   const vetSegment = /^\/vet\/([^/]+)/.exec(pathname)?.[1];
   if (vetSegment && VET_PROTECTED_SEGMENTS.has(vetSegment)) return 'VETERINARIAN';
+  const petSitterSegment = /^\/pet-sitter\/([^/]+)/.exec(pathname)?.[1];
+  if (petSitterSegment && PET_SITTER_PROTECTED_SEGMENTS.has(petSitterSegment)) return 'PET_SITTER';
   return null;
 }
 
