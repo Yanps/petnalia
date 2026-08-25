@@ -2,6 +2,7 @@ import { test as base, type BrowserContext } from '@playwright/test';
 
 const CREDS = {
   tutor: { email: 'ana@petnalia.com', password: 'petnalia123' },
+  tutor2: { email: 'carlos@petnalia.com', password: 'petnalia123' },
   vet: { email: 'dra.beatriz@petnalia.com', password: 'petnalia123' },
   admin: { email: 'admin@petnalia.com', password: 'petnalia123' },
   sitter: { email: 'carla.sitter@petnalia.com', password: 'petnalia123' },
@@ -21,6 +22,7 @@ async function login(context: BrowserContext, role: keyof typeof CREDS) {
 
 export const test = base.extend<{
   tutorContext: BrowserContext;
+  tutor2Context: BrowserContext;
   vetContext: BrowserContext;
   adminContext: BrowserContext;
   sitterContext: BrowserContext;
@@ -28,6 +30,12 @@ export const test = base.extend<{
   tutorContext: async ({ browser }, use) => {
     const ctx = await browser.newContext();
     await login(ctx, 'tutor');
+    await use(ctx);
+    await ctx.close();
+  },
+  tutor2Context: async ({ browser }, use) => {
+    const ctx = await browser.newContext();
+    await login(ctx, 'tutor2');
     await use(ctx);
     await ctx.close();
   },

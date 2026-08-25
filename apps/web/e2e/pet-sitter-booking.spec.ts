@@ -90,3 +90,38 @@ test.describe('Pet sitter — disponibilidade e reservas', () => {
     await tutorPage.close();
   });
 });
+
+test.describe('Pet sitter — avaliações', () => {
+  test('tutor avalia reserva concluída e rating aparece na busca', async ({ tutor2Context }) => {
+    // Seed cria uma reserva "completed" de Carlos+Thor com Roberto Lima. Se a suíte
+    // já rodou antes sem reseed, a reserva já estará avaliada — nesse caso só
+    // confirmamos que o rating agregado persiste (idempotente, como o teste espelho
+    // de consultas em tutor-appointments.spec.ts).
+    const page = await tutor2Context.newPage();
+    await page.goto('/reservas', { waitUntil: 'networkidle' });
+    await expect(page.locator('h1')).toContainText('Reservas com pet sitter');
+
+    const avaliarBtn = page.locator('button:has-text("Avaliar")').first();
+    if (await avaliarBtn.count() > 0) {
+      await avaliarBtn.click();
+      await expect(page.locator('h2:has-text("Avaliar reserva")')).toBeVisible({ timeout: 3000 });
+      const stars = page.locator('[role="dialog"] button').filter({ has: page.locator('svg polygon') });
+      await expect(stars).toHaveCount(5);
+      await stars.nth(4).click(); // 5ª estrela = nota 5
+      await page.click('button:has-text("Enviar avaliação")');
+
+      const success = page.locator('text=Avaliação enviada!').or(page.locator('text=já foi avaliada'));
+      await expect(success.first()).toBeVisible({ timeout: 5000 });
+    }
+    await page.close();
+
+    // O rating agregado deve aparecer na busca por Roberto Lima.
+    const searchPage = await tutor2Context.newPage();
+    await searchPage.goto('/busca?tipo=pet-sitter&raio=50', { waitUntil: 'networkidle' });
+    const robertoCard = searchPage.locator('.vn-vetcard', { hasText: 'Roberto' }).first();
+    await expect(robertoCard).toBeVisible({ timeout: 10000 });
+    await expect(robertoCard.locator('text=5.0')).toBeVisible({ timeout: 5000 });
+    await expect(robertoCard.locator('text=(1)')).toBeVisible({ timeout: 5000 });
+    await searchPage.close();
+  });
+});

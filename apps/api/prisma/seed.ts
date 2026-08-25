@@ -63,6 +63,7 @@ async function clearAll() {
   await prisma.review.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.availabilitySlot.deleteMany();
+  await prisma.petSitterReview.deleteMany();
   await prisma.petSitterBooking.deleteMany();
   await prisma.petSitterAvailabilitySlot.deleteMany();
   await prisma.subscription.deleteMany();
@@ -513,6 +514,30 @@ async function main() {
   });
 
   console.log('  ✓ 3 agendamentos criados (1 concluído + review, 1 confirmado, 1 solicitado)');
+
+  // ── Past Pet Sitter Booking (completed, unreviewed — for the "Avaliar" flow) ──
+
+  const pastSitterSlot = await prisma.petSitterAvailabilitySlot.create({
+    data: {
+      petSitterId: sitterRoberto.id,
+      startsAt: new Date('2026-06-15T11:00:00Z'),
+      endsAt: new Date('2026-06-15T12:00:00Z'),
+      status: 'booked',
+    },
+  });
+  await prisma.petSitterBooking.create({
+    data: {
+      tutorId: tutor2.id,
+      petSitterId: sitterRoberto.id,
+      petId: thor.id,
+      addressId: addrCarlos.id,
+      slotId: pastSitterSlot.id,
+      service: 'passeio',
+      status: 'completed',
+    },
+  });
+
+  console.log('  ✓ 1 reserva de pet sitter concluída (sem avaliação ainda)');
 
   // ── Summary ──────────────────────────────────────────────────────────────
 

@@ -21,8 +21,18 @@ interface SeedPetSitterOpts {
 }
 
 async function seedPetSitter(prisma: PrismaService, opts: SeedPetSitterOpts) {
+  const user = await prisma.user.create({
+    data: {
+      email: `${crypto.randomUUID()}@petnalia-test.com`,
+      passwordHash: '$argon2id$v=19$test',
+      role: 'pet_sitter',
+      profile: { create: { fullName: opts.fullName } },
+    },
+  });
+
   const sitter = await prisma.petSitter.create({
     data: {
+      userId: user.id,
       fullName: opts.fullName,
       bio: opts.bio ?? null,
       services: opts.services ?? ['passeio'],
