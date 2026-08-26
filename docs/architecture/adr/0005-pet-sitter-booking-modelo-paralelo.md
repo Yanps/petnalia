@@ -26,6 +26,8 @@ Construir tabelas e módulos **paralelos**, espelhando nome/estrutura/assinatura
 
 > **Atualização (2026-08-25):** `PetSitterReview` foi implementado como follow-up direto desta decisão, seguindo o mesmo padrão de modelo paralelo (`pet_sitter_reviews`, módulo `pet-sitter-reviews`, mirror de `Review`/`ReviewsModule`). A nota de rating agregado (`averageRating`/`totalReviews`) já é exposta na busca (`GET /v1/pet-sitters/search`) e exibida no `PetSitterCard`, mesmo sem o perfil público individual existir ainda — só este último segue adiado.
 
+> **Atualização (2026-08-26):** o perfil público individual (`/pet-sitter/[slug]`, mirror de `/vet/[slug]`) foi implementado, encerrando o roadmap combinado (agendamento → avaliações → perfil). `GET /v1/pet-sitters/:slug` reaproveita o mesmo esquema de slug do veterinário (últimos 8 chars do UUID + nome). Diferença de UX deliberada em relação ao vet: com o perfil existindo, o fluxo de reserva saiu do modal embutido na busca (`PetSitterBookingModal`, removido) e passou a viver como sidebar sticky na página de perfil (`PetSitterBookingSidebar`, mirror de `BookingSidebar`) — os cards na busca e no carrossel da home agora navegam para o perfil em vez de abrir a reserva diretamente, igual ao padrão já usado para veterinários.
+
 ## Alternativas consideradas
 
 | Opção | Prós | Contras |
@@ -46,5 +48,5 @@ Construir tabelas e módulos **paralelos**, espelhando nome/estrutura/assinatura
 ## Follow-ups
 
 - ~~`PetSitterReview`~~ — implementado em 2026-08-25 (ver atualização acima).
-- Perfil público individual do pet sitter, quando fizer sentido priorizar (depende de haver volume real de reviews publicadas).
+- ~~Perfil público individual do pet sitter~~ — implementado em 2026-08-26 (ver atualização acima).
 - Se o padrão de módulos paralelos se repetir para um terceiro papel, reavaliar a extração de um pacote/abstração compartilhada (ainda não há sinal de 3 ocorrências que justifique isso hoje).

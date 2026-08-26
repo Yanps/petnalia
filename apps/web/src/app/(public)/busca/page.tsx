@@ -4,7 +4,6 @@ import type { PetSitterSearchResult, Specialty, VetSearchResult } from '@petnali
 import { Icon } from '@petnalia/ui';
 
 import { api } from '@/lib/api-client';
-import { getSession, getToken } from '@/lib/auth';
 import { VetResultsGrid } from '@/components/search/vet-results-grid';
 import { PetSitterSearchResults } from '@/components/search/pet-sitter-search-results';
 import { SearchFilters } from '@/components/search/search-filters';
@@ -123,11 +122,7 @@ export default async function BuscaPage({ searchParams }: SearchPageProps) {
     });
     if (sp.q) qs.set('q', sp.q);
 
-    const [{ data: sitters, total }, session, token] = await Promise.all([
-      fetchPetSitters(qs),
-      getSession(),
-      getToken(),
-    ]);
+    const { data: sitters, total } = await fetchPetSitters(qs);
 
     return (
       <main style={{ flex: 1 }}>
@@ -161,7 +156,7 @@ export default async function BuscaPage({ searchParams }: SearchPageProps) {
               </p>
             </div>
           ) : (
-            <PetSitterSearchResults sitters={sitters} columns={3} session={session} token={token} />
+            <PetSitterSearchResults sitters={sitters} columns={3} />
           )}
         </div>
       </main>

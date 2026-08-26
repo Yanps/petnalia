@@ -35,7 +35,7 @@ test.describe('Pet sitter — disponibilidade e reservas', () => {
     await page.close();
   });
 
-  test('tutor reserva com pet sitter e o sitter confirma', async ({ tutorContext, sitterContext }) => {
+  test('tutor reserva com pet sitter a partir do perfil público e o sitter confirma', async ({ tutorContext, sitterContext }) => {
     // The sitter opens a slot far enough in the future to not collide with the other test's slot.
     const sitterPage = await sitterContext.newPage();
     await sitterPage.goto('/pet-sitter/disponibilidade', { waitUntil: 'networkidle' });
@@ -57,27 +57,28 @@ test.describe('Pet sitter — disponibilidade e reservas', () => {
     await expect(sitterPage.locator('text=/horário\\(s\\) criado\\(s\\) com sucesso/')).toBeVisible({ timeout: 5000 });
     await sitterPage.close();
 
-    // The tutor finds Carla specifically in search results and opens the booking modal.
+    // The tutor finds Carla specifically in search results and navigates to her profile.
     const tutorPage = await tutorContext.newPage();
     await tutorPage.goto('/busca?tipo=pet-sitter&raio=50', { waitUntil: 'networkidle' });
     const carlaCard = tutorPage.locator('.vn-vetcard', { hasText: 'Carla' }).first();
     await expect(carlaCard).toBeVisible({ timeout: 10000 });
-    await carlaCard.locator('button:has-text("Reservar")').click();
-    await expect(tutorPage.locator('[role="dialog"]')).toBeVisible();
+    await carlaCard.locator('button:has-text("Ver perfil")').click();
+    await tutorPage.waitForURL(/\/pet-sitter\/carla-/, { timeout: 10000 });
+    await expect(tutorPage.locator('h1')).toContainText('Carla');
 
-    // Pick the day the slot was created on.
-    const dayButtons = tutorPage.locator('[role="dialog"] button').filter({ hasText: String(start.getDate()) });
+    // Pick the day the slot was created on, inside the booking sidebar.
+    const dayButtons = tutorPage.locator('aside button').filter({ hasText: String(start.getDate()) });
     await dayButtons.first().click();
 
     // Pick the first available slot.
-    const slotButtons = tutorPage.locator('[role="dialog"] button:has-text(":")');
+    const slotButtons = tutorPage.locator('aside button:has-text(":")');
     await expect(slotButtons.first()).toBeVisible({ timeout: 5000 });
     await slotButtons.first().click();
 
     // Pick a pet if the selector shows up (tutor role required).
-    const petOption = tutorPage.locator('[role="dialog"] button:has-text("Thor")')
-      .or(tutorPage.locator('[role="dialog"] button:has-text("Rex")'))
-      .or(tutorPage.locator('[role="dialog"] button:has-text("Mia")'));
+    const petOption = tutorPage.locator('aside button:has-text("Thor")')
+      .or(tutorPage.locator('aside button:has-text("Rex")'))
+      .or(tutorPage.locator('aside button:has-text("Mia")'));
     if (await petOption.count() > 0) {
       await petOption.first().click();
     }
@@ -88,6 +89,23 @@ test.describe('Pet sitter — disponibilidade e reservas', () => {
       await expect(tutorPage.locator('text=Reserva enviada!')).toBeVisible({ timeout: 5000 });
     }
     await tutorPage.close();
+  });
+});
+
+test.describe('Pet sitter — perfil público', () => {
+  test('busca leva ao perfil individual com bio, serviços e abas', async ({ page }) => {
+    await page.goto('/busca?tipo=pet-sitter&raio=50', { waitUntil: 'networkidle' });
+    const anyCard = page.locator('.vn-vetcard').first();
+    await expect(anyCard).toBeVisible({ timeout: 10000 });
+    await anyCard.click();
+
+    await page.waitForURL(/\/pet-sitter\/.+/, { timeout: 10000 });
+    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('button:has-text("Sobre")')).toBeVisible();
+    await expect(page.locator('button:has-text("Avaliações")')).toBeVisible();
+
+    await page.click('button:has-text("Avaliações")');
+    await expect(page.locator('aside')).toBeVisible();
   });
 });
 

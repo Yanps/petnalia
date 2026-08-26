@@ -34,6 +34,7 @@ export type PetSitterSearchQuery = z.infer<typeof PetSitterSearchQuerySchema>;
 
 export const PetSitterSearchResultSchema = z.object({
   id: z.string().uuid(),
+  slug: z.string(),
   fullName: z.string(),
   avatarUrl: z.string().nullable(),
   bio: z.string().nullable(),
@@ -82,6 +83,20 @@ export const PetSitterOwnProfileResponseSchema = z.object({
   baseState: z.string().nullable(),
 });
 export type PetSitterOwnProfileResponse = z.infer<typeof PetSitterOwnProfileResponseSchema>;
+
+export const PetSitterProfilePublicResponseSchema = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  fullName: z.string(),
+  bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  services: z.array(PetSitterServiceSchema),
+  baseCity: z.string(),
+  baseState: z.string(),
+  averageRating: z.number().min(0).max(5),
+  totalReviews: z.number().int().nonnegative(),
+});
+export type PetSitterProfilePublicResponse = z.infer<typeof PetSitterProfilePublicResponseSchema>;
 
 // ── Content moderation (admin) ───────────────────────────────────────────────
 // Bios are scanned for veterinary/medical-service keywords (services themselves

@@ -83,7 +83,11 @@ export function FeaturedProsCarousel({ vets, sitters }: FeaturedProsCarouselProp
               distance={sitter.distanceKm}
               city={sitter.baseCity}
               {...(sitter.totalReviews > 0 && { rating: sitter.averageRating, reviews: sitter.totalReviews })}
-              onViewMore={() => router.push('/busca?tipo=pet-sitter')}
+              onViewMore={(e) => {
+                e.stopPropagation();
+                router.push(`/pet-sitter/${sitter.slug}`);
+              }}
+              onClick={() => router.push(`/pet-sitter/${sitter.slug}`)}
             />
           </div>
         ))}

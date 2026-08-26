@@ -18,6 +18,18 @@ interface RawPetSitterRow {
   total_count: bigint | number;
 }
 
+interface RawPetSitterProfile {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  services: string[];
+  base_city: string | null;
+  base_state: string | null;
+  average_rating: number;
+  total_reviews: number;
+}
+
 @Injectable()
 export class PetSittersRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -75,6 +87,35 @@ export class PetSittersRepository {
 
     const totalCount = rows.length > 0 ? Number(rows[0]!.total_count) : 0;
     return { rows, totalCount };
+  }
+
+  async findProfileBySlug(slug: string): Promise<RawPetSitterProfile | null> {
+    if (slug.length < 9) return null;
+    const idPrefix = slug.slice(-8) + '%';
+
+    const rows = await this.prisma.$queryRaw<RawPetSitterProfile[]>`
+      SELECT
+        ps.id::text                                   AS id,
+        ps."fullName"                                 AS full_name,
+        ps."avatarUrl"                                AS avatar_url,
+        ps.bio,
+        ps.services,
+        ps."baseCity"                                 AS base_city,
+        ps."baseState"                                AS base_state,
+        COALESCE(AVG(r.rating), 0)::float8            AS average_rating,
+        COUNT(DISTINCT r.id)::int                     AS total_reviews
+      FROM pet_sitters ps
+      JOIN users u        ON u.id = ps."userId" AND u.status = 'active'
+      LEFT JOIN pet_sitter_reviews r ON r."petSitterId" = ps.id
+      WHERE ps.id::text LIKE ${idPrefix}
+        AND ps."deletedAt" IS NULL
+      GROUP BY
+        ps.id, ps."fullName", ps."avatarUrl", ps.bio, ps.services,
+        ps."baseCity", ps."baseState"
+      LIMIT 1
+    `;
+
+    return rows[0] ?? null;
   }
 
   findByUserId(userId: string) {

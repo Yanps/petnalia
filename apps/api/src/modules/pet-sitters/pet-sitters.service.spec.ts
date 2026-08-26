@@ -18,6 +18,8 @@ function makeRawRow(overrides: Record<string, unknown> = {}) {
     base_city: 'São Paulo',
     base_state: 'SP',
     distance_km: 3.5,
+    average_rating: 0,
+    total_reviews: 0,
     total_count: 10,
     ...overrides,
   };
@@ -36,6 +38,7 @@ function makeRepo(overrides: Partial<Record<keyof PetSittersRepository, unknown>
     search: vi.fn().mockResolvedValue({ rows: [], totalCount: 0 }),
     findByUserId: vi.fn().mockResolvedValue(null),
     updateOwnProfile: vi.fn().mockResolvedValue(undefined),
+    findProfileBySlug: vi.fn().mockResolvedValue(null),
     ...overrides,
   } as unknown as PetSittersRepository;
 }
@@ -71,6 +74,7 @@ describe('PetSittersService.search', () => {
     expect(data).toHaveLength(1);
     expect(data[0]).toEqual({
       id: 'aaaaaaaa-0000-0000-0000-000000000001',
+      slug: 'carla-mendonca-aaaaaaaa',
       fullName: 'Carla Mendonça',
       avatarUrl: null,
       bio: 'Cuido de cães e gatos há 6 anos.',
@@ -78,6 +82,8 @@ describe('PetSittersService.search', () => {
       distanceKm: 3.5,
       baseCity: 'São Paulo',
       baseState: 'SP',
+      averageRating: 0,
+      totalReviews: 0,
     });
   });
 
@@ -121,6 +127,48 @@ describe('PetSittersService.search', () => {
     await service.search(query);
 
     expect(repo.search).toHaveBeenCalledWith(query);
+  });
+});
+
+describe('PetSittersService.getProfile', () => {
+  it('retorna o perfil público mapeado quando o slug existe', async () => {
+    const repo = makeRepo({
+      findProfileBySlug: vi.fn().mockResolvedValue({
+        id: 'aaaaaaaa-0000-0000-0000-000000000001',
+        full_name: 'Carla Mendonça',
+        avatar_url: null,
+        bio: 'Cuido de cães e gatos há 6 anos.',
+        services: ['hospedagem'],
+        base_city: 'São Paulo',
+        base_state: 'SP',
+        average_rating: 4.5,
+        total_reviews: 2,
+      }),
+    });
+    const service = new PetSittersService(repo, makeGeocoder(), makeNotifications(), makeUsersRepo());
+
+    const profile = await service.getProfile('carla-mendonca-aaaaaaaa');
+
+    expect(repo.findProfileBySlug).toHaveBeenCalledWith('carla-mendonca-aaaaaaaa');
+    expect(profile).toEqual({
+      id: 'aaaaaaaa-0000-0000-0000-000000000001',
+      slug: 'carla-mendonca-aaaaaaaa',
+      fullName: 'Carla Mendonça',
+      bio: 'Cuido de cães e gatos há 6 anos.',
+      avatarUrl: null,
+      services: ['hospedagem'],
+      baseCity: 'São Paulo',
+      baseState: 'SP',
+      averageRating: 4.5,
+      totalReviews: 2,
+    });
+  });
+
+  it('lança PetSitterNotFoundError quando o slug não corresponde a nenhum sitter', async () => {
+    const repo = makeRepo({ findProfileBySlug: vi.fn().mockResolvedValue(null) });
+    const service = new PetSittersService(repo, makeGeocoder(), makeNotifications(), makeUsersRepo());
+
+    await expect(service.getProfile('inexistente-00000000')).rejects.toThrow(PetSitterNotFoundError);
   });
 });
 

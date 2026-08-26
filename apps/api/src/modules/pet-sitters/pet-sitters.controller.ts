@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Put, Query } from '@nestjs/common';
 import { PetSitterSearchQuerySchema, UpdatePetSitterProfileInputSchema } from '@petnalia/types';
 import type { User } from '@prisma/client';
 
@@ -30,5 +30,11 @@ export class PetSittersController {
   async updateOwnProfile(@CurrentUser() user: User, @Body() body: unknown): Promise<void> {
     const dto = UpdatePetSitterProfileInputSchema.parse(body);
     await this.petSittersService.updateOwnProfile(user.id, dto);
+  }
+
+  @Public()
+  @Get(':slug')
+  getProfile(@Param('slug') slug: string) {
+    return this.petSittersService.getProfile(slug);
   }
 }
