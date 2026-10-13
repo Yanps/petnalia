@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { CancelAppointmentInputSchema, CreateAppointmentInputSchema } from '@petnalia/types';
 
+import { AppointmentsService } from './appointments.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { AppointmentsService } from './appointments.service';
+
 
 @Controller('appointments')
 export class AppointmentsController {
@@ -22,6 +24,7 @@ export class AppointmentsController {
   }
 
   @Get()
+  @Roles('tutor', 'veterinarian')
   listMine(@CurrentUser() user: User) {
     const role = user.role === 'tutor' ? 'tutor' : 'veterinarian';
     return this.appointmentsService.listMyAppointments(user.id, role);

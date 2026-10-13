@@ -1,11 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { Address } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { CreateAddressInput } from '@petnalia/types';
 
-import type { PrismaService } from '../../shared/prisma/prisma.service';
-import { AddressesRepository } from './addresses.repository';
+
+import type { AddressesRepository } from './addresses.repository';
 import { AddressesService, AddressNotFoundError } from './addresses.service';
-import { GeocoderService } from './geocoder.service';
+import type { GeocoderService } from './geocoder.service';
+import type { PrismaService } from '../../shared/prisma/prisma.service';
 
 const USER_ID = 'user-uuid-1';
 const ADDR_ID = 'addr-uuid-1';
@@ -38,6 +40,7 @@ const baseDto: CreateAddressInput = {
 function makeRepo(overrides: Partial<AddressesRepository> = {}) {
   return {
     findByUser: vi.fn().mockResolvedValue([baseAddress]),
+    findById: vi.fn().mockResolvedValue(baseAddress),
     create: vi.fn().mockResolvedValue(baseAddress),
     delete: vi.fn().mockResolvedValue(1),
     ...overrides,
@@ -121,5 +124,20 @@ describe('AddressesService.deleteAddress', () => {
   it('lança AddressNotFoundError quando nada foi deletado', async () => {
     const repo = makeRepo({ delete: vi.fn().mockResolvedValue(0) });
     await expect(makeService(repo).deleteAddress(ADDR_ID, USER_ID)).rejects.toThrow(AddressNotFoundError);
+  });
+});
+
+describe('AddressesService.assertOwnedBy', () => {
+  it('resolve quando o endereço pertence ao usuário', async () => {
+    const repo = makeRepo();
+    await expect(makeService(repo).assertOwnedBy(ADDR_ID, USER_ID)).resolves.toBeUndefined();
+    expect(repo.findById).toHaveBeenCalledWith(ADDR_ID, USER_ID);
+  });
+
+  it('lança AddressNotFoundError quando o endereço não pertence ao usuário', async () => {
+    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(null) });
+    await expect(makeService(repo).assertOwnedBy(ADDR_ID, 'outro-usuario')).rejects.toThrow(
+      AddressNotFoundError,
+    );
   });
 });

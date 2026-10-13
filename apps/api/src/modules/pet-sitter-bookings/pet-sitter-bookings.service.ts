@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
+
 import type { CreatePetSitterBookingInput, PetSitterBooking } from '@petnalia/types';
 
-import { RedisService } from '../../shared/redis/redis.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
-import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import { PetSitterAvailabilityService } from '../pet-sitter-availability/pet-sitter-availability.service';
 import {
   InvalidPetSitterHoldTokenError,
   PetSitterBookingAddressRequiredError,
@@ -14,6 +10,17 @@ import {
   PetSitterBookingTransitionError,
 } from './pet-sitter-bookings.errors';
 import { PetSitterBookingsRepository } from './pet-sitter-bookings.repository';
+import { RedisService } from '../../shared/redis/redis.service';
+import { AddressesService } from '../addresses/addresses.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import {
+  PetSitterAvailabilityService,
+  PetSitterSlotNotFoundError,
+} from '../pet-sitter-availability/pet-sitter-availability.service';
+import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
+import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
+import { PetsService } from '../pets/pets.service';
+
 
 const IDEM_TTL_SECONDS = 86400;
 const IDEM_KEY = (key: string) => `idem:pet-sitter-booking:${key}`;
@@ -58,6 +65,8 @@ export class PetSitterBookingsService {
     private readonly bookingsRepository: PetSitterBookingsRepository,
     private readonly availabilityService: PetSitterAvailabilityService,
     private readonly petSittersRepository: PetSittersRepository,
+    private readonly petsService: PetsService,
+    private readonly addressesService: AddressesService,
     private readonly redis: RedisService,
     private readonly notifications: NotificationsService,
   ) {}
@@ -76,11 +85,17 @@ export class PetSitterBookingsService {
       throw new PetSitterBookingAddressRequiredError();
     }
 
-    const valid = await this.availabilityService.verifyHoldToken(dto.slotId, dto.holdToken);
-    if (!valid) throw new InvalidPetSitterHoldTokenError();
+    await this.petsService.assertOwnedBy(dto.petId, tutorId);
+    if (dto.addressId) await this.addressesService.assertOwnedBy(dto.addressId, tutorId);
 
     const prisma = this.bookingsRepository.getPrisma();
     const repo = this.availabilityService.getRepository();
+
+    const slot = await repo.findSlotById(dto.slotId);
+    if (!slot || slot.petSitterId !== dto.petSitterId) throw new PetSitterSlotNotFoundError();
+
+    const valid = await this.availabilityService.verifyHoldToken(dto.slotId, dto.holdToken);
+    if (!valid) throw new InvalidPetSitterHoldTokenError();
 
     const booking = await prisma.$transaction(async (tx) => {
       const booked = await repo.bookSlot(dto.slotId, tx);
@@ -102,8 +117,7 @@ export class PetSitterBookingsService {
 
     await this.redis.del(`pet-sitter-slot:hold:${dto.slotId}`);
 
-    const slot = await repo.findSlotById(dto.slotId);
-    const result = toPetSitterBooking({ ...booking, slot: { startsAt: slot!.startsAt } });
+    const result = toPetSitterBooking({ ...booking, slot: { startsAt: slot.startsAt } });
 
     if (idempotencyKey) {
       await this.redis.set(IDEM_KEY(idempotencyKey), JSON.stringify(result), 'EX', IDEM_TTL_SECONDS);

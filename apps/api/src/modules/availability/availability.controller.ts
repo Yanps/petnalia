@@ -1,11 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { AvailabilityQuerySchema, CreateSlotsInputSchema } from '@petnalia/types';
 
+import { AvailabilityService } from './availability.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { AvailabilityService } from './availability.service';
+
 
 @Controller('availability')
 export class AvailabilityController {
@@ -22,7 +24,7 @@ export class AvailabilityController {
   @Roles('veterinarian')
   createSlots(@CurrentUser() user: User, @Body() body: unknown) {
     const dto = CreateSlotsInputSchema.parse(body);
-    return this.availabilityService.createSlots(user.id, dto);
+    return this.availabilityService.createSlotsForUser(user.id, dto);
   }
 
   @Post('slots/:id/hold')

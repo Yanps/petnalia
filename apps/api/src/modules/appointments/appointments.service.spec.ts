@@ -1,20 +1,41 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { AppointmentsService } from './appointments.service';
-import { AppointmentsRepository } from './appointments.repository';
-import { AvailabilityService } from '../availability/availability.service';
-import { RedisService } from '../../shared/redis/redis.service';
 import {
   AppointmentForbiddenError,
   AppointmentNotFoundError,
   AppointmentTransitionError,
   InvalidHoldTokenError,
 } from './appointments.errors';
+import type { AppointmentsRepository } from './appointments.repository';
+import { AppointmentsService } from './appointments.service';
+import type { RedisService } from '../../shared/redis/redis.service';
+import { AddressNotFoundError, type AddressesService } from '../addresses/addresses.service';
+import type { AvailabilityService } from '../availability/availability.service';
+import { SlotNotFoundError } from '../availability/availability.service';
+import { PetNotFoundError } from '../pets/pets.errors';
+import type { PetsService } from '../pets/pets.service';
+import { VeterinarianNotFoundError } from '../veterinarians/veterinarians.errors';
+import type { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+
 
 const TUTOR_ID = 'aaaaaaaa-0000-0000-0000-000000000000';
-const VET_ID = 'bbbbbbbb-0000-0000-0000-000000000000';
+// The vet's user id and the Veterinarian entity id are distinct on purpose:
+// appointments reference veterinarians.id, while the JWT carries users.id.
+const VET_USER_ID = 'bbbbbbbb-0000-0000-0000-000000000000';
+const VET_ID = 'eeeeeeee-0000-0000-0000-000000000000';
+const OTHER_VET_USER_ID = 'bbbbbbbb-1111-0000-0000-000000000000';
+const OTHER_VET_ID = 'eeeeeeee-1111-0000-0000-000000000000';
 const SLOT_ID = 'cccccccc-0000-0000-0000-000000000000';
 const APPT_ID = 'dddddddd-0000-0000-0000-000000000000';
+
+const bookInput = {
+  veterinarianId: VET_ID,
+  petId: 'pet-1',
+  addressId: 'addr-1',
+  slotId: SLOT_ID,
+  holdToken: 'valid-token',
+  modality: 'home' as const,
+};
 
 const baseAppointment = {
   id: APPT_ID,
@@ -59,6 +80,8 @@ function makeAvailabilityService(overrides: Partial<AvailabilityService> = {}) {
     getRepository: vi.fn().mockReturnValue({
       bookSlot: vi.fn().mockResolvedValue(true),
       findSlotById: vi.fn().mockResolvedValue({
+        id: SLOT_ID,
+        veterinarianId: VET_ID,
         startsAt: new Date('2026-01-05T09:00:00Z'),
       }),
     }),
@@ -79,29 +102,52 @@ function makeNotifications() {
   return { enqueueEmail: vi.fn().mockResolvedValue(undefined) } as never;
 }
 
+function makeVetsRepo() {
+  const vetIdByUserId: Record<string, string> = {
+    [VET_USER_ID]: VET_ID,
+    [OTHER_VET_USER_ID]: OTHER_VET_ID,
+  };
+  return {
+    findIdByUserId: vi.fn((userId: string) => Promise.resolve(vetIdByUserId[userId] ?? null)),
+  } as unknown as VeterinariansRepository;
+}
+
+function makePetsService(overrides: Partial<PetsService> = {}) {
+  return {
+    assertOwnedBy: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as PetsService;
+}
+
+function makeAddressesService(overrides: Partial<AddressesService> = {}) {
+  return {
+    assertOwnedBy: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as AddressesService;
+}
+
 function makeService(
   repo: AppointmentsRepository,
   avail: AvailabilityService,
   redis: RedisService,
+  deps: { pets?: PetsService; addresses?: AddressesService } = {},
 ) {
-  return new AppointmentsService(repo, avail, redis, makeNotifications());
+  return new AppointmentsService(
+    repo,
+    avail,
+    makeVetsRepo(),
+    deps.pets ?? makePetsService(),
+    deps.addresses ?? makeAddressesService(),
+    redis,
+    makeNotifications(),
+  );
 }
 
 describe('AppointmentsService', () => {
   describe('bookAppointment', () => {
     it('books when hold token is valid', async () => {
       const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
-      const result = await svc.bookAppointment(
-        TUTOR_ID,
-        {
-          veterinarianId: VET_ID,
-          petId: 'pet-1',
-          addressId: 'addr-1',
-          slotId: SLOT_ID,
-          holdToken: 'valid-token',
-          modality: 'home',
-        },
-      );
+      const result = await svc.bookAppointment(TUTOR_ID, bookInput);
       expect(result.id).toBe(APPT_ID);
       expect(result.scheduledAt).toBe('2026-01-05T09:00:00.000Z');
     });
@@ -110,15 +156,48 @@ describe('AppointmentsService', () => {
       const avail = makeAvailabilityService({ verifyHoldToken: vi.fn().mockResolvedValue(false) });
       const svc = makeService(makeRepo(), avail, makeRedis());
       await expect(
-        svc.bookAppointment(TUTOR_ID, {
-          veterinarianId: VET_ID,
-          petId: 'pet-1',
-          addressId: 'addr-1',
-          slotId: SLOT_ID,
-          holdToken: 'wrong-token',
-          modality: 'home',
-        }),
+        svc.bookAppointment(TUTOR_ID, { ...bookInput, holdToken: 'wrong-token' }),
       ).rejects.toThrow(InvalidHoldTokenError);
+    });
+
+    it('rejects a pet that does not belong to the tutor', async () => {
+      const repo = makeRepo();
+      const pets = makePetsService({
+        assertOwnedBy: vi.fn().mockRejectedValue(new PetNotFoundError()),
+      });
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis(), { pets });
+
+      await expect(svc.bookAppointment(TUTOR_ID, bookInput)).rejects.toThrow(PetNotFoundError);
+      expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('rejects an address that does not belong to the tutor', async () => {
+      const repo = makeRepo();
+      const addresses = makeAddressesService({
+        assertOwnedBy: vi.fn().mockRejectedValue(new AddressNotFoundError()),
+      });
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis(), { addresses });
+
+      await expect(svc.bookAppointment(TUTOR_ID, bookInput)).rejects.toThrow(AddressNotFoundError);
+      expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('rejects a slot that belongs to a different veterinarian', async () => {
+      const repo = makeRepo();
+      const avail = makeAvailabilityService({
+        getRepository: vi.fn().mockReturnValue({
+          bookSlot: vi.fn().mockResolvedValue(true),
+          findSlotById: vi.fn().mockResolvedValue({
+            id: SLOT_ID,
+            veterinarianId: OTHER_VET_ID,
+            startsAt: new Date('2026-01-05T09:00:00Z'),
+          }),
+        }),
+      });
+      const svc = makeService(repo, avail, makeRedis());
+
+      await expect(svc.bookAppointment(TUTOR_ID, bookInput)).rejects.toThrow(SlotNotFoundError);
+      expect(repo.book).not.toHaveBeenCalled();
     });
 
     it('returns cached result when idempotency key already exists', async () => {
@@ -129,7 +208,7 @@ describe('AppointmentsService', () => {
 
       const result = await svc.bookAppointment(
         TUTOR_ID,
-        { veterinarianId: VET_ID, petId: 'p', addressId: 'a', slotId: SLOT_ID, holdToken: 't', modality: 'home' },
+        bookInput,
         'idem-key-123',
       );
       expect(result.id).toBe(APPT_ID);
@@ -144,9 +223,9 @@ describe('AppointmentsService', () => {
       expect(result.id).toBe(APPT_ID);
     });
 
-    it('returns appointment for vet', async () => {
+    it('returns appointment for the owning vet, resolving the vet id from the user id', async () => {
       const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
-      const result = await svc.getAppointment(APPT_ID, VET_ID);
+      const result = await svc.getAppointment(APPT_ID, VET_USER_ID);
       expect(result.id).toBe(APPT_ID);
     });
 
@@ -160,18 +239,36 @@ describe('AppointmentsService', () => {
       const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
       await expect(svc.getAppointment(APPT_ID, 'stranger')).rejects.toThrow(AppointmentForbiddenError);
     });
+
+    it('throws Forbidden for a different vet', async () => {
+      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
+      await expect(svc.getAppointment(APPT_ID, OTHER_VET_USER_ID)).rejects.toThrow(
+        AppointmentForbiddenError,
+      );
+    });
   });
 
   describe('confirmAppointment', () => {
     it('confirms when vet owns and status is requested', async () => {
-      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
-      const result = await svc.confirmAppointment(APPT_ID, VET_ID);
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+      const result = await svc.confirmAppointment(APPT_ID, VET_USER_ID);
       expect(result.status).toBe('confirmed');
+      expect(repo.updateStatus).toHaveBeenCalledWith(APPT_ID, 'confirmed', 'veterinarianId', VET_ID);
     });
 
-    it('throws Forbidden when caller is not the vet', async () => {
+    it('throws Forbidden when caller is a different vet', async () => {
       const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
-      await expect(svc.confirmAppointment(APPT_ID, TUTOR_ID)).rejects.toThrow(AppointmentForbiddenError);
+      await expect(svc.confirmAppointment(APPT_ID, OTHER_VET_USER_ID)).rejects.toThrow(
+        AppointmentForbiddenError,
+      );
+    });
+
+    it('throws VeterinarianNotFoundError when caller has no vet profile', async () => {
+      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
+      await expect(svc.confirmAppointment(APPT_ID, TUTOR_ID)).rejects.toThrow(
+        VeterinarianNotFoundError,
+      );
     });
 
     it('throws TransitionError when status is not requested', async () => {
@@ -179,26 +276,39 @@ describe('AppointmentsService', () => {
         findById: vi.fn().mockResolvedValue({ ...baseAppointment, status: 'cancelled' }),
       });
       const svc = makeService(repo, makeAvailabilityService(), makeRedis());
-      await expect(svc.confirmAppointment(APPT_ID, VET_ID)).rejects.toThrow(AppointmentTransitionError);
+      await expect(svc.confirmAppointment(APPT_ID, VET_USER_ID)).rejects.toThrow(
+        AppointmentTransitionError,
+      );
     });
   });
 
   describe('cancelAppointment', () => {
     it('allows tutor to cancel', async () => {
-      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
       const result = await svc.cancelAppointment(APPT_ID, TUTOR_ID);
       expect(result.status).toBe('cancelled');
+      expect(repo.updateStatus).toHaveBeenCalledWith(APPT_ID, 'cancelled', 'tutorId', TUTOR_ID);
     });
 
-    it('allows vet to cancel', async () => {
-      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
-      const result = await svc.cancelAppointment(APPT_ID, VET_ID);
+    it('allows the owning vet to cancel', async () => {
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+      const result = await svc.cancelAppointment(APPT_ID, VET_USER_ID);
       expect(result.status).toBe('cancelled');
+      expect(repo.updateStatus).toHaveBeenCalledWith(APPT_ID, 'cancelled', 'veterinarianId', VET_ID);
     });
 
     it('throws Forbidden for strangers', async () => {
       const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
       await expect(svc.cancelAppointment(APPT_ID, 'stranger')).rejects.toThrow(AppointmentForbiddenError);
+    });
+
+    it('throws Forbidden for a different vet', async () => {
+      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
+      await expect(svc.cancelAppointment(APPT_ID, OTHER_VET_USER_ID)).rejects.toThrow(
+        AppointmentForbiddenError,
+      );
     });
 
     it('throws TransitionError when already cancelled', async () => {
@@ -216,13 +326,48 @@ describe('AppointmentsService', () => {
         findById: vi.fn().mockResolvedValue({ ...baseAppointment, status: 'confirmed' }),
       });
       const svc = makeService(repo, makeAvailabilityService(), makeRedis());
-      const result = await svc.completeAppointment(APPT_ID, VET_ID);
+      const result = await svc.completeAppointment(APPT_ID, VET_USER_ID);
       expect(result.status).toBe('completed');
+    });
+
+    it('throws Forbidden when caller is a different vet', async () => {
+      const repo = makeRepo({
+        findById: vi.fn().mockResolvedValue({ ...baseAppointment, status: 'confirmed' }),
+      });
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+      await expect(svc.completeAppointment(APPT_ID, OTHER_VET_USER_ID)).rejects.toThrow(
+        AppointmentForbiddenError,
+      );
     });
 
     it('throws TransitionError when status is not confirmed', async () => {
       const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
-      await expect(svc.completeAppointment(APPT_ID, VET_ID)).rejects.toThrow(AppointmentTransitionError);
+      await expect(svc.completeAppointment(APPT_ID, VET_USER_ID)).rejects.toThrow(
+        AppointmentTransitionError,
+      );
+    });
+  });
+
+  describe('listMyAppointments', () => {
+    it('lists by tutor', async () => {
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+      await svc.listMyAppointments(TUTOR_ID, 'tutor');
+      expect(repo.findByTutor).toHaveBeenCalledWith(TUTOR_ID);
+    });
+
+    it('lists by vet, resolving the vet id from the user id first', async () => {
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+      await svc.listMyAppointments(VET_USER_ID, 'veterinarian');
+      expect(repo.findByVet).toHaveBeenCalledWith(VET_ID);
+    });
+
+    it('throws VeterinarianNotFoundError when the vet user has no vet profile', async () => {
+      const svc = makeService(makeRepo(), makeAvailabilityService(), makeRedis());
+      await expect(svc.listMyAppointments('no-profile', 'veterinarian')).rejects.toThrow(
+        VeterinarianNotFoundError,
+      );
     });
   });
 });

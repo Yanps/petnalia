@@ -1,13 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { AvailabilitySlot } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { AvailabilityQuery, CreateSlotsInput } from '@petnalia/types';
 
-import type { RedisService } from '../../shared/redis/redis.service';
-import { AvailabilityRepository } from './availability.repository';
+import type { AvailabilityRepository } from './availability.repository';
 import { AvailabilityService, SlotNotAvailableError } from './availability.service';
+import type { RedisService } from '../../shared/redis/redis.service';
+import { VeterinarianNotFoundError } from '../veterinarians/veterinarians.errors';
+import type { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+
 
 const SLOT_ID = 'slot-uuid-1';
 const VET_ID = 'vet-uuid-1';
+const VET_USER_ID = 'vet-user-uuid-1';
 
 const baseSlot: AvailabilitySlot = {
   id: SLOT_ID,
@@ -41,8 +46,16 @@ function makeRedis(overrides: Partial<RedisService> = {}) {
   } as unknown as RedisService;
 }
 
+function makeVetsRepo() {
+  return {
+    findIdByUserId: vi.fn((userId: string) =>
+      Promise.resolve(userId === VET_USER_ID ? VET_ID : null),
+    ),
+  } as unknown as VeterinariansRepository;
+}
+
 function makeService(repo = makeRepo(), redis = makeRedis()) {
-  return new AvailabilityService(repo, redis);
+  return new AvailabilityService(repo, makeVetsRepo(), redis);
 }
 
 describe('AvailabilityService.getOpenSlots', () => {
@@ -59,17 +72,28 @@ describe('AvailabilityService.getOpenSlots', () => {
   });
 });
 
-describe('AvailabilityService.createSlots', () => {
-  it('delega para o repositório e retorna a contagem criada', async () => {
+describe('AvailabilityService.createSlotsForUser', () => {
+  it('resolve o id do veterinário a partir do usuário e retorna a contagem criada', async () => {
     const repo = makeRepo({ createSlots: vi.fn().mockResolvedValue(5) });
     const dto: CreateSlotsInput = {
       slots: [
         { startsAt: '2026-02-01T09:00:00Z', endsAt: '2026-02-01T10:00:00Z' },
       ],
     };
-    const result = await makeService(repo).createSlots(VET_ID, dto);
+    const result = await makeService(repo).createSlotsForUser(VET_USER_ID, dto);
     expect(repo.createSlots).toHaveBeenCalledWith(VET_ID, dto.slots);
     expect(result).toEqual({ created: 5 });
+  });
+
+  it('lança VeterinarianNotFoundError quando o usuário não tem perfil de veterinário', async () => {
+    const repo = makeRepo();
+    const dto: CreateSlotsInput = {
+      slots: [{ startsAt: '2026-02-01T09:00:00Z', endsAt: '2026-02-01T10:00:00Z' }],
+    };
+    await expect(makeService(repo).createSlotsForUser('sem-perfil', dto)).rejects.toThrow(
+      VeterinarianNotFoundError,
+    );
+    expect(repo.createSlots).not.toHaveBeenCalled();
   });
 });
 

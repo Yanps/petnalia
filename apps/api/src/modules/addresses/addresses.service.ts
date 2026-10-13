@@ -1,10 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+
 import type { CreateAddressInput } from '@petnalia/types';
 
-import { PrismaService } from '../../shared/prisma/prisma.service';
-import { DomainError } from '../../shared/errors/domain.error';
 import { AddressesRepository } from './addresses.repository';
 import { GeocoderService } from './geocoder.service';
+import { DomainError } from '../../shared/errors/domain.error';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+
 
 export class AddressNotFoundError extends DomainError {
   constructor() {
@@ -22,6 +24,11 @@ export class AddressesService {
 
   async listAddresses(userId: string) {
     return this.addressesRepository.findByUser(userId);
+  }
+
+  async assertOwnedBy(addressId: string, userId: string): Promise<void> {
+    const address = await this.addressesRepository.findById(addressId, userId);
+    if (!address) throw new AddressNotFoundError();
   }
 
   async createAddress(userId: string, dto: CreateAddressInput) {
