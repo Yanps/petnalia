@@ -1,11 +1,13 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Put, Query } from '@nestjs/common';
-import { PetSitterSearchQuerySchema, UpdatePetSitterProfileInputSchema } from '@petnalia/types';
 import type { User } from '@prisma/client';
 
+import { PetSitterSearchQuerySchema, UpdatePetSitterProfileInputSchema } from '@petnalia/types';
+
+import { PetSittersService } from './pet-sitters.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { PetSittersService } from './pet-sitters.service';
+
 
 @Controller('pet-sitters')
 export class PetSittersController {

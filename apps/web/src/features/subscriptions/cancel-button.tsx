@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { Button } from '@petnalia/ui';
+
 import { cancelSubscription } from './actions';
 
 export function CancelButton() {
@@ -37,7 +39,7 @@ export function CancelButton() {
           <Button variant="outline" size="sm" block onClick={() => setConfirming(false)} disabled={loading}>
             Manter
           </Button>
-          <Button variant="primary" size="sm" block onClick={handleConfirm} disabled={loading}>
+          <Button variant="primary" size="sm" block onClick={() => void handleConfirm()} disabled={loading}>
             {loading ? 'Aguarde...' : 'Confirmar'}
           </Button>
         </div>

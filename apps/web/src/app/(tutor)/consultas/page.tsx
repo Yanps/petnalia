@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Button } from '@petnalia/ui';
-import type { Appointment } from '@petnalia/types';
 
-import { getToken } from '@/lib/auth';
+import type { Appointment } from '@petnalia/types';
+import { Button } from '@petnalia/ui';
+
 import { AppointmentsList } from '@/components/dashboard/appointments-list';
+import { getToken } from '@/lib/auth';
 
 const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 

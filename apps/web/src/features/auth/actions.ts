@@ -1,10 +1,14 @@
 'use server';
 
+import { decodeJwt } from 'jose';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { decodeJwt } from 'jose';
+
 import { api } from '@/lib/api-client';
+
 import { LoginSchema, RegisterSchema, RegisterVetSchema, ForgotPasswordSchema, ResetPasswordSchema } from './schema';
+
+
 
 interface AuthTokens {
   readonly accessToken: string;
@@ -100,8 +104,9 @@ export async function resetPasswordAction(formData: FormData) {
     confirmPassword: formData.get('confirmPassword'),
   });
 
+  const token = formData.get('token');
   await api.post('/v1/auth/reset-password', {
-    token: String(formData.get('token') ?? ''),
+    token: typeof token === 'string' ? token : '',
     password: data.password,
   });
 

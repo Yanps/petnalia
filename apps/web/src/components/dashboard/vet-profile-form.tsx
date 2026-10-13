@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+
 import type { Specialty, VetOwnProfileResponse } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
@@ -231,7 +232,7 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
           </div>
 
           {/* Editable fields */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <label style={labelStyle}>
                 Bio

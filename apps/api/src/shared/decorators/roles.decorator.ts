@@ -1,4 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
+
 import type { Role } from '@petnalia/types';
 
 export const ROLES_KEY = 'roles';

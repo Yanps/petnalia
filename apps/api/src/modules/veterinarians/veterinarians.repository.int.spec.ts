@@ -2,10 +2,11 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { PrismaModule } from '../../shared/prisma/prisma.module';
-import { PrismaService } from '../../shared/prisma/prisma.service';
 import { VeterinariansRepository } from './veterinarians.repository';
 import { setupTestDatabase, type TestDatabase } from '../../../test/helpers/database';
+import { PrismaModule } from '../../shared/prisma/prisma.module';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+
 
 // São Paulo city centre
 const SP = { lat: -23.5505, lng: -46.6333 };

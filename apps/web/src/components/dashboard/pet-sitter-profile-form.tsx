@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import type { PetSitterOwnProfileResponse, PetSitterService } from '@petnalia/types';
 import { PET_SITTER_SERVICE_LABELS, PetSitterServiceSchema } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
@@ -87,7 +88,7 @@ export function PetSitterProfileForm({ profile, token }: PetSitterProfileFormPro
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <label style={labelStyle}>
                 Bio

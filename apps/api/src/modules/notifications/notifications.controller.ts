@@ -1,9 +1,11 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, Patch, Query } from '@nestjs/common';
-import { PaginationQuerySchema } from '@petnalia/types';
 import type { User } from '@prisma/client';
 
-import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { PaginationQuerySchema } from '@petnalia/types';
+
 import { NotificationsService } from './notifications.service';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+
 
 @Controller('notifications')
 export class NotificationsController {

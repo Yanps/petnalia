@@ -2,13 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
-import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
-import { SubscriptionsRepository } from './subscriptions.repository';
+
 import {
   InvalidWebhookSignatureError,
   SubscriptionNotFoundError,
   VetNotFoundError,
 } from './subscriptions.errors';
+import { SubscriptionsRepository } from './subscriptions.repository';
+import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
 
 const PLAN_PRICE_CENTS: Record<string, number> = {
   pro: 4900,
@@ -117,8 +118,11 @@ export class SubscriptionsService {
     await this.subscriptionsRepo.upsert(vetId, {
       plan,
       status: 'active',
-      providerCustomerId: String(session.customer),
-      providerSubscriptionId: String(session.subscription),
+      // Webhook payloads are not expanded, but the Stripe types allow either an id or an object.
+      providerCustomerId:
+        typeof session.customer === 'string' ? session.customer : session.customer.id,
+      providerSubscriptionId:
+        typeof session.subscription === 'string' ? session.subscription : session.subscription.id,
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
       priceCents: PLAN_PRICE_CENTS[plan] ?? 0,

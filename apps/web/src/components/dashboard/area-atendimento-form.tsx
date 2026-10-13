@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Button, Icon, RadiusSelector } from '@petnalia/ui';
+
 import type { VetOwnProfileResponse } from '@petnalia/types';
+import { Button, Icon, RadiusSelector } from '@petnalia/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 

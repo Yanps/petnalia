@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+
 import type { Address } from '@petnalia/types';
+
 import { AddressManager } from '@/components/dashboard/address-manager';
 import { getSession, getToken } from '@/lib/auth';
 

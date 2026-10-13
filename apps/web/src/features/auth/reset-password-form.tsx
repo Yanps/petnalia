@@ -1,8 +1,10 @@
 'use client';
 
-import { useTransition, useState } from 'react';
 import Link from 'next/link';
+import { useTransition, useState } from 'react';
+
 import { Button, Icon } from '@petnalia/ui';
+
 import { resetPasswordAction } from './actions';
 
 export function ResetPasswordForm({ token }: { readonly token: string }) {

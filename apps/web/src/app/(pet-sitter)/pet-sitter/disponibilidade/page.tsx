@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { getToken } from '@/lib/auth';
+
 import { CreateSlotsForm } from '@/components/dashboard/create-slots-form';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Disponibilidade — Pet sitter' };
 

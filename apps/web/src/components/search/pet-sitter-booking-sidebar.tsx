@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+
 import type {
   Address,
   HoldSlotResponse,
@@ -12,6 +13,7 @@ import type {
 } from '@petnalia/types';
 import { PET_SITTER_SERVICE_LABELS } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
+
 import type { Session } from '@/lib/auth';
 
 type BookingStep = 'idle' | 'select-details' | 'confirming' | 'done';
@@ -264,7 +266,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
             <button
               key={day.toISOString()}
               type="button"
-              onClick={() => handleSelectDate(day)}
+              onClick={() => void handleSelectDate(day)}
               style={{
                 flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '8px 10px', borderRadius: 'var(--radius-md)', fontSize: '0.75rem',
@@ -307,7 +309,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
                     <button
                       key={slot.id}
                       type="button"
-                      onClick={() => handleSelectSlot(slot)}
+                      onClick={() => void handleSelectSlot(slot)}
                       style={{
                         padding: '8px 4px', borderRadius: 'var(--radius-sm)',
                         fontSize: '0.8125rem', fontWeight: 500,
@@ -415,7 +417,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
                 block
                 iconLeft="calendar"
                 disabled={!selectedPetId || (requiresAddress && !selectedAddressId)}
-                onClick={handleConfirm}
+                onClick={() => void handleConfirm()}
               >
                 Confirmar reserva
               </Button>

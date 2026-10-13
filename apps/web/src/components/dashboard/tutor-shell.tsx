@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+
 import { Avatar, Button, Icon } from '@petnalia/ui';
-import type { Session } from '@/lib/auth';
+
 import { logoutAction } from '@/features/auth/actions';
+import type { Session } from '@/lib/auth';
 
 interface TutorShellProps {
   readonly session: Session;

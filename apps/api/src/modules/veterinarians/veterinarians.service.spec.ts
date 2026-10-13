@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import type { VetSearchQuery } from '@petnalia/types';
 
-import type { StoragePort } from '../../shared/storage/storage.port';
+
+import type { VeterinariansRepository } from './veterinarians.repository';
 import { VeterinariansService } from './veterinarians.service';
-import { VeterinariansRepository } from './veterinarians.repository';
+import type { StoragePort } from '../../shared/storage/storage.port';
 
 // Raw row shape returned by the PostGIS query
 function makeRawRow(overrides: Record<string, unknown> = {}) {

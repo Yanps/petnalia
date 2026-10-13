@@ -1,8 +1,8 @@
 import type { Pet } from '@petnalia/types';
 
+import { PetsList } from '@/components/dashboard/pets-list';
 import { apiFetch } from '@/lib/api-client';
 import { getToken } from '@/lib/auth';
-import { PetsList } from '@/components/dashboard/pets-list';
 
 export const metadata = { title: 'Meus pets — PetNalia' };
 

@@ -1,10 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
-import { Avatar, Badge, Icon, Rating, Separator } from '@petnalia/ui';
+
 import type { Review, VetProfilePublicResponse } from '@petnalia/types';
+import { Avatar, Badge, Icon, Rating, Separator } from '@petnalia/ui';
+
 import type { Session } from '@/lib/auth';
+
 import { BookingSidebar } from './booking-sidebar';
+
 
 type Tab = 'sobre' | 'avaliacoes';
 
@@ -79,7 +84,7 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Breadcrumb */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          <a href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Início</a>
+          <Link href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Início</Link>
           <Icon name="chevron-right" size={14} />
           <a href="/busca" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Busca</a>
           <Icon name="chevron-right" size={14} />

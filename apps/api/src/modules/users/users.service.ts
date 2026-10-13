@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
+
 import type { UpdateProfileInput, UserMeResponse } from '@petnalia/types';
 import { stripCPF } from '@petnalia/validation';
-import type { Prisma } from '@prisma/client';
 
 import { UserNotFoundError } from './users.errors';
 import { UsersRepository } from './users.repository';

@@ -1,8 +1,10 @@
 'use client';
 
-import { useTransition, useState } from 'react';
 import Link from 'next/link';
+import { useTransition, useState } from 'react';
+
 import { Button, Icon } from '@petnalia/ui';
+
 import { forgotPasswordAction } from './actions';
 
 export function ForgotPasswordForm() {

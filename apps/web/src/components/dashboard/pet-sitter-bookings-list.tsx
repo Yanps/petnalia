@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Icon } from '@petnalia/ui';
+
 import { PET_SITTER_SERVICE_LABELS, type PetSitterBooking } from '@petnalia/types';
+import { Button, Icon } from '@petnalia/ui';
 
 import { PetSitterReviewModal } from './pet-sitter-review-modal';
 
@@ -181,7 +182,7 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => transition(booking.id, 'confirm', 'Erro ao confirmar reserva.')}
+                    onClick={() => void transition(booking.id, 'confirm', 'Erro ao confirmar reserva.')}
                     disabled={updatingId === booking.id}
                   >
                     Confirmar
@@ -191,7 +192,7 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => transition(booking.id, 'complete', 'Erro ao concluir reserva.')}
+                    onClick={() => void transition(booking.id, 'complete', 'Erro ao concluir reserva.')}
                     disabled={updatingId === booking.id}
                   >
                     Concluir
@@ -201,7 +202,7 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => transition(booking.id, 'cancel', 'Erro ao cancelar reserva.')}
+                    onClick={() => void transition(booking.id, 'cancel', 'Erro ao cancelar reserva.')}
                     disabled={updatingId === booking.id}
                   >
                     {updatingId === booking.id ? 'Cancelando...' : 'Cancelar'}

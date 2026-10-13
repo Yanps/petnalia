@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
 import type { Address } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
@@ -64,7 +65,7 @@ async function searchStreet(uf: string, city: string, street: string): Promise<V
     const url = `https://viacep.com.br/ws/${uf}/${encodeURIComponent(city)}/${encodeURIComponent(street)}/json/`;
     const res = await fetch(url);
     if (!res.ok) return [];
-    const data = await res.json();
+    const data: unknown = await res.json();
     return Array.isArray(data) ? (data as ViaCepResponse[]) : [];
   } catch {
     return [];
@@ -181,7 +182,7 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
     let cancelled = false;
     const timer = setTimeout(() => {
       setStreetSearching(true);
-      searchStreet(form.state, form.city, street)
+      void searchStreet(form.state, form.city, street)
         .then((results) => {
           if (!cancelled) setStreetSuggestions(results);
         })
@@ -419,7 +420,7 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
             Novo endereço
           </h3>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={labelStyle}>Identificação (opcional)</label>
               <input

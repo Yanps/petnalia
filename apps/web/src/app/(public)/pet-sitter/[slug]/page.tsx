@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import type { PetSitterProfilePublicResponse, PetSitterReview } from '@petnalia/types';
+
 import { PetSitterProfile } from '@/components/search/pet-sitter-profile';
 import { api, ApiError } from '@/lib/api-client';
 import { getSession, getToken } from '@/lib/auth';

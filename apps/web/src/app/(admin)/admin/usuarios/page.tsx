@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+
 import type { AdminUserListItem } from '@petnalia/types';
-import { getSession, getToken } from '@/lib/auth';
+
 import { UsersList } from '@/components/admin/users-list';
+import { getSession, getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Usuários — Admin' };
 

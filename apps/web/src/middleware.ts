@@ -1,6 +1,6 @@
+import { jwtVerify } from 'jose';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
 
 type UserRole = 'TUTOR' | 'VETERINARIAN' | 'ADMIN' | 'PET_SITTER';
 

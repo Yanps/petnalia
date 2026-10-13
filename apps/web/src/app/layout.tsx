@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+
 import { Providers } from '@/components/providers';
 import '@petnalia/ui/styles';
 import './globals.css';

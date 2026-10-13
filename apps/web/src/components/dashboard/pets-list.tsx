@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import type { Pet } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
@@ -163,7 +164,7 @@ export function PetsList({ initialPets, token }: PetsListProps) {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDelete(pet.id)}
+                  onClick={() => void handleDelete(pet.id)}
                   aria-label="Remover pet"
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer',
@@ -230,7 +231,7 @@ export function PetsList({ initialPets, token }: PetsListProps) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={labelStyle}>Nome *</label>
                 <input

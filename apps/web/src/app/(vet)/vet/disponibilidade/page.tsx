@@ -1,5 +1,5 @@
-import { getToken } from '@/lib/auth';
 import { CreateSlotsForm } from '@/components/dashboard/create-slots-form';
+import { getToken } from '@/lib/auth';
 
 export default async function DisponibilidadePage() {
   const token = await getToken();

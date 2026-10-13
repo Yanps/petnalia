@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Icon } from '@petnalia/ui';
+
 import type { Appointment } from '@petnalia/types';
+import { Button, Icon } from '@petnalia/ui';
 
 import { ReviewModal } from './review-modal';
 
@@ -226,7 +227,7 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => handleConfirm(appt.id)}
+                    onClick={() => void handleConfirm(appt.id)}
                     disabled={cancelling === appt.id}
                   >
                     Confirmar
@@ -236,7 +237,7 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => handleComplete(appt.id)}
+                    onClick={() => void handleComplete(appt.id)}
                     disabled={cancelling === appt.id}
                   >
                     Concluir
@@ -246,7 +247,7 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleCancel(appt.id)}
+                    onClick={() => void handleCancel(appt.id)}
                     disabled={cancelling === appt.id}
                   >
                     {cancelling === appt.id ? 'Cancelando...' : 'Cancelar'}

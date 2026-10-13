@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import { Button, Icon } from '@petnalia/ui';
-import { getSession, getToken } from '@/lib/auth';
+
 import { CrmvPhotoUpload } from '@/components/vet/crmv-photo-upload';
+import { getSession, getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Painel — Veterinário' };
 

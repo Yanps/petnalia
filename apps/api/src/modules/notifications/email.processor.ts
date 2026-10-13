@@ -1,9 +1,9 @@
-import { Inject, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Inject, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 
-import { MAILER_PORT, type MailerPort } from '../../shared/mailer/mailer.port';
 import { renderEmail, type EmailJobPayload } from '../../shared/mailer/email-templates';
+import { MAILER_PORT, type MailerPort } from '../../shared/mailer/mailer.port';
 import { QUEUE_EMAIL } from '../../shared/queue/queue.module';
 
 @Processor(QUEUE_EMAIL)

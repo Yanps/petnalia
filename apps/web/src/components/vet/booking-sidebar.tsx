@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+
 import type { Address, AvailabilitySlot, HoldSlotResponse, Pet, VetProfilePublicResponse } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
+
 import type { Session } from '@/lib/auth';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -255,7 +257,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
             <button
               key={day.toISOString()}
               type="button"
-              onClick={() => handleSelectDate(day)}
+              onClick={() => void handleSelectDate(day)}
               style={{
                 flexShrink: 0,
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -305,7 +307,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
                     <button
                       key={slot.id}
                       type="button"
-                      onClick={() => handleSelectSlot(slot)}
+                      onClick={() => void handleSelectSlot(slot)}
                       style={{
                         padding: '8px 4px', borderRadius: 'var(--radius-sm)',
                         fontSize: '0.8125rem', fontWeight: 500,
@@ -435,7 +437,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
                 block
                 iconLeft="calendar"
                 disabled={!selectedPetId || !selectedAddressId}
-                onClick={handleConfirm}
+                onClick={() => void handleConfirm()}
               >
                 Confirmar agendamento
               </Button>

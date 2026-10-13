@@ -1,5 +1,5 @@
-import { Badge } from '@petnalia/ui';
 import type { AdminAppointmentListItem } from '@petnalia/types';
+import { Badge } from '@petnalia/ui';
 
 const STATUS_LABEL: Record<AdminAppointmentListItem['status'], string> = {
   requested: 'Pendente',

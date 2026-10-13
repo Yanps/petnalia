@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { VetCard } from '@petnalia/ui';
+
 import type { VetSearchResult } from '@petnalia/types';
+import { VetCard } from '@petnalia/ui';
 
 interface VetResultsGridProps {
   readonly vets: readonly VetSearchResult[];

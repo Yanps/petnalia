@@ -8,12 +8,14 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { CreatePetInputSchema } from '@petnalia/types';
 import type { User } from '@prisma/client';
 
+import { CreatePetInputSchema } from '@petnalia/types';
+
+import { PetsService } from './pets.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { PetsService } from './pets.service';
+
 
 @Controller('pets')
 export class PetsController {

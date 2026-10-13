@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+
 import type { Specialty, VetOwnProfileResponse } from '@petnalia/types';
 import { Icon } from '@petnalia/ui';
 
+import { VetProfileForm } from '@/components/dashboard/vet-profile-form';
 import { apiFetch } from '@/lib/api-client';
 import { getToken } from '@/lib/auth';
-import { VetProfileForm } from '@/components/dashboard/vet-profile-form';
 
 export const metadata: Metadata = { title: 'Perfil — Veterinário' };
 

@@ -1,10 +1,11 @@
 import type { INestApplication } from '@nestjs/common';
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { PrismaService } from '../src/shared/prisma/prisma.service';
-import { setupTestDatabase, type TestDatabase } from './helpers/database';
+
 import { createTestApp } from './helpers/app-factory';
+import { setupTestDatabase, type TestDatabase } from './helpers/database';
+import { PrismaService } from '../src/shared/prisma/prisma.service';
 
 // São Paulo city centre
 const SP = { lat: -23.5505, lng: -46.6333 };

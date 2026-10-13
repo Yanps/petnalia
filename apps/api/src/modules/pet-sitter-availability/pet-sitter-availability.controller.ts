@@ -1,11 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { CreatePetSitterSlotsInputSchema, PetSitterAvailabilityQuerySchema } from '@petnalia/types';
 
+import { PetSitterAvailabilityService } from './pet-sitter-availability.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { PetSitterAvailabilityService } from './pet-sitter-availability.service';
+
 
 @Controller('pet-sitter-availability')
 export class PetSitterAvailabilityController {

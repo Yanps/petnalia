@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Icon } from '@petnalia/ui';
+import { useEffect, useRef, useState, useTransition } from 'react';
+
 import type { GeoSuggestion } from '@petnalia/types';
+import { Button, Icon } from '@petnalia/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 

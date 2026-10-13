@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { CreateAddressInputSchema } from '@petnalia/types';
 
-import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { AddressesService } from './addresses.service';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+
 
 @Controller('addresses')
 export class AddressesController {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+
 import { Badge, Button, Icon } from '@petnalia/ui';
 
 export const metadata: Metadata = {

@@ -1,14 +1,15 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type Stripe from 'stripe';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
-import { SubscriptionsService } from './subscriptions.service';
-import { SubscriptionsRepository } from './subscriptions.repository';
-import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+
 import {
   InvalidWebhookSignatureError,
   SubscriptionNotFoundError,
   VetNotFoundError,
 } from './subscriptions.errors';
+import type { SubscriptionsRepository } from './subscriptions.repository';
+import { SubscriptionsService } from './subscriptions.service';
+import type { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
 
 const USER_ID = 'aaaaaaaa-0000-0000-0000-000000000000';
 const VET_ID = 'bbbbbbbb-0000-0000-0000-000000000000';
@@ -75,11 +76,11 @@ function makeService(
   const svc = new SubscriptionsService(
     makeSubRepo(subRepo),
     makeVetsRepo(vetsRepo),
-    makeConfig() as any,
+    makeConfig() as never,
   );
 
   // Stub stripe instance on the service
-  (svc as any).stripe = {
+  (svc as unknown as { stripe: Stripe }).stripe = {
     checkout: {
       sessions: {
         create: vi.fn().mockResolvedValue({ url: STRIPE_SESSION_URL }),
@@ -94,6 +95,16 @@ function makeService(
   } as unknown as Stripe;
 
   return svc;
+}
+
+interface StripeStub {
+  checkout: { sessions: { create: Mock } };
+  subscriptions: { update: Mock };
+  webhooks: { constructEvent: Mock };
+}
+
+function stripeOf(svc: SubscriptionsService): StripeStub {
+  return (svc as unknown as { stripe: StripeStub }).stripe;
 }
 
 describe('SubscriptionsService', () => {
@@ -115,7 +126,7 @@ describe('SubscriptionsService', () => {
       const svc = makeService({ findByVetId: vi.fn().mockResolvedValue(null) });
       const result = await svc.createCheckoutSession(USER_ID, 'pro');
       expect(result).toEqual({ url: STRIPE_SESSION_URL });
-      expect((svc as any).stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect(stripeOf(svc).checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           mode: 'subscription',
           line_items: [{ price: 'price_pro_test', quantity: 1 }],
@@ -128,7 +139,7 @@ describe('SubscriptionsService', () => {
       const svc = makeService({ findByVetId: vi.fn().mockResolvedValue(null) });
       const result = await svc.createCheckoutSession(USER_ID, 'clinic');
       expect(result).toEqual({ url: STRIPE_SESSION_URL });
-      expect((svc as any).stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect(stripeOf(svc).checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           line_items: [{ price: 'price_clinic_test', quantity: 1 }],
         }),
@@ -138,7 +149,7 @@ describe('SubscriptionsService', () => {
     it('reuses existing customer id if subscription exists', async () => {
       const svc = makeService();
       await svc.createCheckoutSession(USER_ID, 'pro');
-      expect((svc as any).stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect(stripeOf(svc).checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({ customer: STRIPE_CUSTOMER_ID }),
       );
     });
@@ -153,7 +164,7 @@ describe('SubscriptionsService', () => {
     it('sets cancel_at_period_end on Stripe and updates DB', async () => {
       const svc = makeService();
       await svc.cancelSubscription(USER_ID);
-      expect((svc as any).stripe.subscriptions.update).toHaveBeenCalledWith(
+      expect(stripeOf(svc).subscriptions.update).toHaveBeenCalledWith(
         STRIPE_SUB_ID,
         { cancel_at_period_end: true },
       );
@@ -175,7 +186,7 @@ describe('SubscriptionsService', () => {
   describe('handleWebhook', () => {
     it('throws InvalidWebhookSignatureError on bad signature', async () => {
       const svc = makeService();
-      (svc as any).stripe.webhooks.constructEvent = vi.fn().mockImplementation(() => {
+      stripeOf(svc).webhooks.constructEvent = vi.fn().mockImplementation(() => {
         throw new Error('Invalid signature');
       });
       await expect(
@@ -200,7 +211,7 @@ describe('SubscriptionsService', () => {
         },
       } as unknown as Stripe.Event;
 
-      (svc as any).stripe.webhooks.constructEvent = vi.fn().mockReturnValue(event);
+      stripeOf(svc).webhooks.constructEvent = vi.fn().mockReturnValue(event);
 
       await svc.handleWebhook(Buffer.from('{}'), 'valid-sig');
 
@@ -229,7 +240,7 @@ describe('SubscriptionsService', () => {
         },
       } as unknown as Stripe.Event;
 
-      (svc as any).stripe.webhooks.constructEvent = vi.fn().mockReturnValue(event);
+      stripeOf(svc).webhooks.constructEvent = vi.fn().mockReturnValue(event);
 
       await svc.handleWebhook(Buffer.from('{}'), 'valid-sig');
 
@@ -253,7 +264,7 @@ describe('SubscriptionsService', () => {
         },
       } as unknown as Stripe.Event;
 
-      (svc as any).stripe.webhooks.constructEvent = vi.fn().mockReturnValue(event);
+      stripeOf(svc).webhooks.constructEvent = vi.fn().mockReturnValue(event);
       await svc.handleWebhook(Buffer.from('{}'), 'valid-sig');
 
       expect(upsertSpy).not.toHaveBeenCalled();

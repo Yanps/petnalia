@@ -1,4 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+
 import type {
   Specialty,
   UpdateVetProfileInput,
@@ -9,10 +10,11 @@ import type {
   VetSearchResult,
 } from '@petnalia/types';
 
-import { DomainError } from '../../shared/errors/domain.error';
-import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
 import { VeterinarianNotFoundError } from './veterinarians.errors';
 import { VeterinariansRepository } from './veterinarians.repository';
+import { DomainError } from '../../shared/errors/domain.error';
+import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
+
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
 const AVATAR_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);

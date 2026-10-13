@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { PetSitterAvailabilitySlot } from '@prisma/client';
+
 import type { CreatePetSitterSlotsInput, PetSitterAvailabilityQuery } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';

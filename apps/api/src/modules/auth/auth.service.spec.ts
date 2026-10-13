@@ -1,11 +1,8 @@
+import type { User } from '@prisma/client';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Mock } from 'vitest';
-import type { User } from '@prisma/client';
 
-import { AuthService } from './auth.service';
-import { UsersRepository } from '../users/users.repository';
-import { PasswordResetTokensRepository } from './password-reset-tokens.repository';
-import { TokensRepository } from './tokens.repository';
+
 import {
   EmailTakenError,
   InvalidCredentialsError,
@@ -14,6 +11,10 @@ import {
   TokenExpiredError,
   TokenRevokedError,
 } from './auth.errors';
+import { AuthService } from './auth.service';
+import type { PasswordResetTokensRepository } from './password-reset-tokens.repository';
+import type { TokensRepository } from './tokens.repository';
+import type { UsersRepository } from '../users/users.repository';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 

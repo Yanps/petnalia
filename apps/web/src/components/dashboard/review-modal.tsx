@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { Button, Icon } from '@petnalia/ui';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -193,7 +194,7 @@ export function ReviewModal({ appointmentId, token, onSuccess, onClose }: Review
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
                 <label style={{
                   display: 'block', fontSize: '0.875rem', fontWeight: 600,

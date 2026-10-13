@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+
 import type { PetSitterOwnProfileResponse } from '@petnalia/types';
 import { Icon } from '@petnalia/ui';
 
+import { PetSitterProfileForm } from '@/components/dashboard/pet-sitter-profile-form';
 import { apiFetch } from '@/lib/api-client';
 import { getToken } from '@/lib/auth';
-import { PetSitterProfileForm } from '@/components/dashboard/pet-sitter-profile-form';
 
 export const metadata: Metadata = { title: 'Perfil — Pet sitter' };
 

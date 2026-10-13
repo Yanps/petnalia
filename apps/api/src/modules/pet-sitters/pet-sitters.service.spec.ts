@@ -1,12 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import type { PetSitterSearchQuery } from '@petnalia/types';
 
+import { PetSitterNotFoundError } from './pet-sitters.errors';
+import type { PetSittersRepository } from './pet-sitters.repository';
+import { PetSittersService } from './pet-sitters.service';
 import type { GeocoderService } from '../addresses/geocoder.service';
 import type { NotificationsService } from '../notifications/notifications.service';
 import type { UsersRepository } from '../users/users.repository';
-import { PetSittersService } from './pet-sitters.service';
-import { PetSittersRepository } from './pet-sitters.repository';
-import { PetSitterNotFoundError } from './pet-sitters.errors';
+
 
 function makeRawRow(overrides: Record<string, unknown> = {}) {
   return {

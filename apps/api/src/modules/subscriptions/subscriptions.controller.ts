@@ -12,13 +12,14 @@ import {
 } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
-import type { CreateCheckoutSessionInput } from '@petnalia/types';
+
 import { CreateCheckoutSessionInputSchema } from '@petnalia/types';
 
+import { SubscriptionsService } from './subscriptions.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { SubscriptionsService } from './subscriptions.service';
+
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -36,7 +37,7 @@ export class SubscriptionsController {
     @CurrentUser() user: User,
     @Body() body: unknown,
   ) {
-    const { plan } = CreateCheckoutSessionInputSchema.parse(body) as CreateCheckoutSessionInput;
+    const { plan } = CreateCheckoutSessionInputSchema.parse(body);
     return this.subscriptionsService.createCheckoutSession(user.id, plan);
   }
 

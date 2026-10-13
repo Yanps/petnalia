@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { VeterinariansModule } from '../veterinarians/veterinarians.module';
+
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsRepository } from './subscriptions.repository';
 import { SubscriptionsService } from './subscriptions.service';
+import { VeterinariansModule } from '../veterinarians/veterinarians.module';
 
 @Module({
   imports: [VeterinariansModule],

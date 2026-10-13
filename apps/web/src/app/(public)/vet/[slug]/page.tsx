@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import type { Review, VetProfilePublicResponse } from '@petnalia/types';
+
 import { VetProfile } from '@/components/vet/vet-profile';
 import { api, ApiError } from '@/lib/api-client';
 import { getSession, getToken } from '@/lib/auth';

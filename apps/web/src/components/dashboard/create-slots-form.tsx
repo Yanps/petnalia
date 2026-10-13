@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { Button, Icon } from '@petnalia/ui';
 
 interface Slot {
@@ -197,7 +198,7 @@ export function CreateSlotsForm({ token, endpoint = '/v1/availability/slots' }: 
       <Button
         variant="primary"
         size="md"
-        onClick={handleSubmit}
+        onClick={() => void handleSubmit()}
         disabled={slots.length === 0 || submitting}
       >
         {submitting ? 'Salvando...' : `Salvar ${slots.length > 0 ? `${slots.length} horário(s)` : 'horários'}`}

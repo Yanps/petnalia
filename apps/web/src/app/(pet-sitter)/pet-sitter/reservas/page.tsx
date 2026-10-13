@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+
 import type { PetSitterBooking } from '@petnalia/types';
 
-import { getToken } from '@/lib/auth';
 import { PetSitterBookingsList } from '@/components/dashboard/pet-sitter-bookings-list';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Reservas — Pet sitter' };
 

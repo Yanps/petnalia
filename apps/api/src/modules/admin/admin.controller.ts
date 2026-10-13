@@ -9,17 +9,19 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import type { User } from '@prisma/client';
+
 import {
   AdminAppointmentsQuerySchema,
   ModerationDecisionInputSchema,
   PaginationQuerySchema,
   RejectVetInputSchema,
 } from '@petnalia/types';
-import type { User } from '@prisma/client';
 
+import { AdminService } from './admin.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { AdminService } from './admin.service';
+
 
 @Controller('admin')
 @Roles('admin')

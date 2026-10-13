@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import type { FlaggedPetSitterItem } from '@petnalia/types';
-import { getToken } from '@/lib/auth';
+
 import { FlaggedPetSittersList } from '@/components/admin/flagged-pet-sitters-list';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Pet sitters sinalizados — Admin' };
 

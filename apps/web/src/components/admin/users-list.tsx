@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Badge, Button } from '@petnalia/ui';
+
 import type { AdminUserListItem } from '@petnalia/types';
+import { Badge, Button } from '@petnalia/ui';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 

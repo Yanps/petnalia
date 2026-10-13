@@ -1,5 +1,5 @@
-import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { Global, Module } from '@nestjs/common';
 
 export const QUEUE_EMAIL = 'email' as const;
 export const QUEUE_REMINDERS = 'reminders' as const;

@@ -1,4 +1,5 @@
 import { Skeleton, VetResultsGridSkeleton } from '@petnalia/ui';
+
 import { SearchFiltersSkeleton } from '@/components/search/search-filters-skeleton';
 
 export default function Loading() {

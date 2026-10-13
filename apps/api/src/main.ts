@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 
+import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
-import { NestFactory } from '@nestjs/core';
 
+import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
-import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { rawBody: true });

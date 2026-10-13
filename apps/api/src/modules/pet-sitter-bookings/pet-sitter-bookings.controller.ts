@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { CancelPetSitterBookingInputSchema, CreatePetSitterBookingInputSchema } from '@petnalia/types';
 
+import { PetSitterBookingsService } from './pet-sitter-bookings.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { PetSitterBookingsService } from './pet-sitter-bookings.service';
+
 
 @Controller('pet-sitter-bookings')
 export class PetSitterBookingsController {

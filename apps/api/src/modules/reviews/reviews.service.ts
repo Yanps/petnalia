@@ -1,9 +1,11 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+
 import type { CreateReviewInput } from '@petnalia/types';
 
+import { ReviewsRepository } from './reviews.repository';
 import { DomainError } from '../../shared/errors/domain.error';
 import { AppointmentNotFoundError } from '../appointments/appointments.errors';
-import { ReviewsRepository } from './reviews.repository';
+
 
 export class ReviewAlreadyExistsError extends DomainError {
   constructor() {
