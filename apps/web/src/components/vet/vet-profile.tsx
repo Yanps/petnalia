@@ -9,6 +9,7 @@ import { Avatar, Badge, Icon, Rating, Separator } from '@petnalia/ui';
 import type { Session } from '@/lib/auth';
 
 import { BookingSidebar } from './booking-sidebar';
+import { ConsultationPrice } from './consultation-price';
 
 
 type Tab = 'sobre' | 'avaliacoes';
@@ -197,6 +198,33 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
                 Este veterinário ainda não adicionou uma bio.
               </p>
             )}
+
+            <Separator />
+            <div style={{ marginTop: 24, marginBottom: 24 }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1rem', color: 'var(--text)', marginBottom: 12 }}>
+                Valores da consulta
+              </h2>
+              <dl style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <dt style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
+                    <Icon name="home" size={16} aria-hidden />
+                    Consulta presencial
+                  </dt>
+                  <dd style={{ margin: 0 }}>
+                    <ConsultationPrice priceCents={vet.homePriceCents} />
+                  </dd>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <dt style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
+                    <Icon name="video" size={16} aria-hidden />
+                    Teleconsulta
+                  </dt>
+                  <dd style={{ margin: 0 }}>
+                    <ConsultationPrice priceCents={vet.onlinePriceCents} />
+                  </dd>
+                </div>
+              </dl>
+            </div>
 
             {vet.specialties.length > 0 && (
               <>

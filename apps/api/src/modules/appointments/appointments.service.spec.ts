@@ -46,7 +46,7 @@ const baseAppointment = {
   slotId: SLOT_ID,
   modality: 'home' as const,
   status: 'requested' as const,
-  priceCents: 0,
+  priceCents: 18000,
   notes: null,
   createdAt: new Date('2026-01-01T10:00:00Z'),
   updatedAt: new Date('2026-01-01T10:00:00Z'),
@@ -102,13 +102,19 @@ function makeNotifications() {
   return { enqueueEmail: vi.fn().mockResolvedValue(undefined) } as never;
 }
 
-function makeVetsRepo() {
+interface VetPrices {
+  homePriceCents: number | null;
+  onlinePriceCents: number | null;
+}
+
+function makeVetsRepo(prices: VetPrices = { homePriceCents: 18000, onlinePriceCents: 9000 }) {
   const vetIdByUserId: Record<string, string> = {
     [VET_USER_ID]: VET_ID,
     [OTHER_VET_USER_ID]: OTHER_VET_ID,
   };
   return {
     findIdByUserId: vi.fn((userId: string) => Promise.resolve(vetIdByUserId[userId] ?? null)),
+    findVetById: vi.fn((id: string) => Promise.resolve(id === VET_ID ? { id, ...prices } : null)),
   } as unknown as VeterinariansRepository;
 }
 
@@ -130,12 +136,12 @@ function makeService(
   repo: AppointmentsRepository,
   avail: AvailabilityService,
   redis: RedisService,
-  deps: { pets?: PetsService; addresses?: AddressesService } = {},
+  deps: { pets?: PetsService; addresses?: AddressesService; prices?: VetPrices } = {},
 ) {
   return new AppointmentsService(
     repo,
     avail,
-    makeVetsRepo(),
+    makeVetsRepo(deps.prices),
     deps.pets ?? makePetsService(),
     deps.addresses ?? makeAddressesService(),
     redis,
@@ -180,6 +186,35 @@ describe('AppointmentsService', () => {
 
       await expect(svc.bookAppointment(TUTOR_ID, bookInput)).rejects.toThrow(AddressNotFoundError);
       expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it("records the vet's in-person price for a home appointment", async () => {
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+
+      await svc.bookAppointment(TUTOR_ID, bookInput);
+
+      expect(repo.book).toHaveBeenCalledWith(expect.objectContaining({ priceCents: 18000 }), {});
+    });
+
+    it("records the vet's teleconsultation price for an online appointment", async () => {
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis());
+
+      await svc.bookAppointment(TUTOR_ID, { ...bookInput, modality: 'online' });
+
+      expect(repo.book).toHaveBeenCalledWith(expect.objectContaining({ priceCents: 9000 }), {});
+    });
+
+    it('records null ("a combinar") when the vet has no price for the modality', async () => {
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makeRedis(), {
+        prices: { homePriceCents: null, onlinePriceCents: 9000 },
+      });
+
+      await svc.bookAppointment(TUTOR_ID, bookInput);
+
+      expect(repo.book).toHaveBeenCalledWith(expect.objectContaining({ priceCents: null }), {});
     });
 
     it('rejects a slot that belongs to a different veterinarian', async () => {

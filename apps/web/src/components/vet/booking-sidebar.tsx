@@ -8,6 +8,8 @@ import { Button, Icon } from '@petnalia/ui';
 
 import type { Session } from '@/lib/auth';
 
+import { ConsultationPrice } from './consultation-price';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type BookingStep = 'idle' | 'select-details' | 'confirming' | 'done';
@@ -245,6 +247,18 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
       <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.0625rem', color: 'var(--text)', marginBottom: 16 }}>
         Agendar consulta
       </p>
+
+      {/* Price — booking is in-person only for now (VETS-01, open question 1) */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        padding: '10px 12px', marginBottom: 16,
+        background: 'var(--surface-2)', borderRadius: 'var(--radius-md)',
+      }}>
+        <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>
+          Consulta presencial
+        </span>
+        <ConsultationPrice priceCents={vet.homePriceCents} />
+      </div>
 
       {/* Date picker */}
       <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>

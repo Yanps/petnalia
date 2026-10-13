@@ -17,6 +17,11 @@ export type AppointmentStatus = z.infer<typeof AppointmentStatusSchema>;
 export const ModalitySchema = z.enum(['home', 'online']);
 export type Modality = z.infer<typeof ModalitySchema>;
 
+// Money is integer cents (CLAUDE.md). A published price is at least R$ 0,01 and at most
+// R$ 10.000,00; "no price" is modelled as null ("a combinar"), never as 0.
+export const PRICE_CENTS_MAX = 1_000_000;
+export const PriceCentsSchema = z.number().int().min(1).max(PRICE_CENTS_MAX);
+
 export const VerificationStatusSchema = z.enum([
   'pending',
   'in_review',

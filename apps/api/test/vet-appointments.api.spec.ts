@@ -27,6 +27,7 @@ describe('Fluxo de consulta do veterinário (integração)', () => {
   let addressId: string;
   let strangerPetId: string;
   let slotId: string;
+  let holdToken: string;
   let appointmentId: string;
 
   const http = () => request(app.getHttpServer());
@@ -112,9 +113,34 @@ describe('Fluxo de consulta do veterinário (integração)', () => {
     slotId = slots.body[0].id as string;
   });
 
+  it('o vet define o valor presencial e deixa a teleconsulta a combinar', async () => {
+    const zero = await http()
+      .put('/v1/veterinarians/profile')
+      .set(auth(vetToken))
+      .send({ homePriceCents: 0 });
+    expect(zero.status).toBe(422);
+    expect(zero.body.error.code).toBe('VALIDATION_ERROR');
+
+    const res = await http()
+      .put('/v1/veterinarians/profile')
+      .set(auth(vetToken))
+      .send({ homePriceCents: 18000, onlinePriceCents: null });
+    expect(res.status).toBe(200);
+
+    const own = await http().get('/v1/veterinarians/me').set(auth(vetToken));
+    expect(own.body).toMatchObject({ homePriceCents: 18000, onlinePriceCents: null });
+  });
+
+  it('o banco rejeita preço zero mesmo fora da API', async () => {
+    await expect(
+      db.prisma.veterinarian.update({ where: { id: veterinarianId }, data: { homePriceCents: 0 } }),
+    ).rejects.toThrow();
+  });
+
   it('recusa agendar com pet de outro tutor', async () => {
     const hold = await http().post(`/v1/availability/slots/${slotId}/hold`).set(auth(tutorToken));
     expect(hold.status).toBe(201);
+    holdToken = hold.body.holdToken as string;
 
     const res = await http()
       .post('/v1/appointments')
@@ -124,7 +150,7 @@ describe('Fluxo de consulta do veterinário (integração)', () => {
         petId: strangerPetId,
         addressId,
         slotId,
-        holdToken: hold.body.holdToken,
+        holdToken,
         modality: 'home',
       });
 
@@ -132,18 +158,32 @@ describe('Fluxo de consulta do veterinário (integração)', () => {
     expect(res.body.error.code).toBe('PET_NOT_FOUND');
   });
 
-  it('o tutor agenda a consulta', async () => {
-    const hold = await http().post(`/v1/availability/slots/${slotId}/hold`).set(auth(tutorToken));
-    expect(hold.status).toBe(201);
-
+  it('o tutor corrige o pet e agenda com a mesma reserva de horário', async () => {
+    // The rejected attempt above did not consume the hold, so the same token is still valid.
     const res = await http()
       .post('/v1/appointments')
       .set(auth(tutorToken))
-      .send({ veterinarianId, petId, addressId, slotId, holdToken: hold.body.holdToken, modality: 'home' });
+      .send({ veterinarianId, petId, addressId, slotId, holdToken, modality: 'home' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ veterinarianId, status: 'requested', scheduledAt: SLOT_START });
+    expect(res.body).toMatchObject({
+      veterinarianId,
+      status: 'requested',
+      scheduledAt: SLOT_START,
+      priceCents: 18000,
+    });
     appointmentId = res.body.id as string;
+  });
+
+  it('mudar o preço depois não altera a consulta já agendada', async () => {
+    const update = await http()
+      .put('/v1/veterinarians/profile')
+      .set(auth(vetToken))
+      .send({ homePriceCents: 25000 });
+    expect(update.status).toBe(200);
+
+    const detail = await http().get(`/v1/appointments/${appointmentId}`).set(auth(tutorToken));
+    expect(detail.body.priceCents).toBe(18000);
   });
 
   it('o vet vê a consulta na própria lista e no detalhe', async () => {

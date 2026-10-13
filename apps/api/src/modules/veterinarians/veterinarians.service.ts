@@ -93,6 +93,8 @@ export class VeterinariansService {
       baseCity: row.base_city ?? '',
       baseState: row.base_state ?? '',
       serviceRadiusKm: row.service_radius_km,
+      homePriceCents: row.home_price_cents,
+      onlinePriceCents: row.online_price_cents,
     };
   }
 
@@ -116,6 +118,8 @@ export class VeterinariansService {
       baseCity: row.base_city ?? '',
       baseState: row.base_state ?? '',
       serviceRadiusKm: row.service_radius_km,
+      homePriceCents: row.home_price_cents,
+      onlinePriceCents: row.online_price_cents,
       crmvPhotoUploaded: row.has_crmv_photo,
     };
   }

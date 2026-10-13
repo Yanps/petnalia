@@ -1,5 +1,6 @@
 import type { AdminAppointmentListItem } from '@petnalia/types';
 import { Badge } from '@petnalia/ui';
+import { formatBRL } from '@petnalia/utils';
 
 const STATUS_LABEL: Record<AdminAppointmentListItem['status'], string> = {
   requested: 'Pendente',
@@ -22,8 +23,8 @@ const MODALITY_LABEL: Record<AdminAppointmentListItem['modality'], string> = {
   online: 'Telemedicina',
 };
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function formatPrice(cents: number | null): string {
+  return cents === null ? 'A combinar' : formatBRL(cents);
 }
 
 interface Props {

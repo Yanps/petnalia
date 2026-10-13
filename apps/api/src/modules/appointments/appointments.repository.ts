@@ -11,7 +11,7 @@ type AppointmentWithSlot = Appointment & {
 
 type BookData = Omit<CreateAppointmentInput, 'holdToken'> & {
   tutorId: string;
-  priceCents: number;
+  priceCents: number | null;
 };
 
 type PrismaTx = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];

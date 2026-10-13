@@ -30,6 +30,8 @@ interface RawOwnProfile {
   base_city: string | null;
   base_state: string | null;
   has_crmv_photo: boolean;
+  home_price_cents: number | null;
+  online_price_cents: number | null;
   specialties: Array<{ id: string; name: string; slug: string }> | null;
 }
 
@@ -47,6 +49,8 @@ interface RawVetProfile {
   base_state: string | null;
   average_rating: number;
   total_reviews: number;
+  home_price_cents: number | null;
+  online_price_cents: number | null;
   specialties: Array<{ id: string; name: string; slug: string }> | null;
 }
 
@@ -180,6 +184,8 @@ export class VeterinariansRepository {
         v."verificationStatus"                                        AS verification_status,
         v.tier,
         v."serviceRadiusKm"                                           AS service_radius_km,
+        v."homePriceCents"                                            AS home_price_cents,
+        v."onlinePriceCents"                                          AS online_price_cents,
         a.city                                                        AS base_city,
         a.state                                                       AS base_state,
         COALESCE(AVG(r.rating), 0)::float8                            AS average_rating,
@@ -206,6 +212,7 @@ export class VeterinariansRepository {
         v.id, p."fullName", p."avatarUrl", v.bio,
         v.crmv, v."crmvState",
         v."verificationStatus", v.tier, v."serviceRadiusKm",
+        v."homePriceCents", v."onlinePriceCents",
         a.city, a.state
       LIMIT 1
     `;
@@ -232,6 +239,8 @@ export class VeterinariansRepository {
         v."verificationStatus"                                        AS verification_status,
         v.tier,
         v."serviceRadiusKm"                                           AS service_radius_km,
+        v."homePriceCents"                                            AS home_price_cents,
+        v."onlinePriceCents"                                          AS online_price_cents,
         a.city                                                        AS base_city,
         a.state                                                       AS base_state,
         (v."crmvPhotoKey" IS NOT NULL)                                AS has_crmv_photo,
@@ -255,6 +264,7 @@ export class VeterinariansRepository {
         v.id, u.id, p."fullName", p."avatarUrl", v.bio,
         v.crmv, v."crmvState",
         v."verificationStatus", v.tier, v."serviceRadiusKm", v."crmvPhotoKey",
+        v."homePriceCents", v."onlinePriceCents",
         a.city, a.state
       LIMIT 1
     `;
@@ -334,6 +344,9 @@ export class VeterinariansRepository {
         data: {
           ...(data.bio !== undefined && { bio: data.bio }),
           ...(data.serviceRadiusKm && { serviceRadiusKm: data.serviceRadiusKm }),
+          // undefined = unchanged; null = back to "a combinar"
+          ...(data.homePriceCents !== undefined && { homePriceCents: data.homePriceCents }),
+          ...(data.onlinePriceCents !== undefined && { onlinePriceCents: data.onlinePriceCents }),
         },
       });
 

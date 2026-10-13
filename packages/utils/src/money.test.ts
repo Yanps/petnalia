@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { toCents, fromCents, formatBRL } from './money.js';
+import { toCents, fromCents, formatBRL, formatBRLAmount, parseBRL } from './money.js';
 
 describe('toCents', () => {
   it('converte valor inteiro para centavos', () => {
@@ -32,5 +32,34 @@ describe('formatBRL', () => {
 
   it('formata zero corretamente', () => {
     expect(formatBRL(0)).toContain('0');
+  });
+});
+
+describe('formatBRLAmount', () => {
+  it('formata centavos sem o símbolo da moeda, com duas casas', () => {
+    expect(formatBRLAmount(18000)).toBe('180,00');
+    expect(formatBRLAmount(9050)).toBe('90,50');
+    expect(formatBRLAmount(150000)).toBe('1.500,00');
+  });
+});
+
+describe('parseBRL', () => {
+  it('trata campo vazio como ausência de valor', () => {
+    expect(parseBRL('')).toEqual({ kind: 'empty' });
+    expect(parseBRL('   ')).toEqual({ kind: 'empty' });
+  });
+
+  it('converte valores digitados em pt-BR para centavos sem aritmética de float', () => {
+    expect(parseBRL('150')).toEqual({ kind: 'value', cents: 15000 });
+    expect(parseBRL('150,5')).toEqual({ kind: 'value', cents: 15050 });
+    expect(parseBRL('150,50')).toEqual({ kind: 'value', cents: 15050 });
+    expect(parseBRL('1.500,00')).toEqual({ kind: 'value', cents: 150000 });
+    expect(parseBRL('R$ 0,29')).toEqual({ kind: 'value', cents: 29 });
+  });
+
+  it('rejeita formatos que não são valores em reais', () => {
+    for (const input of ['abc', '150,555', '1,500.00', '-10', '15.00']) {
+      expect(parseBRL(input), input).toEqual({ kind: 'invalid' });
+    }
   });
 });

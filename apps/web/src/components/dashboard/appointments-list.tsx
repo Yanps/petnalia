@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import type { Appointment } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
+import { formatBRL } from '@petnalia/utils';
 
 import { ReviewModal } from './review-modal';
 
@@ -210,6 +211,12 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
                     background: 'var(--surface-2)', padding: '2px 10px', borderRadius: 100,
                   }}>
                     {MODALITY_LABEL[appt.modality] ?? appt.modality}
+                  </span>
+                  <span style={{
+                    fontSize: '0.8125rem', color: 'var(--text-secondary)',
+                    background: 'var(--surface-2)', padding: '2px 10px', borderRadius: 100,
+                  }}>
+                    {appt.priceCents === null ? 'Valor a combinar' : formatBRL(appt.priceCents)}
                   </span>
                 </div>
                 <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>

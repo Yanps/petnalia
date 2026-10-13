@@ -53,6 +53,16 @@ export function VetProfileSkeleton() {
         <Skeleton width={64} height={14} style={{ marginBottom: 12 }} />
         <Skeleton width="100%" height={14} style={{ marginBottom: 8 }} />
         <Skeleton width="90%" height={14} style={{ marginBottom: 24 }} />
+        {/* Valores da consulta */}
+        <Skeleton width={150} height={14} style={{ marginBottom: 12 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <Skeleton width={150} height={16} />
+              <Skeleton width={90} height={20} />
+            </div>
+          ))}
+        </div>
         <Skeleton width={110} height={14} style={{ marginBottom: 12 }} />
         <div style={{ display: 'flex', gap: 8 }}>
           <Skeleton width={100} height={28} radius="var(--radius-full)" />
@@ -67,6 +77,7 @@ export function VetProfileSkeleton() {
         borderRadius: 'var(--radius-xl)', padding: '24px',
       }}>
         <Skeleton width={130} height={18} style={{ marginBottom: 16 }} />
+        <Skeleton width="100%" height={40} radius="var(--radius-md)" style={{ marginBottom: 16 }} />
         <Skeleton width={100} height={13} style={{ marginBottom: 10 }} />
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
           {Array.from({ length: 5 }).map((_, i) => (

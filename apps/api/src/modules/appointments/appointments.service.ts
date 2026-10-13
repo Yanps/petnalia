@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { Appointment, CreateAppointmentInput } from '@petnalia/types';
+import type { Appointment, CreateAppointmentInput, Modality } from '@petnalia/types';
 
 import {
   AppointmentForbiddenError,
@@ -18,6 +18,23 @@ import { VeterinarianNotFoundError } from '../veterinarians/veterinarians.errors
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
 
 
+// Price snapshot for the booked modality; null = "a combinar" (VETS-01).
+function priceForModality(
+  vet: { homePriceCents: number | null; onlinePriceCents: number | null },
+  modality: Modality,
+): number | null {
+  switch (modality) {
+    case 'home':
+      return vet.homePriceCents;
+    case 'online':
+      return vet.onlinePriceCents;
+    default: {
+      const exhaustive: never = modality;
+      throw new Error(`Unhandled modality: ${String(exhaustive)}`);
+    }
+  }
+}
+
 const IDEM_TTL_SECONDS = 86400;
 const IDEM_KEY = (key: string) => `idem:appointment:${key}`;
 
@@ -30,7 +47,7 @@ function toAppointment(row: {
   slotId: string;
   modality: string;
   status: string;
-  priceCents: number;
+  priceCents: number | null;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +104,10 @@ export class AppointmentsService {
     const valid = await this.availabilityService.verifyHoldToken(dto.slotId, dto.holdToken);
     if (!valid) throw new InvalidHoldTokenError();
 
+    const vet = await this.veterinariansRepository.findVetById(dto.veterinarianId);
+    if (!vet) throw new VeterinarianNotFoundError();
+    const priceCents = priceForModality(vet, dto.modality);
+
     const appointment = await prisma.$transaction(async (tx) => {
       const booked = await repo.bookSlot(dto.slotId, tx);
       if (!booked) throw new InvalidHoldTokenError();
@@ -100,7 +121,7 @@ export class AppointmentsService {
           slotId: dto.slotId,
           modality: dto.modality,
           notes: dto.notes,
-          priceCents: 0,
+          priceCents,
         },
         tx,
       );
