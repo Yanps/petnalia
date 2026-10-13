@@ -38,6 +38,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Testes dos hooks do Claude Code
+        run: node --test .claude/hooks/hooks.test.js
+
   unit-tests:
     name: Testes unitários
     runs-on: ubuntu-latest
