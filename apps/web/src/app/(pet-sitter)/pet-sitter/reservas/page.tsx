@@ -39,7 +39,6 @@ export default async function PetSitterReservasPage() {
 
       <PetSitterBookingsList
         initialBookings={bookings}
-        token={token ?? ''}
         role="pet_sitter"
         emptyMessage="Nenhuma reserva ainda."
       />

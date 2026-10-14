@@ -1,4 +1,9 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+// Server code talks to the API directly; the browser goes through the same-origin proxy
+// (app/api/v1/[...path]), which attaches the httpOnly session cookie as the bearer token.
+const API_BASE =
+  typeof window === 'undefined'
+    ? (process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000')
+    : '/api';
 
 export class ApiError extends Error {
   constructor(

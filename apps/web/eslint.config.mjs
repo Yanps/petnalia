@@ -34,6 +34,11 @@ export default [
     },
   },
   {
+    // The fetch rule targets components; route handlers and lib/ are where API calls belong.
+    files: ['src/app/api/**/*.ts', 'src/lib/**/*.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
     // Playwright fixtures call `use(...)`, which is not a React hook.
     files: ['e2e/**/*.ts'],
     rules: { 'react-hooks/rules-of-hooks': 'off' },

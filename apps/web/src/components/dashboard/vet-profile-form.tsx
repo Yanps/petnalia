@@ -9,7 +9,6 @@ import { formatBRLAmount, parseBRL } from '@petnalia/utils';
 interface VetProfileFormProps {
   readonly profile: VetOwnProfileResponse;
   readonly specialties: Specialty[];
-  readonly token: string;
 }
 
 type SaveState = 'idle' | 'saving' | 'success' | 'error';
@@ -41,8 +40,6 @@ function toPriceInput(cents: number | null): string {
   return cents === null ? '' : formatBRLAmount(cents);
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
 function getInitials(name: string): string {
   return name
     .split(' ')
@@ -54,12 +51,10 @@ function getInitials(name: string): string {
 function AvatarUpload({
   currentUrl,
   name,
-  token,
   onUpload,
 }: {
   currentUrl: string | null;
   name: string;
-  token: string;
   onUpload: (url: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,9 +70,8 @@ function AvatarUpload({
     form.append('file', file);
 
     try {
-      const res = await fetch(`${API_BASE}/v1/veterinarians/avatar`, {
+      const res = await fetch(`/api/v1/veterinarians/avatar`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
 
@@ -179,7 +173,7 @@ function AvatarUpload({
   );
 }
 
-export function VetProfileForm({ profile, specialties, token }: VetProfileFormProps) {
+export function VetProfileForm({ profile, specialties }: VetProfileFormProps) {
   const [bio, setBio] = useState(profile.bio ?? '');
   const [serviceRadiusKm, setServiceRadiusKm] = useState(profile.serviceRadiusKm);
   const [homePrice, setHomePrice] = useState(toPriceInput(profile.homePriceCents));
@@ -212,11 +206,10 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
 
     setSaveState('saving');
     try {
-      const res = await fetch(`${API_BASE}/v1/veterinarians/profile`, {
+      const res = await fetch(`/api/v1/veterinarians/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           bio: bio || null,
@@ -268,7 +261,6 @@ export function VetProfileForm({ profile, specialties, token }: VetProfileFormPr
             <AvatarUpload
               currentUrl={profile.avatarUrl}
               name={profile.fullName}
-              token={token}
               onUpload={() => { /* profile will refresh on next page load */ }}
             />
           </div>

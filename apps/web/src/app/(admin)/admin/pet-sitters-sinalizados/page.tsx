@@ -49,7 +49,7 @@ export default async function PetSittersSinalizadosPage() {
         </div>
       </div>
 
-      <FlaggedPetSittersList initialSitters={sitters} token={token ?? ''} />
+      <FlaggedPetSittersList initialSitters={sitters} />
     </main>
   );
 }

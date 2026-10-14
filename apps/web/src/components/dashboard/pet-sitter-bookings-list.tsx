@@ -47,13 +47,12 @@ function filterByTab(bookings: PetSitterBooking[], tab: Tab): PetSitterBooking[]
 
 interface Props {
   initialBookings: PetSitterBooking[];
-  token: string;
   role: 'tutor' | 'pet_sitter';
   emptyMessage: string;
   emptyAction?: React.ReactNode;
 }
 
-export function PetSitterBookingsList({ initialBookings, token, role, emptyMessage, emptyAction }: Props) {
+export function PetSitterBookingsList({ initialBookings, role, emptyMessage, emptyAction }: Props) {
   const [bookings, setBookings] = useState<PetSitterBooking[]>(initialBookings);
   const [activeTab, setActiveTab] = useState<Tab>('Todas');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -67,9 +66,9 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
     setUpdatingId(id);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/pet-sitter-bookings/${id}/${action}`, {
+      const res = await fetch(`/api/v1/pet-sitter-bookings/${id}/${action}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         ...(action === 'cancel' ? { body: JSON.stringify({}) } : {}),
       });
       if (!res.ok) throw new Error(errorMessage);
@@ -236,7 +235,6 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
       {reviewingId && (
         <PetSitterReviewModal
           bookingId={reviewingId}
-          token={token}
           onSuccess={() => {
             setReviewedIds((prev) => new Set(prev).add(reviewingId));
             setReviewingId(null);

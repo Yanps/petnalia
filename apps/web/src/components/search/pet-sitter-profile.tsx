@@ -22,7 +22,6 @@ interface Props {
   readonly sitter: PetSitterProfilePublicResponse;
   readonly initialReviews: PetSitterReview[];
   readonly session: Session | null;
-  readonly token: string | null;
 }
 
 function StarRating({ value }: { value: number }) {
@@ -72,7 +71,7 @@ function ReviewCard({ review }: { review: PetSitterReview }) {
   );
 }
 
-export function PetSitterProfile({ sitter, initialReviews, session, token }: Props) {
+export function PetSitterProfile({ sitter, initialReviews, session }: Props) {
   const [tab, setTab] = useState<Tab>('sobre');
 
   const tabLabel = (t: Tab) =>
@@ -233,7 +232,7 @@ export function PetSitterProfile({ sitter, initialReviews, session, token }: Pro
       </div>
 
       {/* Booking sidebar */}
-      <PetSitterBookingSidebar sitter={sitter} session={session} token={token} />
+      <PetSitterBookingSidebar sitter={sitter} session={session} />
     </div>
   );
 }

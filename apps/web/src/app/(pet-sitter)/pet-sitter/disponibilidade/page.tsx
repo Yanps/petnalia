@@ -1,13 +1,10 @@
 import type { Metadata } from 'next';
 
 import { CreateSlotsForm } from '@/components/dashboard/create-slots-form';
-import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Disponibilidade — Pet sitter' };
 
-export default async function PetSitterDisponibilidadePage() {
-  const token = await getToken();
-
+export default function PetSitterDisponibilidadePage() {
   return (
     <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
       <div style={{ marginBottom: 32 }}>
@@ -23,7 +20,7 @@ export default async function PetSitterDisponibilidadePage() {
         </p>
       </div>
 
-      <CreateSlotsForm token={token ?? ''} endpoint="/v1/pet-sitter-availability/slots" />
+      <CreateSlotsForm endpoint="/v1/pet-sitter-availability/slots" />
     </div>
   );
 }

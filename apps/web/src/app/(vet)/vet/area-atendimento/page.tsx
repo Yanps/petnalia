@@ -33,7 +33,7 @@ export default async function AreaAtendimentoPage() {
         </div>
 
         {profile ? (
-          <AreaAtendimentoForm profile={profile} token={token ?? ''} />
+          <AreaAtendimentoForm profile={profile} />
         ) : (
           <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 12,

@@ -25,7 +25,6 @@ const SPECIES_EMOJI: Record<string, string> = {
 
 interface PetsListProps {
   initialPets: Pet[];
-  token: string;
 }
 
 interface FormState {
@@ -44,14 +43,12 @@ const EMPTY_FORM: FormState = {
   birthdate: '',
 };
 
-export function PetsList({ initialPets, token }: PetsListProps) {
+export function PetsList({ initialPets }: PetsListProps) {
   const [pets, setPets] = useState<Pet[]>(initialPets);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
   function openModal() {
     setForm(EMPTY_FORM);
@@ -77,7 +74,6 @@ export function PetsList({ initialPets, token }: PetsListProps) {
           breed: form.breed || null,
           birthdate: form.birthdate || null,
         },
-        headers: authHeaders,
       });
       setPets((prev) => [...prev, pet]);
       closeModal();
@@ -90,7 +86,7 @@ export function PetsList({ initialPets, token }: PetsListProps) {
 
   async function handleDelete(id: string) {
     try {
-      await apiFetch(`/v1/pets/${id}`, { method: 'DELETE', headers: authHeaders });
+      await apiFetch(`/v1/pets/${id}`, { method: 'DELETE' });
       setPets((prev) => prev.filter((p) => p.id !== id));
     } catch {
       // silently ignore

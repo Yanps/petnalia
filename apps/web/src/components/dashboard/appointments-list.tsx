@@ -57,13 +57,12 @@ function filterByTab(appointments: Appointment[], tab: Tab): Appointment[] {
 
 interface Props {
   initialAppointments: Appointment[];
-  token: string;
   role: 'tutor' | 'veterinarian';
   emptyMessage: string;
   emptyAction?: React.ReactNode;
 }
 
-export function AppointmentsList({ initialAppointments, token, role, emptyMessage, emptyAction }: Props) {
+export function AppointmentsList({ initialAppointments, role, emptyMessage, emptyAction }: Props) {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [activeTab, setActiveTab] = useState<Tab>('Todas');
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -77,9 +76,9 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
     setCancelling(id);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/appointments/${id}/cancel`, {
+      const res = await fetch(`/api/v1/appointments/${id}/cancel`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
       if (!res.ok) throw new Error('Erro ao cancelar consulta.');
@@ -96,9 +95,8 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
     setCancelling(id);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/appointments/${id}/confirm`, {
+      const res = await fetch(`/api/v1/appointments/${id}/confirm`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Erro ao confirmar consulta.');
       const updated = (await res.json()) as Appointment;
@@ -114,9 +112,8 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
     setCancelling(id);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/appointments/${id}/complete`, {
+      const res = await fetch(`/api/v1/appointments/${id}/complete`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Erro ao concluir consulta.');
       const updated = (await res.json()) as Appointment;
@@ -288,7 +285,6 @@ export function AppointmentsList({ initialAppointments, token, role, emptyMessag
       {reviewingId && (
         <ReviewModal
           appointmentId={reviewingId}
-          token={token}
           onSuccess={() => {
             setReviewedIds((prev) => new Set(prev).add(reviewingId));
             setReviewingId(null);

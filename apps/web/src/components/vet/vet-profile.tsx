@@ -23,7 +23,6 @@ interface Props {
   readonly vet: VetProfilePublicResponse;
   readonly initialReviews: Review[];
   readonly session: Session | null;
-  readonly token: string | null;
 }
 
 function StarRating({ value }: { value: number }) {
@@ -73,7 +72,7 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-export function VetProfile({ vet, initialReviews, session, token }: Props) {
+export function VetProfile({ vet, initialReviews, session }: Props) {
   const [tab, setTab] = useState<Tab>('sobre');
 
   const tabLabel = (t: Tab) =>
@@ -292,7 +291,7 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
       </div>
 
       {/* Booking sidebar */}
-      <BookingSidebar vet={vet} session={session} token={token} />
+      <BookingSidebar vet={vet} session={session} />
     </div>
   );
 }

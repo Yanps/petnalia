@@ -4,11 +4,8 @@ import { useState } from 'react';
 
 import { Button, Icon } from '@petnalia/ui';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
 interface ReviewModalProps {
   appointmentId: string;
-  token: string;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -76,7 +73,7 @@ const RATING_LABEL: Record<number, string> = {
   5: 'Excelente',
 };
 
-export function ReviewModal({ appointmentId, token, onSuccess, onClose }: ReviewModalProps) {
+export function ReviewModal({ appointmentId, onSuccess, onClose }: ReviewModalProps) {
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -92,11 +89,10 @@ export function ReviewModal({ appointmentId, token, onSuccess, onClose }: Review
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/v1/reviews`, {
+      const res = await fetch(`/api/v1/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           appointmentId,

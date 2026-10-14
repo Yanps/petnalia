@@ -13,5 +13,5 @@ export default async function PetsPage() {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   }).catch(() => []);
 
-  return <PetsList initialPets={pets} token={token ?? ''} />;
+  return <PetsList initialPets={pets} />;
 }

@@ -113,7 +113,6 @@ export default async function TutorPerfilPage() {
         }}>
           <AddressManager
             initialAddresses={addresses}
-            token={token ?? ''}
           />
         </div>
       </div>

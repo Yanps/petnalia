@@ -38,5 +38,5 @@ export default async function PetSitterPerfilPage() {
     );
   }
 
-  return <PetSitterProfileForm profile={profile} token={token ?? ''} />;
+  return <PetSitterProfileForm profile={profile} />;
 }

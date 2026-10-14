@@ -35,7 +35,6 @@ export default async function VetConsultasPage() {
 
       <AppointmentsList
         initialAppointments={appointments}
-        token={token ?? ''}
         role="veterinarian"
         emptyMessage="Nenhuma consulta agendada ainda."
       />

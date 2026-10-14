@@ -38,7 +38,6 @@ export default async function TutorConsultasPage() {
 
       <AppointmentsList
         initialAppointments={appointments}
-        token={token ?? ''}
         role="tutor"
         emptyMessage="Você ainda não tem consultas."
         emptyAction={

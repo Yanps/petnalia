@@ -17,15 +17,12 @@ type BookingStep = 'idle' | 'select-details' | 'confirming' | 'done';
 interface BookingSidebarProps {
   readonly vet: VetProfilePublicResponse;
   readonly session: Session | null;
-  readonly token: string | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const res = await fetch(`/api${path}`, init);
   if (!res.ok) {
     const body = await res.json().catch(() => null) as { message?: string } | null;
     throw new Error(body?.message ?? `HTTP ${res.status}`);
@@ -103,7 +100,7 @@ function SelectItem({
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
+export function BookingSidebar({ vet, session }: BookingSidebarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -119,9 +116,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
   const [error, setError] = useState<string | null>(null);
 
   const weekDays = getWeekDays();
-  const authHeaders: Record<string, string> = token
-    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-    : { 'Content-Type': 'application/json' };
+  const jsonHeaders = { 'Content-Type': 'application/json' };
 
   async function handleSelectDate(day: Date) {
     setSelectedDate(day);
@@ -155,8 +150,8 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
     setLoadingDetails(true);
     try {
       const [petsData, addressesData] = await Promise.all([
-        apiFetch<Pet[]>('/v1/pets', { headers: authHeaders }),
-        apiFetch<Address[]>('/v1/addresses', { headers: authHeaders }),
+        apiFetch<Pet[]>('/v1/pets', { headers: jsonHeaders }),
+        apiFetch<Address[]>('/v1/addresses', { headers: jsonHeaders }),
       ]);
       setPets(petsData);
       setAddresses(addressesData);
@@ -171,19 +166,19 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
   }
 
   async function handleConfirm() {
-    if (!selectedSlot || !selectedPetId || !selectedAddressId || !token) return;
+    if (!selectedSlot || !selectedPetId || !selectedAddressId || !session) return;
     setStep('confirming');
     setError(null);
 
     try {
       const holdData = await apiFetch<HoldSlotResponse>(
         `/v1/availability/slots/${selectedSlot.id}/hold`,
-        { method: 'POST', headers: authHeaders },
+        { method: 'POST', headers: jsonHeaders },
       );
 
       await apiFetch('/v1/appointments', {
         method: 'POST',
-        headers: authHeaders,
+        headers: jsonHeaders,
         body: JSON.stringify({
           veterinarianId: vet.id,
           petId: selectedPetId,

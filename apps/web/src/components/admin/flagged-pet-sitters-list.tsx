@@ -5,31 +5,27 @@ import { useState, useTransition } from 'react';
 import type { FlaggedPetSitterItem } from '@petnalia/types';
 import { Badge, Button } from '@petnalia/ui';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
-async function confirmViolation(id: string, moderatorNote: string, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/admin/pet-sitters/${id}/confirm-violation`, {
+async function confirmViolation(id: string, moderatorNote: string): Promise<void> {
+  const res = await fetch(`/api/v1/admin/pet-sitters/${id}/confirm-violation`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ moderatorNote }),
   });
   if (!res.ok) throw new Error('Falha ao confirmar violação.');
 }
 
-async function dismissFlag(id: string, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/admin/pet-sitters/${id}/dismiss`, {
+async function dismissFlag(id: string): Promise<void> {
+  const res = await fetch(`/api/v1/admin/pet-sitters/${id}/dismiss`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Falha ao descartar sinalização.');
 }
 
 interface Props {
   readonly initialSitters: FlaggedPetSitterItem[];
-  readonly token: string;
 }
 
-export function FlaggedPetSittersList({ initialSitters, token }: Props) {
+export function FlaggedPetSittersList({ initialSitters }: Props) {
   const [sitters, setSitters] = useState(initialSitters);
   const [pending, startTransition] = useTransition();
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -40,7 +36,7 @@ export function FlaggedPetSittersList({ initialSitters, token }: Props) {
     setActionError(null);
     startTransition(async () => {
       try {
-        await dismissFlag(id, token);
+        await dismissFlag(id);
         setSitters((prev) => prev.filter((s) => s.id !== id));
       } catch {
         setActionError('Erro ao descartar sinalização. Tente novamente.');
@@ -53,7 +49,7 @@ export function FlaggedPetSittersList({ initialSitters, token }: Props) {
     setActionError(null);
     startTransition(async () => {
       try {
-        await confirmViolation(id, moderatorNote.trim(), token);
+        await confirmViolation(id, moderatorNote.trim());
         setSitters((prev) => prev.filter((s) => s.id !== id));
         setConfirmingId(null);
         setModeratorNote('');

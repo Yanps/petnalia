@@ -10,7 +10,6 @@ interface Slot {
 }
 
 interface Props {
-  token: string;
   endpoint?: string;
 }
 
@@ -20,7 +19,7 @@ function formatSlotLabel(slot: Slot): string {
   return `${s.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })} · ${s.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} – ${e.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
-export function CreateSlotsForm({ token, endpoint = '/v1/availability/slots' }: Props) {
+export function CreateSlotsForm({ endpoint = '/v1/availability/slots' }: Props) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
@@ -56,10 +55,9 @@ export function CreateSlotsForm({ token, endpoint = '/v1/availability/slots' }: 
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+      const res = await fetch(`/api${endpoint}`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ slots }),

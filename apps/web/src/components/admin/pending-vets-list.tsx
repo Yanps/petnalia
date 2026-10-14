@@ -5,20 +5,17 @@ import { useState, useTransition } from 'react';
 import type { PendingVetItem } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
-async function approveVet(vetId: string, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/admin/veterinarians/${vetId}/approve`, {
+async function approveVet(vetId: string): Promise<void> {
+  const res = await fetch(`/api/v1/admin/veterinarians/${vetId}/approve`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Falha ao aprovar veterinário.');
 }
 
-async function rejectVet(vetId: string, reason: string, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/admin/veterinarians/${vetId}/reject`, {
+async function rejectVet(vetId: string, reason: string): Promise<void> {
+  const res = await fetch(`/api/v1/admin/veterinarians/${vetId}/reject`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason }),
   });
   if (!res.ok) throw new Error('Falha ao recusar veterinário.');
@@ -26,10 +23,9 @@ async function rejectVet(vetId: string, reason: string, token: string): Promise<
 
 interface Props {
   initialVets: PendingVetItem[];
-  token: string;
 }
 
-export function PendingVetsList({ initialVets, token }: Props) {
+export function PendingVetsList({ initialVets }: Props) {
   const [vets, setVets] = useState(initialVets);
   const [pending, startTransition] = useTransition();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -40,7 +36,7 @@ export function PendingVetsList({ initialVets, token }: Props) {
     setActionError(null);
     startTransition(async () => {
       try {
-        await approveVet(vetId, token);
+        await approveVet(vetId);
         setVets((prev) => prev.filter((v) => v.id !== vetId));
       } catch {
         setActionError('Erro ao aprovar veterinário. Tente novamente.');
@@ -53,7 +49,7 @@ export function PendingVetsList({ initialVets, token }: Props) {
     setActionError(null);
     startTransition(async () => {
       try {
-        await rejectVet(vetId, rejectReason.trim(), token);
+        await rejectVet(vetId, rejectReason.trim());
         setVets((prev) => prev.filter((v) => v.id !== vetId));
         setRejectingId(null);
         setRejectReason('');

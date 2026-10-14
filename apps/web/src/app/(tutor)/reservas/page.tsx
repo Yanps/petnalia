@@ -41,7 +41,6 @@ export default async function TutorReservasPage() {
 
       <PetSitterBookingsList
         initialBookings={bookings}
-        token={token ?? ''}
         role="tutor"
         emptyMessage="Você ainda não tem reservas com pet sitters."
         emptyAction={

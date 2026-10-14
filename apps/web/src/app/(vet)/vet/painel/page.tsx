@@ -77,7 +77,7 @@ export default async function VetPainelPage() {
               O documento deve estar dentro da validade.
             </p>
           </div>
-          <CrmvPhotoUpload token={token} onSuccess={() => { /* painel reloads on next navigation */ }} />
+          <CrmvPhotoUpload onSuccess={() => { /* painel reloads on next navigation */ }} />
         </div>
       )}
 

@@ -41,7 +41,7 @@ export default async function VerificacaoPage() {
         </p>
       </div>
 
-      <PendingVetsList initialVets={vets} token={token ?? ''} />
+      <PendingVetsList initialVets={vets} />
     </main>
   );
 }

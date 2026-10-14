@@ -58,7 +58,6 @@ export default async function VetPerfilPage() {
     <VetProfileForm
       profile={profileResult}
       specialties={specialties}
-      token={token ?? ''}
     />
   );
 }

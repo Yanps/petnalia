@@ -42,7 +42,7 @@ export default async function UsuariosPage() {
         </p>
       </div>
 
-      <UsersList initialUsers={users} currentUserId={session?.userId ?? ''} token={token ?? ''} />
+      <UsersList initialUsers={users} currentUserId={session?.userId ?? ''} />
     </main>
   );
 }
