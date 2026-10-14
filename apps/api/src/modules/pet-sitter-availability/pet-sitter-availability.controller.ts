@@ -7,6 +7,7 @@ import { PetSitterAvailabilityService } from './pet-sitter-availability.service'
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
 
 
 @Controller('pet-sitter-availability')
@@ -29,7 +30,7 @@ export class PetSitterAvailabilityController {
 
   @Post('slots/:id/hold')
   @Roles('tutor')
-  holdSlot(@Param('id') slotId: string) {
+  holdSlot(@Param('id', UuidParamPipe) slotId: string) {
     return this.availabilityService.holdSlot(slotId);
   }
 }

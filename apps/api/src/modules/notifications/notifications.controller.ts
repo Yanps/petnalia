@@ -5,6 +5,7 @@ import { PaginationQuerySchema } from '@petnalia/types';
 
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
 
 
 @Controller('notifications')
@@ -19,7 +20,7 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async markAsRead(@CurrentUser() user: User, @Param('id') id: string): Promise<void> {
+  async markAsRead(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string): Promise<void> {
     await this.notificationsService.markAsRead(id, user.id);
   }
 }

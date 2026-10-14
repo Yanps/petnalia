@@ -15,6 +15,7 @@ import { CreatePetInputSchema } from '@petnalia/types';
 import { PetsService } from './pets.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
 
 
 @Controller('pets')
@@ -37,7 +38,7 @@ export class PetsController {
   @Delete(':id')
   @Roles('tutor')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@CurrentUser() user: User, @Param('id') id: string) {
+  async remove(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     await this.petsService.deletePet(id, user.id);
   }
 }

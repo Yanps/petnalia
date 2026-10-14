@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common';
@@ -21,6 +20,7 @@ import {
 import { AdminService } from './admin.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
 
 
 @Controller('admin')
@@ -41,14 +41,14 @@ export class AdminController {
 
   @Post('veterinarians/:id/approve')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async approveVet(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  async approveVet(@Param('id', UuidParamPipe) id: string): Promise<void> {
     await this.adminService.approveVet(id);
   }
 
   @Post('veterinarians/:id/reject')
   @HttpCode(HttpStatus.NO_CONTENT)
   async rejectVet(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', UuidParamPipe) id: string,
     @Body() body: unknown,
   ): Promise<void> {
     const dto = RejectVetInputSchema.parse(body);
@@ -65,14 +65,14 @@ export class AdminController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async suspendUser(
     @CurrentUser() admin: User,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', UuidParamPipe) id: string,
   ): Promise<void> {
     await this.adminService.suspendUser(admin.id, id);
   }
 
   @Post('users/:id/reactivate')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async reactivateUser(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  async reactivateUser(@Param('id', UuidParamPipe) id: string): Promise<void> {
     await this.adminService.reactivateUser(id);
   }
 
@@ -97,7 +97,7 @@ export class AdminController {
   @Post('pet-sitters/:id/confirm-violation')
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmPetSitterViolation(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', UuidParamPipe) id: string,
     @Body() body: unknown,
   ): Promise<void> {
     const dto = ModerationDecisionInputSchema.parse(body ?? {});
@@ -107,7 +107,7 @@ export class AdminController {
   @Post('pet-sitters/:id/dismiss')
   @HttpCode(HttpStatus.NO_CONTENT)
   async dismissPetSitterFlag(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', UuidParamPipe) id: string,
     @Body() body: unknown,
   ): Promise<void> {
     const dto = ModerationDecisionInputSchema.parse(body ?? {});
