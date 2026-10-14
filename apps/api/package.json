@@ -33,6 +33,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/swagger": "^8.1.1",
+    "@nestjs/throttler": "6.7.1",
     "@petnalia/config": "workspace:*",
     "@petnalia/types": "workspace:*",
     "@petnalia/utils": "workspace:*",

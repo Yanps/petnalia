@@ -5,6 +5,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
+import { ThrottlerModule } from '@nestjs/throttler';
 import cookieParser from 'cookie-parser';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
@@ -16,6 +17,7 @@ import { RolesGuard } from '../../src/shared/guards/roles.guard';
 import { MailerModule } from '../../src/shared/mailer/mailer.module';
 import { PrismaModule } from '../../src/shared/prisma/prisma.module';
 import { QueueModule } from '../../src/shared/queue/queue.module';
+import { RATE_LIMIT_DEFAULT, RateLimitGuard } from '../../src/shared/rate-limit/rate-limit';
 import { RedisModule } from '../../src/shared/redis/redis.module';
 import { RedisService } from '../../src/shared/redis/redis.service';
 import { StorageModule } from '../../src/shared/storage/storage.module';
@@ -38,9 +40,18 @@ import { StorageModule } from '../../src/shared/storage/storage.module';
 })
 class TestAppModule {}
 
+// Opt-in: most suites log in many times from one IP and would trip the limits.
+@Module({
+  imports: [ThrottlerModule.forRoot(RATE_LIMIT_DEFAULT)],
+  providers: [{ provide: APP_GUARD, useClass: RateLimitGuard }],
+})
+class RateLimitTestModule {}
+
 export interface TestAppOptions {
   /** Feature modules beyond the auth/users/vets baseline. */
   readonly imports?: NonNullable<ModuleMetadata['imports']>;
+  /** Enable the production rate limiter. */
+  readonly rateLimit?: boolean;
 }
 
 /**
@@ -82,7 +93,12 @@ export async function createTestApp(
   process.env['API_URL'] = 'http://localhost:4000';
 
   const moduleRef = await Test.createTestingModule({
-    imports: [TestAppModule, RedisModule, ...(options.imports ?? [])],
+    imports: [
+      TestAppModule,
+      RedisModule,
+      ...(options.rateLimit ? [RateLimitTestModule] : []),
+      ...(options.imports ?? []),
+    ],
   })
     .overrideProvider(RedisService)
     .useValue(new InMemoryRedis())

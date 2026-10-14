@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -22,12 +23,14 @@ import { RolesGuard } from './shared/guards/roles.guard';
 import { MailerModule } from './shared/mailer/mailer.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { QueueModule } from './shared/queue/queue.module';
+import { RATE_LIMIT_DEFAULT, RateLimitGuard } from './shared/rate-limit/rate-limit';
 import { RedisModule } from './shared/redis/redis.module';
 import { StorageModule } from './shared/storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot(RATE_LIMIT_DEFAULT),
     // Shared infrastructure (global)
     PrismaModule,
     RedisModule,
@@ -54,6 +57,8 @@ import { StorageModule } from './shared/storage/storage.module';
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    // After JwtAuthGuard, so authenticated requests are limited per user.
+    { provide: APP_GUARD, useClass: RateLimitGuard },
   ],
 })
 export class AppModule {}

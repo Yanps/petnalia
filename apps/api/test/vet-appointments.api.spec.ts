@@ -195,6 +195,12 @@ describe('Fluxo de consulta do veterinário (integração)', () => {
     expect(detail.status).toBe(200);
   });
 
+  it('id malformado na rota responde 422, não 500', async () => {
+    const res = await http().get('/v1/appointments/undefined').set(auth(vetToken));
+    expect(res.status).toBe(422);
+    expect(res.body.error).toMatchObject({ code: 'VALIDATION_ERROR', details: [{ field: 'id' }] });
+  });
+
   it('outro vet não acessa nem confirma a consulta', async () => {
     const detail = await http().get(`/v1/appointments/${appointmentId}`).set(auth(otherVetToken));
     expect(detail.status).toBe(403);

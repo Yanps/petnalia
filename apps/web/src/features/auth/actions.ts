@@ -1,10 +1,11 @@
 'use server';
 
 import { decodeJwt } from 'jose';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { api } from '@/lib/api-client';
+import { forwardedForHeader } from '@/lib/forwarded-for';
 
 import { LoginSchema, RegisterSchema, RegisterVetSchema, ForgotPasswordSchema, ResetPasswordSchema } from './schema';
 
@@ -13,6 +14,12 @@ import { LoginSchema, RegisterSchema, RegisterVetSchema, ForgotPasswordSchema, R
 interface AuthTokens {
   readonly accessToken: string;
   readonly refreshToken: string;
+}
+
+
+// Auth calls run on the Next.js server; pass the browser IP so the API rate-limits per client.
+async function clientIp(): Promise<{ headers: Record<string, string> }> {
+  return { headers: forwardedForHeader((await headers()).get('x-forwarded-for')) };
 }
 
 function roleToRedirect(role: unknown): string {
@@ -29,7 +36,7 @@ export async function loginAction(formData: FormData) {
     password: formData.get('password'),
   });
 
-  const tokens = await api.post<AuthTokens>('/v1/auth/login', data);
+  const tokens = await api.post<AuthTokens>('/v1/auth/login', data, await clientIp());
 
   const cookieStore = await cookies();
   cookieStore.set('petnalia_session', tokens.accessToken, {
@@ -61,7 +68,7 @@ export async function registerAction(formData: FormData) {
       password:  data.password,
       crmv:      data.crmv,
       crmvState: data.crmvState.toUpperCase(),
-    });
+    }, await clientIp());
     redirect('/entrar?cadastro=pendente');
   } else if (role === 'PET_SITTER') {
     const data = RegisterSchema.parse({
@@ -74,7 +81,7 @@ export async function registerAction(formData: FormData) {
       fullName: data.name,
       email:    data.email,
       password: data.password,
-    });
+    }, await clientIp());
     redirect('/entrar');
   } else {
     const data = RegisterSchema.parse({
@@ -88,14 +95,14 @@ export async function registerAction(formData: FormData) {
       email:    data.email,
       password: data.password,
       role:     data.role.toLowerCase(),
-    });
+    }, await clientIp());
     redirect('/entrar');
   }
 }
 
 export async function forgotPasswordAction(formData: FormData) {
   const data = ForgotPasswordSchema.parse({ email: formData.get('email') });
-  await api.post('/v1/auth/forgot-password', data);
+  await api.post('/v1/auth/forgot-password', data, await clientIp());
 }
 
 export async function resetPasswordAction(formData: FormData) {
@@ -108,7 +115,7 @@ export async function resetPasswordAction(formData: FormData) {
   await api.post('/v1/auth/reset-password', {
     token: typeof token === 'string' ? token : '',
     password: data.password,
-  });
+  }, await clientIp());
 
   redirect('/entrar?senha=redefinida');
 }

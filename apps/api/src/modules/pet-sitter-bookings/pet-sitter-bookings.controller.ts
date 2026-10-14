@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { User } from '@prisma/client';
 
 import { CancelPetSitterBookingInputSchema, CreatePetSitterBookingInputSchema } from '@petnalia/types';
@@ -6,6 +7,8 @@ import { CancelPetSitterBookingInputSchema, CreatePetSitterBookingInputSchema } 
 import { PetSitterBookingsService } from './pet-sitter-bookings.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
+import { RATE_LIMIT } from '../../shared/rate-limit/rate-limit';
 
 
 @Controller('pet-sitter-bookings')
@@ -14,6 +17,7 @@ export class PetSitterBookingsController {
 
   @Post()
   @Roles('tutor')
+  @Throttle(RATE_LIMIT.BOOKING)
   book(
     @CurrentUser() user: User,
     @Body() body: unknown,
@@ -30,25 +34,25 @@ export class PetSitterBookingsController {
   }
 
   @Get(':id')
-  getOne(@CurrentUser() user: User, @Param('id') id: string) {
+  getOne(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.bookingsService.getBooking(id, user.id);
   }
 
   @Post(':id/confirm')
   @Roles('pet_sitter')
-  confirm(@CurrentUser() user: User, @Param('id') id: string) {
+  confirm(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.bookingsService.confirmBooking(id, user.id);
   }
 
   @Post(':id/cancel')
-  cancel(@CurrentUser() user: User, @Param('id') id: string, @Body() body: unknown) {
+  cancel(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string, @Body() body: unknown) {
     CancelPetSitterBookingInputSchema.parse(body);
     return this.bookingsService.cancelBooking(id, user.id);
   }
 
   @Post(':id/complete')
   @Roles('pet_sitter')
-  complete(@CurrentUser() user: User, @Param('id') id: string) {
+  complete(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.bookingsService.completeBooking(id, user.id);
   }
 }
