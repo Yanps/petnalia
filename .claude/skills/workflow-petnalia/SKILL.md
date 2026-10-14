@@ -44,7 +44,8 @@ Mapa de cenário → skills + docs na ordem certa. Consulte antes de começar qu
 ## 3. Use case / serviço de backend (NestJS)
 
 ```
-1. /tdd                  → unit test com vi.mock() do repositório → implementação mínima
+1. /tdd                  → unit test do use case com fake/mock do repositório → implementação mínima
+                           (TESTING_GUIDE: não mocke tudo — repositório se testa contra banco real, passo 3)
 2. ENGINEERING_GUIDE     → controller thin, service implementa use case, repository isola Prisma
 3. /tdd (integration)    → Testcontainers para o repositório contra banco real
 ```
@@ -93,7 +94,8 @@ Seções do checklist por tipo de PR:
 ```
 1. docs/design-system/     → leia antes de qualquer mudança de token ou componente
 2. /atomic-design          → classificação e reuse-first
-3. ADR-0002                → novo par de token? Rode contrast.test.ts; se falhar, adicione ao ledger
+3. ADR-0002                → novo par de token? Confira o contraste AA à mão — o gate contrast.test.ts
+                             ainda não existe (ADR-0002 aceito, não implementado)
 4. /loading-skeletons      → componente alterado? Sincronize o skeleton companheiro
 ```
 
@@ -105,7 +107,7 @@ Seções do checklist por tipo de PR:
 
 ```
 1. ARCHITECTURE.md §DB    → revise regras (transações, FK explícitas, soft delete, UTC)
-2. prisma migrate dev      → gere a migration (nunca edite manualmente — protect-files.sh bloqueia)
+2. prisma migrate dev      → gere a migration (nunca edite manualmente — protect-files.js bloqueia)
 3. /tdd (integration)     → Testcontainers valida a migration contra banco real
 ```
 

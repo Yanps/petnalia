@@ -64,7 +64,7 @@ jobs:
         run: pnpm --filter @petnalia/api prisma:generate
 
       - name: Testes unitários
-        run: pnpm --filter @petnalia/api test
+        run: pnpm test
 
   integration-tests:
     name: Testes de integração

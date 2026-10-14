@@ -20,6 +20,8 @@ O PetNalia organiza UI por **Atomic Design** sobre **Tailwind v4 + tokens CSS do
 
 ## Onde a UI mora
 
+> **Estado atual (2026-10-14):** a árvore abaixo é o **alvo**. Hoje `packages/ui/src/` está organizado em `core/` (Button, Badge, Avatar, Card, Icon, Rating, Separator, Skeleton), `atoms/` (CalendarDay, Chip, DistanceIndicator, PriceTag, StatusDot), `domain/` (VetCard, PetSitterCard, AppointmentCard, CoverageMap, RadiusSelector, PetProfileCard + skeletons) e `feedback/` (Alert), com arquivos em **PascalCase** (`domain/VetCard.tsx`). Ainda **não existem** Input, Label, Modal/Dialog nem Tabs — por isso o app tem inputs e botões crus. No `apps/web`, os componentes vivem em `src/components/<área>/` e só `auth`, `search` e `subscriptions` têm pasta em `src/features/`. Antes de criar algo, procure nos dois lugares; componente novo no `@petnalia/ui` segue a árvore-alvo (kebab-case).
+
 ```
 packages/ui/src/               # @petnalia/ui — o design system React (apresentacional)
   atoms/        # Button, Input, Label, Badge, Avatar, Skeleton, Icon, Rating...

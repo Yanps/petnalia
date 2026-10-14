@@ -133,3 +133,5 @@ O ledger começa vazio. Se algum par da tabela acima não passar na primeira exe
 - Ao corrigir qualquer par no ledger, remover a entrada e abrir PR específico de token.
 - Se `colors.css` migrar para `oklch()`/`hsl()`: estender `toRgb()` no teste — sem mudar a estrutura do gate.
 - Gate completo de a11y (foco, ARIA, navegação por teclado) fica para fase posterior do design system.
+
+> **Atualização (2026-10-14) — estado da implementação:** decisão aceita, **ainda não implementada**. `packages/ui/src/contrast.test.ts` e `contrast-ledger.json` não existem, e `packages/ui` não tem script `test`. A skill `workflow-petnalia` manda "rodar contrast.test.ts" — até a implementação, essa etapa não tem como ser cumprida.

@@ -50,3 +50,5 @@ Construir tabelas e módulos **paralelos**, espelhando nome/estrutura/assinatura
 - ~~`PetSitterReview`~~ — implementado em 2026-08-25 (ver atualização acima).
 - ~~Perfil público individual do pet sitter~~ — implementado em 2026-08-26 (ver atualização acima).
 - Se o padrão de módulos paralelos se repetir para um terceiro papel, reavaliar a extração de um pacote/abstração compartilhada (ainda não há sinal de 3 ocorrências que justifique isso hoje).
+
+> **Atualização (2026-10-14):** o risco da duplicação se materializou. A resolução `userId → id do papel` descrita acima foi feita na cópia do pet sitter, mas faltava na original do veterinário: confirmar, concluir, cancelar e listar consultas davam 403 ou lista vazia para o vet, e criar horários violava a FK. Corrigido em `9fd7df8`, junto com checagens de posse (pet, endereço e slot) nos **dois** fluxos. Ao mexer em um lado, revisar o espelho; candidatos a extração para `shared/` independente do modelo de tabelas: helper de idempotência, hold de slot e máquina de status.
