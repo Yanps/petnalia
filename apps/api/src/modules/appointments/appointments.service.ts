@@ -36,7 +36,8 @@ function priceForModality(
 }
 
 const IDEM_TTL_SECONDS = 86400;
-const IDEM_KEY = (key: string) => `idem:appointment:${key}`;
+// Scoped per tutor: a key replayed by another user must never return someone else's booking.
+const IDEM_KEY = (tutorId: string, key: string) => `idem:appointment:${tutorId}:${key}`;
 
 function toAppointment(row: {
   id: string;
@@ -88,7 +89,7 @@ export class AppointmentsService {
     idempotencyKey?: string,
   ): Promise<Appointment> {
     if (idempotencyKey) {
-      const cached = await this.redis.get(IDEM_KEY(idempotencyKey));
+      const cached = await this.redis.get(IDEM_KEY(tutorId, idempotencyKey));
       if (cached) return JSON.parse(cached) as Appointment;
     }
 
@@ -132,7 +133,7 @@ export class AppointmentsService {
     const result = toAppointment({ ...appointment, slot: { startsAt: slot.startsAt } });
 
     if (idempotencyKey) {
-      await this.redis.set(IDEM_KEY(idempotencyKey), JSON.stringify(result), 'EX', IDEM_TTL_SECONDS);
+      await this.redis.set(IDEM_KEY(tutorId, idempotencyKey), JSON.stringify(result), 'EX', IDEM_TTL_SECONDS);
     }
 
     void this.notifyAppointmentBooked(appointment.id);

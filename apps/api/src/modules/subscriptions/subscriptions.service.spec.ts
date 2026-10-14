@@ -69,6 +69,19 @@ function makeConfig(overrides: Record<string, string> = {}) {
   };
 }
 
+// In-memory stand-in for the Redis commands the webhook dedup uses (SET NX / DEL).
+function makeRedis() {
+  const store = new Map<string, string>();
+  return {
+    set: vi.fn((key: string, value: string, ...args: unknown[]) => {
+      if (args.includes('NX') && store.has(key)) return Promise.resolve(null);
+      store.set(key, value);
+      return Promise.resolve('OK');
+    }),
+    del: vi.fn((key: string) => Promise.resolve(store.delete(key) ? 1 : 0)),
+  };
+}
+
 function makeService(
   subRepo?: Partial<SubscriptionsRepository>,
   vetsRepo?: Partial<VeterinariansRepository>,
@@ -77,6 +90,7 @@ function makeService(
     makeSubRepo(subRepo),
     makeVetsRepo(vetsRepo),
     makeConfig() as never,
+    makeRedis() as never,
   );
 
   // Stub stripe instance on the service
@@ -184,6 +198,46 @@ describe('SubscriptionsService', () => {
   });
 
   describe('handleWebhook', () => {
+    function checkoutCompleted(id: string): Stripe.Event {
+      return {
+        id,
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_test',
+            subscription: STRIPE_SUB_ID,
+            customer: STRIPE_CUSTOMER_ID,
+            metadata: { vetId: VET_ID, plan: 'pro' },
+          } as unknown as Stripe.Checkout.Session,
+        },
+      } as unknown as Stripe.Event;
+    }
+
+    it('processes a redelivered Stripe event only once', async () => {
+      const upsertSpy = vi.fn().mockResolvedValue(baseSub);
+      const svc = makeService({ upsert: upsertSpy });
+      stripeOf(svc).webhooks.constructEvent = vi.fn().mockReturnValue(checkoutCompleted('evt_1'));
+
+      await svc.handleWebhook(Buffer.from('{}'), 'valid-sig');
+      await svc.handleWebhook(Buffer.from('{}'), 'valid-sig');
+
+      expect(upsertSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('releases the event claim when processing fails, so the Stripe retry is processed', async () => {
+      const upsertSpy = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('db down'))
+        .mockResolvedValue(baseSub);
+      const svc = makeService({ upsert: upsertSpy });
+      stripeOf(svc).webhooks.constructEvent = vi.fn().mockReturnValue(checkoutCompleted('evt_2'));
+
+      await expect(svc.handleWebhook(Buffer.from('{}'), 'valid-sig')).rejects.toThrow('db down');
+      await svc.handleWebhook(Buffer.from('{}'), 'valid-sig');
+
+      expect(upsertSpy).toHaveBeenCalledTimes(2);
+    });
+
     it('throws InvalidWebhookSignatureError on bad signature', async () => {
       const svc = makeService();
       stripeOf(svc).webhooks.constructEvent = vi.fn().mockImplementation(() => {

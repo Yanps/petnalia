@@ -19,6 +19,7 @@ import type { VeterinariansRepository } from '../veterinarians/veterinarians.rep
 
 
 const TUTOR_ID = 'aaaaaaaa-0000-0000-0000-000000000000';
+const OTHER_TUTOR_ID = 'aaaaaaaa-1111-0000-0000-000000000000';
 // The vet's user id and the Veterinarian entity id are distinct on purpose:
 // appointments reference veterinarians.id, while the JWT carries users.id.
 const VET_USER_ID = 'bbbbbbbb-0000-0000-0000-000000000000';
@@ -248,6 +249,24 @@ describe('AppointmentsService', () => {
       );
       expect(result.id).toBe(APPT_ID);
       expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('scopes the idempotency key to the tutor, so another tutor never gets a cached booking', async () => {
+      const store = new Map<string, string>();
+      const redis = makeRedis({
+        get: vi.fn((key: string) => Promise.resolve(store.get(key) ?? null)),
+        set: vi.fn((key: string, value: string) => {
+          store.set(key, value);
+          return Promise.resolve('OK' as const);
+        }),
+      });
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), redis);
+
+      await svc.bookAppointment(TUTOR_ID, bookInput, 'shared-key');
+      await svc.bookAppointment(OTHER_TUTOR_ID, bookInput, 'shared-key');
+
+      expect(repo.book).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -22,6 +22,7 @@ import type { PetsService } from '../pets/pets.service';
 
 
 const TUTOR_ID = 'aaaaaaaa-0000-0000-0000-000000000000';
+const OTHER_TUTOR_ID = 'aaaaaaaa-1111-0000-0000-000000000000';
 const SITTER_USER_ID = 'bbbbbbbb-0000-0000-0000-000000000000';
 const SITTER_ID = 'ffffffff-0000-0000-0000-000000000000';
 const OTHER_SITTER_ID = 'ffffffff-1111-0000-0000-000000000000';
@@ -280,6 +281,24 @@ describe('PetSitterBookingsService', () => {
       );
       expect(result.id).toBe(BOOKING_ID);
       expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('scopes the idempotency key to the tutor, so another tutor never gets a cached booking', async () => {
+      const store = new Map<string, string>();
+      const redis = makeRedis({
+        get: vi.fn((key: string) => Promise.resolve(store.get(key) ?? null)),
+        set: vi.fn((key: string, value: string) => {
+          store.set(key, value);
+          return Promise.resolve('OK' as const);
+        }),
+      });
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makePetSittersRepo(), redis);
+
+      await svc.bookSitterService(TUTOR_ID, bookInput, 'shared-key');
+      await svc.bookSitterService(OTHER_TUTOR_ID, bookInput, 'shared-key');
+
+      expect(repo.book).toHaveBeenCalledTimes(2);
     });
   });
 
