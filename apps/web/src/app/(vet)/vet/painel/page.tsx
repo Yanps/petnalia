@@ -77,7 +77,9 @@ export default async function VetPainelPage() {
               O documento deve estar dentro da validade.
             </p>
           </div>
-          <CrmvPhotoUpload onSuccess={() => { /* painel reloads on next navigation */ }} />
+          {/* No onSuccess: a Server Component cannot pass functions to a Client Component
+              (it crashed the page for every new vet). The panel updates on next navigation. */}
+          <CrmvPhotoUpload />
         </div>
       )}
 

@@ -8,7 +8,8 @@ const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_MB = 5;
 
 interface Props {
-  onSuccess: () => void;
+  /** Optional: Server Components cannot pass functions to Client Components. */
+  readonly onSuccess?: () => void;
 }
 
 export function CrmvPhotoUpload({ onSuccess }: Props) {
@@ -45,7 +46,7 @@ export function CrmvPhotoUpload({ onSuccess }: Props) {
       }
 
       setUploaded(true);
-      onSuccess();
+      onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro inesperado. Tente novamente.');
     } finally {
