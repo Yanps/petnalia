@@ -203,7 +203,7 @@ Valores monetários são sempre armazenados em **centavos** (inteiro). Todos os 
 Os Dockerfiles não dependem de provedor. Rode os builds a partir da raiz do repositório:
 
 ```bash
-# API, e o job de migrations (rodar antes de cada deploy da API)
+# API, e o job de migrations (rodar antes de cada deploy da API, com DATABASE_URL e DIRECT_URL)
 docker build -f apps/api/Dockerfile -t petnalia-api .
 docker build -f apps/api/Dockerfile --target migrate -t petnalia-api-migrate .
 

@@ -86,6 +86,7 @@ jobs:
         run: |
           docker run --rm --network host \
             -e DATABASE_URL="postgresql://petnalia:petnalia@$HOST_IP:5432/petnalia?schema=public" \
+            -e DIRECT_URL="postgresql://petnalia:petnalia@$HOST_IP:5432/petnalia?schema=public" \
             petnalia-api-migrate:ci
 
       - name: Subir API (produção)

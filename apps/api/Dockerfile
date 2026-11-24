@@ -26,7 +26,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
   && cd /out && /app/apps/api/node_modules/.bin/prisma generate --schema prisma/schema.prisma
 
 # One-off job: apply pending migrations before rolling out a new API version.
-#   docker run --rm -e DATABASE_URL=... petnalia-api-migrate
+# DIRECT_URL is the non-pooled connection Prisma uses for migrations (same as
+# DATABASE_URL when there is no connection pooler in front of Postgres).
+#   docker run --rm -e DATABASE_URL=... -e DIRECT_URL=... petnalia-api-migrate
 FROM build AS migrate
 WORKDIR /app/apps/api
 CMD ["pnpm", "prisma:migrate:deploy"]

@@ -1,11 +1,11 @@
 ---
 id: VETS-01
 title: Preço da consulta opcional no perfil do veterinário
-status: accepted
+status: implemented
 epic: VETS
 owners: []
 depends_on: []
-prs: []
+prs: ["#1"]
 ---
 
 # VETS-01 — Preço da consulta opcional no perfil do veterinário

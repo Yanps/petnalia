@@ -5,4 +5,4 @@ Convenção: `<EPIC>-<NN>-<slug>.md`. Status: draft · accepted · implemented �
 
 | ID | Título | Status |
 |---|---|---|
-| [VETS-01](VETS-01-preco-da-consulta.md) | Preço da consulta opcional no perfil do veterinário | Accepted |
+| [VETS-01](VETS-01-preco-da-consulta.md) | Preço da consulta opcional no perfil do veterinário | Implemented |
