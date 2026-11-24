@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { zCrmv, zPhoneBR } from '@petnalia/validation';
 
-import { VerificationStatusSchema, VetTierSchema, CoordinatesSchema } from './common.js';
+import { VerificationStatusSchema, VetTierSchema, CoordinatesSchema, PriceCentsSchema } from './common.js';
 
 export const SpecialtySchema = z.object({
   id: z.string().uuid(),
@@ -47,9 +47,13 @@ export const CreateVetProfileInputSchema = z.object({
 export type CreateVetProfileInput = z.infer<typeof CreateVetProfileInputSchema>;
 
 export const UpdateVetProfileInputSchema = z.object({
-  bio: z.string().max(1000).optional(),
+  // null clears the bio
+  bio: z.string().max(1000).nullable().optional(),
   serviceRadiusKm: z.number().positive().max(200).optional(),
   specialtyIds: z.array(z.string().uuid()).optional(),
+  // undefined = unchanged; null = back to "a combinar"
+  homePriceCents: PriceCentsSchema.nullable().optional(),
+  onlinePriceCents: PriceCentsSchema.nullable().optional(),
 });
 export type UpdateVetProfileInput = z.infer<typeof UpdateVetProfileInputSchema>;
 
@@ -113,6 +117,9 @@ export const VetProfilePublicResponseSchema = z.object({
   baseCity: z.string(),
   baseState: z.string().length(2),
   serviceRadiusKm: z.number().positive(),
+  // null = "Valor a combinar"
+  homePriceCents: PriceCentsSchema.nullable(),
+  onlinePriceCents: PriceCentsSchema.nullable(),
 });
 export type VetProfilePublicResponse = z.infer<typeof VetProfilePublicResponseSchema>;
 

@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import type { Review, VetProfilePublicResponse } from '@petnalia/types';
+
 import { VetProfile } from '@/components/vet/vet-profile';
 import { api, ApiError } from '@/lib/api-client';
-import { getSession, getToken } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 
 interface VetPageProps {
   readonly params: Promise<{ slug: string }>;
@@ -53,10 +55,9 @@ export async function generateMetadata({ params }: VetPageProps): Promise<Metada
 
 export default async function VetPage({ params }: VetPageProps) {
   const { slug } = await params;
-  const [vet, session, token] = await Promise.all([
+  const [vet, session] = await Promise.all([
     getVetProfile(slug),
     getSession(),
-    getToken(),
   ]);
 
   if (!vet) notFound();
@@ -69,7 +70,6 @@ export default async function VetPage({ params }: VetPageProps) {
         vet={vet}
         initialReviews={reviews}
         session={session}
-        token={token}
       />
     </main>
   );

@@ -1,9 +1,11 @@
 'use client';
 
-import { useTransition, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTransition, useState } from 'react';
+
 import { Button, Icon } from '@petnalia/ui';
+
 import { registerAction } from './actions';
 
 type Role = 'TUTOR' | 'VETERINARIAN' | 'PET_SITTER';

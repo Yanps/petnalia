@@ -22,8 +22,9 @@ coverage/
 playwright-report/
 test-results/
 
-# Claude Code session files (personal, not project)
-.claude/
+# Claude Code: hooks, skills and settings.json are shared project config;
+# settings.local.json holds personal permissions.
+.claude/settings.local.json
 
 # Editor
 .idea/

@@ -13,7 +13,7 @@ test.describe('Busca de veterinários', () => {
     // All cards share one flex row, so they must all render at the same height
     // (no ragged heights when a vet's specialty text wraps to two lines, etc.)
     const heights = await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
-    const [firstHeight, ...rest] = heights;
+    const [firstHeight = 0, ...rest] = heights;
     for (const h of rest) expect(Math.abs(h - firstHeight)).toBeLessThan(1);
   });
 

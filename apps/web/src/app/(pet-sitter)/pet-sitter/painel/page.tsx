@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import type { PetSitterOwnProfileResponse } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
+
 import { apiFetch } from '@/lib/api-client';
 import { getSession, getToken } from '@/lib/auth';
 

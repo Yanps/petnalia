@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+
 import type { PetSitterSearchResult, VetSearchResult } from '@petnalia/types';
 import { Icon, PetSitterCard, VetCard } from '@petnalia/ui';
 

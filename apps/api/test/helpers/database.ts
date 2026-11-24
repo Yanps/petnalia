@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { execSync } from 'node:child_process';
 import { resolve } from 'node:path';
+
+import { PrismaClient } from '@prisma/client';
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
 
 export interface TestDatabase {
   prisma: PrismaClient;

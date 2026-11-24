@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+
 import { Icon } from '@petnalia/ui';
 
 interface Specialty {
@@ -18,7 +19,7 @@ interface SearchFiltersProps {
   readonly lng: number;
 }
 
-export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds, lat, lng }: SearchFiltersProps) {
+export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -35,10 +36,10 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds,
     for (const [key, value] of Object.entries(updates)) {
       params.delete(key);
       if (value === null) continue;
-      if (Array.isArray(value)) {
-        for (const v of value) params.append(key, v);
+      if (typeof value === 'string') {
+        params.set(key, value);
       } else {
-        params.set(key, value as string);
+        for (const v of value) params.append(key, v);
       }
     }
     router.push(`/busca?${params.toString()}`);

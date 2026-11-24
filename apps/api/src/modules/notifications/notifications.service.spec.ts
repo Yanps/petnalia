@@ -1,11 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
-import type { Queue } from 'bullmq';
 import type { Notification } from '@prisma/client';
+import type { Queue } from 'bullmq';
+import { describe, it, expect, vi } from 'vitest';
 
-import type { EmailJobPayload } from '../../shared/mailer/email-templates';
+
 import { NotificationNotFoundError } from './notifications.errors';
-import { NotificationsRepository } from './notifications.repository';
+import type { NotificationsRepository } from './notifications.repository';
 import { NotificationsService } from './notifications.service';
+import type { EmailJobPayload } from '../../shared/mailer/email-templates';
 
 function makeQueue(overrides: Partial<Queue> = {}) {
   return {

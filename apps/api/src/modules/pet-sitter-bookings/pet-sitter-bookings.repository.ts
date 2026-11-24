@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { PetSitterBooking, PetSitterBookingStatus } from '@prisma/client';
+
 import type { CreatePetSitterBookingInput } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';

@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
-import { STORAGE_PORT } from './storage.port';
 import { S3StorageAdapter } from './s3-storage.adapter';
+import { STORAGE_PORT } from './storage.port';
 
 @Global()
 @Module({

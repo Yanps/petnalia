@@ -1,14 +1,15 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
+
 import type { PetSitterSearchResult, Specialty, VetSearchResult } from '@petnalia/types';
 import { Icon } from '@petnalia/ui';
 
-import { api } from '@/lib/api-client';
-import { VetResultsGrid } from '@/components/search/vet-results-grid';
+import { MainSearchBar } from '@/components/search/main-search-bar';
 import { PetSitterSearchResults } from '@/components/search/pet-sitter-search-results';
 import { SearchFilters } from '@/components/search/search-filters';
 import { SearchFiltersSkeleton } from '@/components/search/search-filters-skeleton';
-import { MainSearchBar } from '@/components/search/main-search-bar';
+import { VetResultsGrid } from '@/components/search/vet-results-grid';
+import { api } from '@/lib/api-client';
 
 export const metadata: Metadata = { title: 'Buscar veterinários e pet sitters' };
 

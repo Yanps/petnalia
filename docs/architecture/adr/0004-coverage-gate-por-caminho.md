@@ -167,3 +167,5 @@ Rodar como workflow informativo (`mutation.yml`, não required) até acumular si
 - Implementar `mutation.yml` (Stryker) como workflow informativo para módulos críticos (`auth`, `appointments`).
 - Quando `appointments` e `availability` estabilizarem, elevar de 80% → 100%.
 - Integrar relatório de cobertura (`lcov`) ao PR via `actions/upload-artifact` + comentário automático.
+
+> **Atualização (2026-10-14) — estado da implementação:** decisão aceita, **ainda não implementada**. Nenhum `vitest.config.ts` define `coverage.thresholds`, `@vitest/coverage-v8` não está instalado (então `pnpm test:coverage` falha) e o CI não roda cobertura. O TESTING_GUIDE foi corrigido nesta data para refletir isso.

@@ -2,6 +2,7 @@
 
 import { SearchParamsSchema } from './schema';
 
+// eslint-disable-next-line @typescript-eslint/require-await -- Server Actions must be async functions.
 export async function searchVetsAction(formData: FormData) {
   // Server Action: orchestrates call to the API; business logic stays in NestJS
   const params = SearchParamsSchema.parse({

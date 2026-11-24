@@ -1,13 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
-import type { Notification, NotificationChannel, NotificationListResponse, PaginationQuery } from '@petnalia/types';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Notification as PrismaNotification } from '@prisma/client';
+import type { Queue } from 'bullmq';
 
-import { QUEUE_EMAIL } from '../../shared/queue/queue.module';
-import type { EmailJobPayload } from '../../shared/mailer/email-templates';
+import type { Notification, NotificationChannel, NotificationListResponse, PaginationQuery } from '@petnalia/types';
+
+
 import { NotificationNotFoundError } from './notifications.errors';
 import { NotificationsRepository } from './notifications.repository';
+import type { EmailJobPayload } from '../../shared/mailer/email-templates';
+import { QUEUE_EMAIL } from '../../shared/queue/queue.module';
 
 export interface NotifyInput {
   readonly userId: string;

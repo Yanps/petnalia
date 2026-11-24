@@ -1,10 +1,15 @@
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { User } from '@prisma/client';
+
 import { CancelAppointmentInputSchema, CreateAppointmentInputSchema } from '@petnalia/types';
 
+import { AppointmentsService } from './appointments.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { AppointmentsService } from './appointments.service';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
+import { RATE_LIMIT } from '../../shared/rate-limit/rate-limit';
+
 
 @Controller('appointments')
 export class AppointmentsController {
@@ -12,6 +17,7 @@ export class AppointmentsController {
 
   @Post()
   @Roles('tutor')
+  @Throttle(RATE_LIMIT.BOOKING)
   book(
     @CurrentUser() user: User,
     @Body() body: unknown,
@@ -22,31 +28,32 @@ export class AppointmentsController {
   }
 
   @Get()
+  @Roles('tutor', 'veterinarian')
   listMine(@CurrentUser() user: User) {
     const role = user.role === 'tutor' ? 'tutor' : 'veterinarian';
     return this.appointmentsService.listMyAppointments(user.id, role);
   }
 
   @Get(':id')
-  getOne(@CurrentUser() user: User, @Param('id') id: string) {
+  getOne(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.appointmentsService.getAppointment(id, user.id);
   }
 
   @Post(':id/confirm')
   @Roles('veterinarian')
-  confirm(@CurrentUser() user: User, @Param('id') id: string) {
+  confirm(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.appointmentsService.confirmAppointment(id, user.id);
   }
 
   @Post(':id/cancel')
-  cancel(@CurrentUser() user: User, @Param('id') id: string, @Body() body: unknown) {
+  cancel(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string, @Body() body: unknown) {
     CancelAppointmentInputSchema.parse(body);
     return this.appointmentsService.cancelAppointment(id, user.id);
   }
 
   @Post(':id/complete')
   @Roles('veterinarian')
-  complete(@CurrentUser() user: User, @Param('id') id: string) {
+  complete(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.appointmentsService.completeAppointment(id, user.id);
   }
 }

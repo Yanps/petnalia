@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
 import type { Address } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
@@ -64,7 +65,7 @@ async function searchStreet(uf: string, city: string, street: string): Promise<V
     const url = `https://viacep.com.br/ws/${uf}/${encodeURIComponent(city)}/${encodeURIComponent(street)}/json/`;
     const res = await fetch(url);
     if (!res.ok) return [];
-    const data = await res.json();
+    const data: unknown = await res.json();
     return Array.isArray(data) ? (data as ViaCepResponse[]) : [];
   } catch {
     return [];
@@ -73,7 +74,6 @@ async function searchStreet(uf: string, city: string, street: string): Promise<V
 
 interface AddressManagerProps {
   initialAddresses: Address[];
-  token: string;
 }
 
 interface FormState {
@@ -119,7 +119,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'inherit',
 };
 
-export function AddressManager({ initialAddresses, token }: AddressManagerProps) {
+export function AddressManager({ initialAddresses }: AddressManagerProps) {
   const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -133,8 +133,6 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
   const [streetSuggestions, setStreetSuggestions] = useState<ViaCepResponse[]>([]);
   const [streetSearching, setStreetSearching] = useState(false);
   const [showStreetSuggestions, setShowStreetSuggestions] = useState(false);
-
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
   useEffect(() => {
     if (!form.state) {
@@ -181,7 +179,7 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
     let cancelled = false;
     const timer = setTimeout(() => {
       setStreetSearching(true);
-      searchStreet(form.state, form.city, street)
+      void searchStreet(form.state, form.city, street)
         .then((results) => {
           if (!cancelled) setStreetSuggestions(results);
         })
@@ -265,7 +263,6 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
           state: form.state.toUpperCase(),
           cep: rawCep,
         },
-        headers: authHeaders,
       });
       setAddresses((prev) => [...prev, address]);
       closeForm();
@@ -283,7 +280,7 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
     }
     setDeleteConfirm(null);
     try {
-      await apiFetch(`/v1/addresses/${id}`, { method: 'DELETE', headers: authHeaders });
+      await apiFetch(`/v1/addresses/${id}`, { method: 'DELETE' });
       setAddresses((prev) => prev.filter((a) => a.id !== id));
     } catch {
       // silently ignore
@@ -419,7 +416,7 @@ export function AddressManager({ initialAddresses, token }: AddressManagerProps)
             Novo endereço
           </h3>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={labelStyle}>Identificação (opcional)</label>
               <input

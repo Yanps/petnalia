@@ -1,17 +1,15 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Button, Icon, RadiusSelector } from '@petnalia/ui';
+
 import type { VetOwnProfileResponse } from '@petnalia/types';
+import { Button, Icon, RadiusSelector } from '@petnalia/ui';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
-async function updateServiceRadius(radiusKm: number, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/veterinarians/profile`, {
+async function updateServiceRadius(radiusKm: number): Promise<void> {
+  const res = await fetch(`/api/v1/veterinarians/profile`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ serviceRadiusKm: radiusKm }),
   });
@@ -20,10 +18,9 @@ async function updateServiceRadius(radiusKm: number, token: string): Promise<voi
 
 interface Props {
   readonly profile: VetOwnProfileResponse;
-  readonly token: string;
 }
 
-export function AreaAtendimentoForm({ profile, token }: Props) {
+export function AreaAtendimentoForm({ profile }: Props) {
   const [radius, setRadius] = useState(profile.serviceRadiusKm);
   const [lastSavedRadius, setLastSavedRadius] = useState(profile.serviceRadiusKm);
   const [pending, startTransition] = useTransition();
@@ -41,7 +38,7 @@ export function AreaAtendimentoForm({ profile, token }: Props) {
     setSaved(false);
     startTransition(async () => {
       try {
-        await updateServiceRadius(radius, token);
+        await updateServiceRadius(radius);
         setLastSavedRadius(radius);
         setSaved(true);
       } catch {

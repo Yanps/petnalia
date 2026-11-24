@@ -1,13 +1,14 @@
 import { createHash } from 'node:crypto';
 
 import type { INestApplication } from '@nestjs/common';
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { PrismaService } from '../src/shared/prisma/prisma.service';
-import { setupTestDatabase, type TestDatabase } from './helpers/database';
-import { createTestApp } from './helpers/app-factory';
+
 import { makeRegisterInput } from './factories/user.factory';
+import { createTestApp } from './helpers/app-factory';
+import { setupTestDatabase, type TestDatabase } from './helpers/database';
+import { PrismaService } from '../src/shared/prisma/prisma.service';
 
 function hashResetToken(raw: string): string {
   return createHash('sha256').update(raw).digest('hex');

@@ -4,10 +4,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { hash as argonHash, verify as argonVerify } from 'argon2';
+
 import type { LoginInput, RegisterInput, RegisterVetInput, RegisterPetSitterInput, AuthTokens } from '@petnalia/types';
 
-import { NotificationsService } from '../notifications/notifications.service';
-import { UsersRepository } from '../users/users.repository';
+
 import {
   AccountSuspendedError,
   EmailTakenError,
@@ -18,6 +18,8 @@ import {
 } from './auth.errors';
 import { PasswordResetTokensRepository } from './password-reset-tokens.repository';
 import { TokensRepository } from './tokens.repository';
+import { NotificationsService } from '../notifications/notifications.service';
+import { UsersRepository } from '../users/users.repository';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1_000; // 1h
 

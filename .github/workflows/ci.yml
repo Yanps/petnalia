@@ -17,9 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Version comes from "packageManager" in package.json.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -38,6 +37,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Testes dos hooks do Claude Code
+        run: node --test .claude/hooks/hooks.test.js
+
   unit-tests:
     name: Testes unitários
     runs-on: ubuntu-latest
@@ -45,9 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Version comes from "packageManager" in package.json.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -61,7 +62,7 @@ jobs:
         run: pnpm --filter @petnalia/api prisma:generate
 
       - name: Testes unitários
-        run: pnpm --filter @petnalia/api test
+        run: pnpm test
 
   integration-tests:
     name: Testes de integração
@@ -70,9 +71,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Version comes from "packageManager" in package.json.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:

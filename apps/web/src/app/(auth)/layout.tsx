@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { Icon } from '@petnalia/ui';
 
 export default function AuthLayout({ children }: { readonly children: React.ReactNode }) {

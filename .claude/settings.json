@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm turbo *)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm --filter @petnalia/api test)",
+      "Bash(pnpm --filter @petnalia/api test:integration)",
+      "Bash(pnpm --filter @petnalia/api lint)",
+      "Bash(pnpm --filter @petnalia/web lint)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright *)",
+      "Bash(node_modules/.bin/playwright test *)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma validate)",
+      "Bash(npx prisma format)",
+      "Bash(npx prisma migrate status)",
+      "Bash(node --test .claude/hooks/hooks.test.js)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/block-dangerous-commands.js"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-secrets.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-files.js"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-secrets.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-secrets.js"
+          }
+        ]
+      }
+    ]
+  }
+}

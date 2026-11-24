@@ -1,13 +1,16 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import type { PetSitterAvailabilitySlot } from '@prisma/client';
-import type { CreatePetSitterSlotsInput, HoldSlotResponse, PetSitterAvailabilityQuery } from '@petnalia/types';
 import { randomUUID } from 'crypto';
 
+import { HttpStatus, Injectable } from '@nestjs/common';
+import type { PetSitterAvailabilitySlot } from '@prisma/client';
+
+import type { CreatePetSitterSlotsInput, HoldSlotResponse, PetSitterAvailabilityQuery } from '@petnalia/types';
+
+import { PetSitterAvailabilityRepository } from './pet-sitter-availability.repository';
 import { DomainError } from '../../shared/errors/domain.error';
 import { RedisService } from '../../shared/redis/redis.service';
 import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
 import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import { PetSitterAvailabilityRepository } from './pet-sitter-availability.repository';
+
 
 const HOLD_TTL_SECONDS = 600;
 const HOLD_KEY = (slotId: string) => `pet-sitter-slot:hold:${slotId}`;
@@ -15,6 +18,12 @@ const HOLD_KEY = (slotId: string) => `pet-sitter-slot:hold:${slotId}`;
 export class PetSitterSlotNotAvailableError extends DomainError {
   constructor() {
     super('PET_SITTER_SLOT_NOT_AVAILABLE', 'Este horário não está disponível.', HttpStatus.CONFLICT);
+  }
+}
+
+export class PetSitterSlotNotFoundError extends DomainError {
+  constructor() {
+    super('PET_SITTER_SLOT_NOT_FOUND', 'Horário não encontrado.', HttpStatus.NOT_FOUND);
   }
 }
 

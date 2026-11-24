@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+
 import type { AdminAppointmentListItem, AppointmentStatus } from '@petnalia/types';
-import { getToken } from '@/lib/auth';
+
 import { AppointmentsStatusFilter } from '@/components/admin/appointments-status-filter';
 import { AppointmentsTable } from '@/components/admin/appointments-table';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Consultas — Admin' };
 

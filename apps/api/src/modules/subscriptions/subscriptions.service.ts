@@ -2,13 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
-import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
-import { SubscriptionsRepository } from './subscriptions.repository';
+
 import {
   InvalidWebhookSignatureError,
   SubscriptionNotFoundError,
   VetNotFoundError,
 } from './subscriptions.errors';
+import { SubscriptionsRepository } from './subscriptions.repository';
+import { RedisService } from '../../shared/redis/redis.service';
+import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+
+const WEBHOOK_EVENT_TTL_SECONDS = 7 * 24 * 60 * 60; // Stripe retries for up to 3 days
+const WEBHOOK_EVENT_KEY = (eventId: string) => `stripe:event:${eventId}`;
 
 const PLAN_PRICE_CENTS: Record<string, number> = {
   pro: 4900,
@@ -24,6 +29,7 @@ export class SubscriptionsService {
     private readonly subscriptionsRepo: SubscriptionsRepository,
     private readonly vetsRepo: VeterinariansRepository,
     private readonly config: ConfigService,
+    private readonly redis: RedisService,
   ) {
     this.stripe = new Stripe(config.getOrThrow<string>('STRIPE_SECRET_KEY'));
   }
@@ -87,18 +93,32 @@ export class SubscriptionsService {
       throw new InvalidWebhookSignatureError();
     }
 
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await this.handleCheckoutCompleted(event.data.object);
-        break;
-      case 'customer.subscription.updated':
-        await this.handleSubscriptionUpdated(event.data.object);
-        break;
-      case 'customer.subscription.deleted':
-        await this.handleSubscriptionDeleted(event.data.object);
-        break;
-      default:
-        break;
+    // Stripe delivers at-least-once: claim the event id so a redelivery is a no-op.
+    const claimKey = WEBHOOK_EVENT_KEY(event.id);
+    const claimed = await this.redis.set(claimKey, '1', 'EX', WEBHOOK_EVENT_TTL_SECONDS, 'NX');
+    if (claimed !== 'OK') {
+      this.logger.log('Stripe event already processed, skipping', { eventId: event.id });
+      return;
+    }
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object);
+          break;
+        case 'customer.subscription.updated':
+          await this.handleSubscriptionUpdated(event.data.object);
+          break;
+        case 'customer.subscription.deleted':
+          await this.handleSubscriptionDeleted(event.data.object);
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      // Release the claim so Stripe's retry gets processed.
+      await this.redis.del(claimKey);
+      throw error;
     }
   }
 
@@ -117,8 +137,11 @@ export class SubscriptionsService {
     await this.subscriptionsRepo.upsert(vetId, {
       plan,
       status: 'active',
-      providerCustomerId: String(session.customer),
-      providerSubscriptionId: String(session.subscription),
+      // Webhook payloads are not expanded, but the Stripe types allow either an id or an object.
+      providerCustomerId:
+        typeof session.customer === 'string' ? session.customer : session.customer.id,
+      providerSubscriptionId:
+        typeof session.subscription === 'string' ? session.subscription : session.subscription.id,
       currentPeriodEnd: null,
       cancelAtPeriodEnd: false,
       priceCents: PLAN_PRICE_CENTS[plan] ?? 0,

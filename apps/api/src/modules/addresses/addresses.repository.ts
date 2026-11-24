@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import type { CreateAddressInput } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -12,6 +13,10 @@ export class AddressesRepository {
       where: { userId },
       orderBy: { createdAt: 'asc' },
     });
+  }
+
+  async findById(id: string, userId: string) {
+    return this.prisma.address.findFirst({ where: { id, userId } });
   }
 
   async create(userId: string, data: CreateAddressInput) {

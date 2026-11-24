@@ -131,7 +131,6 @@ pnpm --filter @petnalia/api prisma:seed
 pnpm dev
 # API  → http://localhost:4000
 # Web  → http://localhost:3000
-# Docs → http://localhost:4000/api (Swagger)
 ```
 
 ---
@@ -147,7 +146,9 @@ Execute a partir da raiz do monorepo via Turborepo:
 | `pnpm typecheck` | Verifica tipos TypeScript em todo o monorepo |
 | `pnpm lint` | Lint ESLint em todo o monorepo |
 | `pnpm test` | Roda todos os testes (Vitest) |
-| `pnpm test:coverage` | Testes com relatório de cobertura |
+| `pnpm test:coverage` | Cobertura — ainda não configurada (falta `@vitest/coverage-v8`; ver ADR-0004) |
+| `pnpm --filter @petnalia/api test:integration` | Testes de integração da API (Testcontainers; requer Docker) |
+| `pnpm --filter @petnalia/web test:e2e` | Suíte Playwright contra o stack local (suba a API com `RATE_LIMIT_AUTH_PER_MINUTE=1000`; ver ADR-0007) |
 | `pnpm format` | Formata todo o código com Prettier |
 | `pnpm clean` | Remove todos os artefatos de build |
 
@@ -221,4 +222,4 @@ Para detalhes completos: [`docs/architecture/ARCHITECTURE.md`](docs/architecture
 | [`docs/architecture/TESTING_GUIDE.md`](docs/architecture/TESTING_GUIDE.md) | Estratégia de testes e quality gates |
 | [`docs/architecture/adr/`](docs/architecture/adr/) | Architecture Decision Records |
 | [`docs/design-system/`](docs/design-system/) | Tokens, componentes, guidelines de UX |
-| `http://localhost:4000/api` | Swagger UI (API em execução) |
+| [`docs/specs/`](docs/specs/) | Especificações de features (criadas com a skill `create-spec`) |

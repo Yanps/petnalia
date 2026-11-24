@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Badge, Button } from '@petnalia/ui';
-import type { AdminUserListItem } from '@petnalia/types';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import type { AdminUserListItem } from '@petnalia/types';
+import { Badge, Button } from '@petnalia/ui';
 
 const ROLE_LABEL: Record<AdminUserListItem['role'], string> = {
   tutor: 'Tutor',
@@ -25,18 +24,16 @@ const STATUS_VARIANT: Record<AdminUserListItem['status'], 'success' | 'warning' 
   deleted: 'neutral',
 };
 
-async function suspendUser(userId: string, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/admin/users/${userId}/suspend`, {
+async function suspendUser(userId: string): Promise<void> {
+  const res = await fetch(`/api/v1/admin/users/${userId}/suspend`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Falha ao suspender usuário.');
 }
 
-async function reactivateUser(userId: string, token: string): Promise<void> {
-  const res = await fetch(`${API}/v1/admin/users/${userId}/reactivate`, {
+async function reactivateUser(userId: string): Promise<void> {
+  const res = await fetch(`/api/v1/admin/users/${userId}/reactivate`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Falha ao reativar usuário.');
 }
@@ -44,10 +41,9 @@ async function reactivateUser(userId: string, token: string): Promise<void> {
 interface Props {
   readonly initialUsers: AdminUserListItem[];
   readonly currentUserId: string;
-  readonly token: string;
 }
 
-export function UsersList({ initialUsers, currentUserId, token }: Props) {
+export function UsersList({ initialUsers, currentUserId }: Props) {
   const [users, setUsers] = useState(initialUsers);
   const [pending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -57,10 +53,10 @@ export function UsersList({ initialUsers, currentUserId, token }: Props) {
     startTransition(async () => {
       try {
         if (user.status === 'suspended') {
-          await reactivateUser(user.id, token);
+          await reactivateUser(user.id);
           setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, status: 'active' } : u)));
         } else {
-          await suspendUser(user.id, token);
+          await suspendUser(user.id);
           setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, status: 'suspended' } : u)));
         }
       } catch {

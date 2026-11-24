@@ -1,9 +1,6 @@
-import { getToken } from '@/lib/auth';
 import { CreateSlotsForm } from '@/components/dashboard/create-slots-form';
 
-export default async function DisponibilidadePage() {
-  const token = await getToken();
-
+export default function DisponibilidadePage() {
   return (
     <div className="pn-page" style={{ padding: '40px 40px 60px' }}>
       <div style={{ marginBottom: 32 }}>
@@ -19,7 +16,7 @@ export default async function DisponibilidadePage() {
         </p>
       </div>
 
-      <CreateSlotsForm token={token ?? ''} />
+      <CreateSlotsForm />
     </div>
   );
 }

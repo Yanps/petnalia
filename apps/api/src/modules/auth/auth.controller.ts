@@ -8,7 +8,9 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
+
 import {
   ForgotPasswordInputSchema,
   LoginInputSchema,
@@ -18,12 +20,15 @@ import {
   ResetPasswordInputSchema,
 } from '@petnalia/types';
 
-import { Public } from '../../shared/decorators/public.decorator';
 import { AuthService } from './auth.service';
+import { Public } from '../../shared/decorators/public.decorator';
+import { RATE_LIMIT } from '../../shared/rate-limit/rate-limit';
+
 
 const REFRESH_COOKIE = 'petnalia_refresh';
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1_000;
 
+@Throttle(RATE_LIMIT.AUTH)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

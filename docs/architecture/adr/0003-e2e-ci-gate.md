@@ -165,3 +165,5 @@ apps/web/e2e/
 - Avaliar MSW (Mock Service Worker) para interceptação de API mais robusta que `page.route()`.
 - Ao graduar a required: atualizar `TESTING_GUIDE.md` que hoje descreve E2E como gate opt-in.
 - Adicionar testes de smoke de rota (descoberta automática de `page.tsx` + navegação com sessão mockada) como complemento ao `critical/`.
+
+> **Atualização (2026-10-14) — estado da implementação:** decisão aceita, **ainda não implementada no CI** — não existe `.github/workflows/e2e.yml`. A suíte em `apps/web/e2e/` (56 testes) roda localmente contra o stack real (docker compose + seed + API + web). Desde o ADR-0007, a API precisa subir com `RATE_LIMIT_AUTH_PER_MINUTE` alto para a suíte, porque localmente todo o tráfego vem de um único endereço.

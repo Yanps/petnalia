@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
-import type { PetSitterSearchResponse, Specialty, VetSearchResult } from '@petnalia/types';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+
+import type { PetSitterSearchResponse, Specialty, VetSearchResult } from '@petnalia/types';
 import { Badge, Button, Icon } from '@petnalia/ui';
-import { api } from '@/lib/api-client';
+
 import { FeaturedProsCarousel } from '@/components/search/featured-pros-carousel';
 import { MainSearchBar } from '@/components/search/main-search-bar';
 import { MOCK_VETS } from '@/data/mock-vets';
+import { api } from '@/lib/api-client';
 
 async function fetchSpecialties(): Promise<Specialty[]> {
   try {
@@ -69,8 +71,8 @@ export default async function HomePage() {
     baseCity: v.city.split(',')[0]?.trim() ?? v.city,
     baseState: v.city.split(',')[1]?.trim() ?? 'SP',
     serviceRadiusKm: 20,
-    verificationStatus: (v.verified ? 'verified' : 'pending') as VetSearchResult['verificationStatus'],
-    tier: 'free' as VetSearchResult['tier'],
+    verificationStatus: (v.verified ? 'verified' : 'pending'),
+    tier: 'free',
   }));
 
   return (

@@ -148,3 +148,5 @@ jobs:
 - Ao adicionar chaves server-side novas (ex.: AWS S3, OpenTelemetry), declará-las em `server` do `env.ts`.
 - Avaliar SOPS/dotenv-vault para secrets versionados se algum secret server-side precisar estar no repositório.
 - Configurar Dependabot para PRs automáticos de atualização de dependências.
+
+> **Atualização (2026-10-14) — estado da implementação:** só a medida 4 (CI no GitHub Actions) existe, e o `pnpm lint` passou a rodar de fato nesta data (antes falhava por falta de config do ESLint e bloqueava os testes). Ainda **não implementadas**: validação de env no build (`apps/*/src/env.ts` com t3-env — o arquivo não existe), o pacote `@petnalia/next-config` com `withSecurity()` e os security headers do web. Hoje a API lê `process.env` com defaults (`main.ts`, `redis.service.ts`).

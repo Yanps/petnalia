@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+
 import type { PetSitterSearchResult } from '@petnalia/types';
 import { PetSitterCard } from '@petnalia/ui';
 

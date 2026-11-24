@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.amazonaws.com' },
     ],
   },
-  webpack: (config) => {
+  webpack: (config: { resolve: { extensionAlias?: Record<string, string[]> } }) => {
     // @petnalia/types re-exports its modules with explicit `.js` extensions
     // (required for NodeNext ESM output), but webpack resolves those specifiers
     // against the `.ts` source when bundling the workspace package directly.

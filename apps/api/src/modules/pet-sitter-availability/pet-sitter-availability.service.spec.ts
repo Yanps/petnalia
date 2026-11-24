@@ -1,12 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { PetSitterAvailabilitySlot } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { CreatePetSitterSlotsInput, PetSitterAvailabilityQuery } from '@petnalia/types';
 
+import type { PetSitterAvailabilityRepository } from './pet-sitter-availability.repository';
+import { PetSitterAvailabilityService, PetSitterSlotNotAvailableError } from './pet-sitter-availability.service';
 import type { RedisService } from '../../shared/redis/redis.service';
 import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
 import type { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import { PetSitterAvailabilityRepository } from './pet-sitter-availability.repository';
-import { PetSitterAvailabilityService, PetSitterSlotNotAvailableError } from './pet-sitter-availability.service';
+
 
 const SLOT_ID = 'slot-uuid-1';
 const SITTER_ID = 'sitter-uuid-1';

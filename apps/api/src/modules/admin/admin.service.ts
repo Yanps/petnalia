@@ -1,4 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+
 import type {
   AdminAppointmentListResponse,
   AdminAppointmentsQuery,
@@ -13,8 +14,8 @@ import { AppointmentsRepository } from '../appointments/appointments.repository'
 import { NotificationsService } from '../notifications/notifications.service';
 import { PetSitterNotFlaggedError, PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
 import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import { UsersRepository } from '../users/users.repository';
 import { UserNotFoundError } from '../users/users.errors';
+import { UsersRepository } from '../users/users.repository';
 import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
 
 export class VetNotFoundError extends DomainError {

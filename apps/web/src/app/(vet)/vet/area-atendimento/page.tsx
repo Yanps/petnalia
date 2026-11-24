@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+
 import type { VetOwnProfileResponse } from '@petnalia/types';
 import { Icon } from '@petnalia/ui';
 
+import { AreaAtendimentoForm } from '@/components/dashboard/area-atendimento-form';
 import { apiFetch } from '@/lib/api-client';
 import { getToken } from '@/lib/auth';
-import { AreaAtendimentoForm } from '@/components/dashboard/area-atendimento-form';
 
 export const metadata: Metadata = { title: 'Área de atendimento' };
 
@@ -32,7 +33,7 @@ export default async function AreaAtendimentoPage() {
         </div>
 
         {profile ? (
-          <AreaAtendimentoForm profile={profile} token={token ?? ''} />
+          <AreaAtendimentoForm profile={profile} />
         ) : (
           <div style={{
             display: 'flex', alignItems: 'flex-start', gap: 12,

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { AvailabilitySlot } from '@prisma/client';
+
 import type { AvailabilityQuery, CreateSlotsInput } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';

@@ -1,14 +1,16 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { PetSitterReview } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { CreatePetSitterReviewInput } from '@petnalia/types';
 
-import { PetSitterBookingNotFoundError } from '../pet-sitter-bookings/pet-sitter-bookings.errors';
-import { PetSitterReviewsRepository } from './pet-sitter-reviews.repository';
+
+import type { PetSitterReviewsRepository } from './pet-sitter-reviews.repository';
 import {
   PetSitterBookingNotReviewableError,
   PetSitterReviewAlreadyExistsError,
   PetSitterReviewsService,
 } from './pet-sitter-reviews.service';
+import { PetSitterBookingNotFoundError } from '../pet-sitter-bookings/pet-sitter-bookings.errors';
 
 const TUTOR_ID = 'tutor-uuid-1';
 const SITTER_ID = 'sitter-uuid-1';

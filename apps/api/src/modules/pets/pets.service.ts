@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
+
 import type { CreatePetInput } from '@petnalia/types';
 
+import { PetNotFoundError } from './pets.errors';
 import { PetsRepository } from './pets.repository';
 
 @Injectable()
@@ -23,6 +25,11 @@ export class PetsService {
       microchip: dto.microchip ?? null,
       photoUrl: dto.photoUrl ?? null,
     });
+  }
+
+  async assertOwnedBy(petId: string, tutorId: string): Promise<void> {
+    const pet = await this.petsRepository.findById(petId, tutorId);
+    if (!pet) throw new PetNotFoundError();
   }
 
   async deletePet(petId: string, tutorId: string) {

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import type { Appointment, Pet } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 

@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
-import { AppointmentStatusSchema, ModalitySchema, PaginatedResponseSchema, PaginationQuerySchema } from './common.js';
+import {
+  AppointmentStatusSchema,
+  ModalitySchema,
+  PaginatedResponseSchema,
+  PaginationQuerySchema,
+  PriceCentsSchema,
+} from './common.js';
 
 export const AppointmentSchema = z.object({
   id: z.string().uuid(),
@@ -11,7 +17,8 @@ export const AppointmentSchema = z.object({
   slotId: z.string().uuid(),
   modality: ModalitySchema,
   status: AppointmentStatusSchema,
-  priceCents: z.number().int().nonnegative(),
+  // Snapshot of the vet's price for the modality at booking time; null = "a combinar".
+  priceCents: PriceCentsSchema.nullable(),
   notes: z.string().max(500).nullable(),
   scheduledAt: z.string().datetime(),
   createdAt: z.string().datetime(),
@@ -54,7 +61,7 @@ export const AdminAppointmentListItemSchema = z.object({
   petName: z.string(),
   status: AppointmentStatusSchema,
   modality: ModalitySchema,
-  priceCents: z.number().int().nonnegative(),
+  priceCents: PriceCentsSchema.nullable(),
   scheduledAt: z.string().datetime(),
   createdAt: z.string().datetime(),
 });

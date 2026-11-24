@@ -268,6 +268,8 @@ async function main() {
       verificationStatus: 'verified',
       tier: 'premium',
       serviceRadiusKm: 15,
+      homePriceCents: 18000, // R$ 180,00
+      onlinePriceCents: 9000, // R$ 90,00
       bio: 'Médica-veterinária com 10 anos de experiência em clínica geral e dermatologia. ' +
            'Especialista em atendimento domiciliar para cães e gatos.',
       specialties: {
@@ -308,6 +310,7 @@ async function main() {
       verificationStatus: 'verified',
       tier: 'free',
       serviceRadiusKm: 20,
+      homePriceCents: 15000, // R$ 150,00; teleconsulta a combinar
       bio: 'Veterinário especializado em ortopedia e clínica geral para cães de grande porte. ' +
            'Atendo na zona oeste de São Paulo.',
       specialties: {

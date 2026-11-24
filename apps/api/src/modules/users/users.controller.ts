@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
-import { UpdateProfileInputSchema } from '@petnalia/types';
 import type { User } from '@prisma/client';
 
-import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { UpdateProfileInputSchema } from '@petnalia/types';
+
 import { UsersService } from './users.service';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+
 
 @Controller('users')
 export class UsersController {

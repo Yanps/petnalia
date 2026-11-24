@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import type {
   PetSitterOwnProfileResponse,
   PetSitterProfilePublicResponse,
@@ -9,12 +10,13 @@ import type {
   UpdatePetSitterProfileInput,
 } from '@petnalia/types';
 
-import { GeocoderService } from '../addresses/geocoder.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { UsersRepository } from '../users/users.repository';
 import { scanBioForViolation } from './bio-moderation';
 import { PetSitterNotFoundError } from './pet-sitters.errors';
 import { PetSittersRepository } from './pet-sitters.repository';
+import { GeocoderService } from '../addresses/geocoder.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { UsersRepository } from '../users/users.repository';
+
 
 function toSlug(fullName: string, id: string): string {
   const base = fullName

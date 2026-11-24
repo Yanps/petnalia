@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Appointment, AppointmentStatus } from '@prisma/client';
+
 import type { AdminAppointmentsQuery, CreateAppointmentInput } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -10,7 +11,7 @@ type AppointmentWithSlot = Appointment & {
 
 type BookData = Omit<CreateAppointmentInput, 'holdToken'> & {
   tutorId: string;
-  priceCents: number;
+  priceCents: number | null;
 };
 
 type PrismaTx = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];
