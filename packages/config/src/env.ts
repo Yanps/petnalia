@@ -26,8 +26,8 @@ const ServerEnvSchema = z.object({
   S3_BUCKET: z.string(),
   S3_FORCE_PATH_STYLE: z
     .string()
-    .transform((v) => v === 'true')
-    .default('false'),
+    .default('false')
+    .transform((v) => v === 'true'),
 
   // Email
   SMTP_HOST: z.string(),
@@ -51,20 +51,20 @@ export type ClientEnv = z.infer<typeof ClientEnvSchema>;
 const FeatureFlagSchema = z.object({
   FEATURE_MAGIC_LINK: z
     .string()
-    .transform((v) => v === 'true')
-    .default('false'),
+    .default('false')
+    .transform((v) => v === 'true'),
   FEATURE_GOOGLE_OAUTH: z
     .string()
-    .transform((v) => v === 'true')
-    .default('false'),
+    .default('false')
+    .transform((v) => v === 'true'),
   FEATURE_WHATSAPP: z
     .string()
-    .transform((v) => v === 'true')
-    .default('false'),
+    .default('false')
+    .transform((v) => v === 'true'),
   FEATURE_POLYGON_SERVICE_AREA: z
     .string()
-    .transform((v) => v === 'true')
-    .default('false'),
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type FeatureFlags = z.infer<typeof FeatureFlagSchema>;

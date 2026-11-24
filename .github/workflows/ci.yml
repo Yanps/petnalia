@@ -28,6 +28,9 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
+      - name: Auditoria de dependências (alta/crítica em produção)
+        run: pnpm audit --prod --audit-level=high
+
       - name: Gerar cliente Prisma
         run: pnpm --filter @petnalia/api prisma:generate
 

@@ -43,7 +43,7 @@ describe('zCep', () => {
     const result = schema.safeParse('0131');
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.errors[0]?.message).toBe('CEP inválido');
+      expect(result.error.issues[0]?.message).toBe('CEP inválido');
     }
   });
 });
