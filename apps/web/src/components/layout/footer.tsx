@@ -2,21 +2,22 @@ import Link from 'next/link';
 
 import { Icon } from '@petnalia/ui';
 
+// Only routes that exist: a link to a missing page is prefetched as a 404 whose body the
+// router never consumes, which held browser connections and stalled navigation.
+// Add "Como funciona", "Sobre nós" and "Blog" back when those pages exist.
 const LINKS = {
   'Para tutores': [
     { href: '/busca', label: 'Buscar veterinários' },
-    { href: '/como-funciona', label: 'Como funciona' },
     { href: '/planos', label: 'Planos' },
   ],
   'Para veterinários': [
     { href: '/para-veterinarios', label: 'Quero atender' },
     { href: '/planos', label: 'Planos profissionais' },
-    { href: '/verificacao', label: 'Verificação CRMV' },
+    { href: '/para-veterinarios#como-funciona', label: 'Verificação CRMV' },
   ],
   'PetNalia': [
-    { href: '/sobre', label: 'Sobre nós' },
-    { href: '/blog', label: 'Blog' },
-    { href: '/contato', label: 'Contato' },
+    // Same channel published in the terms of use.
+    { href: 'mailto:contato@petnalia.com', label: 'Contato' },
   ],
 } as const;
 
