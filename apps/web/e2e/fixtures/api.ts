@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 
-import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Locator, type Page, type Request } from '@playwright/test';
 
 /**
  * Direct API calls for test setup (fresh users, slots, admin actions) so each flow test
@@ -106,4 +106,18 @@ export async function uiLogin(page: Page, email: string, password: string): Prom
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
   await page.waitForURL((url) => !url.pathname.startsWith('/entrar'), { timeout: 15_000 });
+}
+
+/**
+ * Tracks requests that never finish. Call in beforeEach and attach the result when a test
+ * fails: a stalled request is invisible in traces, which only record finished ones.
+ */
+export function trackUnfinishedRequests(page: Page): () => string {
+  const pending = new Map<Request, number>();
+  page.on('request', (request) => pending.set(request, Date.now()));
+  page.on('requestfinished', (request) => pending.delete(request));
+  page.on('requestfailed', (request) => pending.delete(request));
+  return () =>
+    [...pending].map(([request, startedAt]) => `${request.method()} ${request.url()} — ${Date.now() - startedAt}ms`).join('\n') ||
+    '(nenhuma)';
 }
