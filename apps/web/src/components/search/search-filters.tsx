@@ -53,7 +53,10 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds 
     updateParams({ especialidade: next });
   }
 
-  const filterContent = (
+  // Rendered twice (mobile panel + desktop aside). Each copy needs its own radio group
+  // name: with a shared name the browser keeps a single checked radio across both copies,
+  // so the mobile panel opened with no radius selected.
+  const renderFilterContent = (variant: 'mobile' | 'desktop') => (
     <>
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>
@@ -66,7 +69,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds 
           >
             <input
               type="radio"
-              name="raio"
+              name={`raio-${variant}`}
               checked={r === currentRadius}
               onChange={() => updateParams({ raio: String(r) })}
               style={{ accentColor: 'var(--brand)', cursor: 'pointer' }}
@@ -172,7 +175,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds 
           borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
           padding: '20px',
         }}>
-          {filterContent}
+          {renderFilterContent('mobile')}
         </div>
       </div>
 
@@ -192,7 +195,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds 
         }}>
           Filtros
         </p>
-        {filterContent}
+        {renderFilterContent('desktop')}
       </aside>
     </>
   );

@@ -79,9 +79,10 @@ test.describe('Busca de veterinários', () => {
     // Panel closed by default
     const panel = page.locator('.pn-filter-panel');
     await expect(panel).toBeHidden();
-    // Open
+    // Open — the current radius (default 20 km) must show as selected in the mobile copy
     await toggleBtn.click();
     await expect(panel).toBeVisible();
+    await expect(panel.getByRole('radio', { name: '20 km' })).toBeChecked();
     // Close
     await toggleBtn.click();
     await expect(panel).toBeHidden();
