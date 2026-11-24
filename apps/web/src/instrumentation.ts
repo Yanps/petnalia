@@ -8,12 +8,15 @@ export function register(): void {
   // subset of the environment, so validate in the Node.js server.
   if (process.env.NEXT_RUNTIME === 'nodejs') parseWebEnv(process.env);
 
-  // Without NEXT_PUBLIC_SENTRY_DSN the SDK stays disabled.
-  Sentry.init({
-    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-    environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
-    dataCollection: SENTRY_DATA_COLLECTION,
-  });
+  // Only with a DSN: without one, init would still instrument the server for nothing.
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (dsn) {
+    Sentry.init({
+      dsn,
+      environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
+      dataCollection: SENTRY_DATA_COLLECTION,
+    });
+  }
 }
 
 /** Errors thrown while rendering Server Components, route handlers and Server Actions. */

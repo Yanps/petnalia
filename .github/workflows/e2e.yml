@@ -21,12 +21,18 @@ concurrency:
 
 jobs:
   e2e:
-    name: Playwright — fluxos críticos
+    name: Playwright — fluxos críticos (Sentry ${{ matrix.sentry }})
     if: >
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'run-e2e')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # `on` runs the apps with the Sentry SDKs active (as in production with a DSN) pointing
+    # at an unreachable host, so their instrumentation is exercised without sending anything.
+    strategy:
+      fail-fast: false
+      matrix:
+        sentry: ['off', 'on']
 
     services:
       postgres:
@@ -74,6 +80,8 @@ jobs:
       API_URL: http://localhost:4000
       API_INTERNAL_URL: http://localhost:4000
       NEXT_PUBLIC_API_URL: http://localhost:4000
+      SENTRY_DSN: ${{ matrix.sentry == 'on' && 'https://e2e@o0.ingest.sentry.invalid/1' || '' }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ matrix.sentry == 'on' && 'https://e2e@o0.ingest.sentry.invalid/1' || '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -138,7 +146,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-sentry-${{ matrix.sentry }}
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
