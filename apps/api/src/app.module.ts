@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 
+import { parseApiEnv } from '@petnalia/config';
+
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
@@ -29,7 +31,15 @@ import { StorageModule } from './shared/storage/storage.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // Fail fast on a missing/malformed variable (ADR-0001). Returns the raw values so
+      // ConfigService keeps serving strings exactly as before.
+      validate: (raw) => {
+        parseApiEnv(raw);
+        return raw;
+      },
+    }),
     ThrottlerModule.forRoot(RATE_LIMIT_DEFAULT),
     // Shared infrastructure (global)
     PrismaModule,

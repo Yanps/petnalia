@@ -160,6 +160,17 @@ describe('SubscriptionsService', () => {
       );
     });
 
+    it('returns the vet to the subscription page after checkout', async () => {
+      const svc = makeService({ findByVetId: vi.fn().mockResolvedValue(null) });
+      await svc.createCheckoutSession(USER_ID, 'pro');
+      expect(stripeOf(svc).checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success_url: 'http://localhost:3001/vet/assinatura?success=true',
+          cancel_url: 'http://localhost:3001/vet/assinatura?cancelled=true',
+        }),
+      );
+    });
+
     it('reuses existing customer id if subscription exists', async () => {
       const svc = makeService();
       await svc.createCheckoutSession(USER_ID, 'pro');

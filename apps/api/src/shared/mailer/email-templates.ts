@@ -76,7 +76,7 @@ function btn(label: string, href: string): string {
 }
 
 export function renderEmail(payload: EmailJobPayload): { subject: string; html: string; text: string } {
-  const BASE_URL = process.env['WEB_URL'] ?? 'http://localhost:3000';
+  const BASE_URL = process.env['APP_URL'] ?? 'http://localhost:3000';
 
   switch (payload.type) {
     case 'vet_registered': {

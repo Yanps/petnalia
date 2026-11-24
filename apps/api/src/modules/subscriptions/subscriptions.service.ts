@@ -49,15 +49,15 @@ export class SubscriptionsService {
         ? this.config.getOrThrow<string>('STRIPE_PRICE_PRO')
         : this.config.getOrThrow<string>('STRIPE_PRICE_CLINIC');
 
-    const appUrl = this.config.get<string>('APP_URL', 'http://localhost:3001');
+    const appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000');
 
     const existing = await this.subscriptionsRepo.findByVetId(vetId);
 
     const params: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${appUrl}/vet/planos?success=true`,
-      cancel_url: `${appUrl}/vet/planos?cancelled=true`,
+      success_url: `${appUrl}/vet/assinatura?success=true`,
+      cancel_url: `${appUrl}/vet/assinatura?cancelled=true`,
       metadata: { vetId, plan },
       ...(existing?.providerCustomerId
         ? { customer: existing.providerCustomerId }
