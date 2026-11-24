@@ -9,6 +9,8 @@ export interface SecurityHeadersOptions {
   readonly isDev: boolean;
   /** NEXT_PUBLIC_API_URL — the only API origin the browser calls directly. */
   readonly publicApiUrl?: string | undefined;
+  /** NEXT_PUBLIC_SENTRY_DSN — the browser SDK posts errors to its origin. */
+  readonly sentryDsn?: string | undefined;
 }
 
 export interface Header {
@@ -28,9 +30,15 @@ function originOf(url: string | undefined): string | null {
   }
 }
 
-function contentSecurityPolicy({ isDev, publicApiUrl }: SecurityHeadersOptions): string {
+function contentSecurityPolicy({ isDev, publicApiUrl, sentryDsn }: SecurityHeadersOptions): string {
   const apiOrigin = originOf(publicApiUrl) ?? (isDev ? 'http://localhost:4000' : null);
-  const connectSrc = ["'self'", ...BROWSER_FETCH_ORIGINS, ...(apiOrigin ? [apiOrigin] : [])];
+  const sentryOrigin = originOf(sentryDsn);
+  const connectSrc = [
+    "'self'",
+    ...BROWSER_FETCH_ORIGINS,
+    ...(apiOrigin ? [apiOrigin] : []),
+    ...(sentryOrigin ? [sentryOrigin] : []),
+  ];
   if (isDev) connectSrc.push('ws:'); // HMR
 
   const directives = [

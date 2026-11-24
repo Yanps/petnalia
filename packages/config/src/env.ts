@@ -166,7 +166,9 @@ export class EnvValidationError extends Error {
 }
 
 function parseWith<T extends z.ZodType>(app: string, schema: T, raw: RawEnv): z.infer<T> {
-  const result = schema.safeParse(raw);
+  // `KEY=` in a .env file means "not set", not "set to an empty string".
+  const defined = Object.fromEntries(Object.entries(raw).filter(([, value]) => value !== ''));
+  const result = schema.safeParse(defined);
   if (!result.success) throw new EnvValidationError(app, result.error.issues);
   return result.data;
 }

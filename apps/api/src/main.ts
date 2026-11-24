@@ -1,3 +1,5 @@
+// Must stay the first import (Sentry instruments modules as they load).
+import './instrument';
 import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
@@ -8,6 +10,8 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
+import { JsonLogger } from './shared/observability/json-logger';
+import { requestContextMiddleware } from './shared/observability/request-context';
 
 // Which proxies may set X-Forwarded-For (Express "trust proxy" syntax). The web app's
 // proxy and Server Actions forward the browser's IP; only trusted hops are believed, so a
@@ -20,9 +24,15 @@ function trustProxySetting(): boolean | number | string {
 }
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  const isProduction = process.env['NODE_ENV'] === 'production';
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    // Machine-readable logs in production; Nest's readable output locally.
+    ...(isProduction && { logger: new JsonLogger() }),
+  });
   app.set('trust proxy', trustProxySetting());
 
+  app.use(requestContextMiddleware);
   app.use(helmet());
   app.use(cookieParser());
   app.enableCors({

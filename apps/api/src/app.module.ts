@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { SentryModule } from '@sentry/nestjs/setup';
 
 import { parseApiEnv } from '@petnalia/config';
 
@@ -31,6 +32,7 @@ import { StorageModule } from './shared/storage/storage.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       // Fail fast on a missing/malformed variable (ADR-0001). Returns the raw values so

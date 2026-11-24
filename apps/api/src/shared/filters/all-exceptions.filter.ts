@@ -6,10 +6,12 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
 
 import type { DomainErrorBody } from '../errors/domain.error';
+import { currentRequestId } from '../observability/request-context';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -20,7 +22,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let code = 'INTERNAL_ERROR';
     let message = 'Erro interno. Tente novamente mais tarde.';
     let details: unknown = undefined;
@@ -51,9 +53,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     } else {
       this.logger.error(
-        `Unhandled exception on ${req.method} ${req.url}`,
+        `Unhandled exception on ${req.method} ${req.path}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+    }
+
+    // Only unexpected failures go to error tracking; 4xx are part of normal traffic.
+    if (status >= 500) {
+      Sentry.withScope((scope) => {
+        const requestId = currentRequestId();
+        if (requestId) scope.setTag('request_id', requestId);
+        Sentry.captureException(exception);
+      });
     }
 
     const envelope: Record<string, unknown> = { code, message };

@@ -72,6 +72,11 @@ describe('parseApiEnv', () => {
     expect(parseApiEnv(PROD_API_ENV).NODE_ENV).toBe('production');
   });
 
+  it('trata variável vazia (KEY= no .env) como não definida', () => {
+    expect(parseApiEnv({ ...DEV_API_ENV, SENTRY_DSN: '', SMTP_PORT: '' }).SENTRY_DSN).toBeUndefined();
+    expect(failedVars(() => parseApiEnv({ ...PROD_API_ENV, STRIPE_SECRET_KEY: '' }))).toEqual(['STRIPE_SECRET_KEY']);
+  });
+
   it('exige em produção as variáveis que têm default de desenvolvimento', () => {
     const vars = failedVars(() =>
       parseApiEnv({

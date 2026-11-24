@@ -15,12 +15,13 @@ export class LoggingInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
-    const { method, url } = request;
+    // Path only: query strings can carry personal data (e.g. the tutor's coordinates).
+    const { method, path } = request;
     const start = Date.now();
 
     return next.handle().pipe(
       tap(() => {
-        this.logger.log(`${method} ${url} — ${Date.now() - start}ms`);
+        this.logger.log({ message: 'request completed', method, path, durationMs: Date.now() - start });
       }),
     );
   }

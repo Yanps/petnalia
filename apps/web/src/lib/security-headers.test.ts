@@ -38,6 +38,16 @@ describe('securityHeaders', () => {
     expect(header(prod, 'Content-Security-Policy-Report-Only')).not.toContain("'unsafe-eval'");
   });
 
+  it('libera o envio de erros para a origem do DSN do Sentry', () => {
+    const headers = securityHeaders({
+      isDev: false,
+      sentryDsn: 'https://abc123@o4507.ingest.us.sentry.io/4508',
+    });
+    const csp = header(headers, 'Content-Security-Policy-Report-Only') ?? '';
+    expect(csp).toContain('https://o4507.ingest.us.sentry.io');
+    expect(csp).not.toContain('abc123');
+  });
+
   it('ignora uma URL pública da API malformada', () => {
     expect(() => securityHeaders({ isDev: false, publicApiUrl: 'not a url' })).not.toThrow();
   });

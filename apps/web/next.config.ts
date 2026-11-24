@@ -15,7 +15,13 @@ const nextConfig: NextConfig = {
     Promise.resolve([
       {
         source: '/:path*',
-        headers: [...securityHeaders({ isDev, publicApiUrl: process.env.NEXT_PUBLIC_API_URL })],
+        headers: [
+          ...securityHeaders({
+            isDev,
+            publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+            sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+          }),
+        ],
       },
     ]),
   transpilePackages: [
