@@ -23,6 +23,7 @@ import { UsersModule } from './modules/users/users.module';
 import { VeterinariansModule } from './modules/veterinarians/veterinarians.module';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
+import { HealthController } from './shared/health/health.controller';
 import { MailerModule } from './shared/mailer/mailer.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { QueueModule } from './shared/queue/queue.module';
@@ -66,6 +67,7 @@ import { StorageModule } from './shared/storage/storage.module';
     AddressesModule,
     AdminModule,
   ],
+  controllers: [HealthController],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

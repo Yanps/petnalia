@@ -198,6 +198,29 @@ Valores monetários são sempre armazenados em **centavos** (inteiro). Todos os 
 
 ---
 
+## Imagens Docker (produção)
+
+Os Dockerfiles não dependem de provedor. Rode os builds a partir da raiz do repositório:
+
+```bash
+# API, e o job de migrations (rodar antes de cada deploy da API)
+docker build -f apps/api/Dockerfile -t petnalia-api .
+docker build -f apps/api/Dockerfile --target migrate -t petnalia-api-migrate .
+
+# Web: as variáveis NEXT_PUBLIC_* entram no bundle no momento do build
+docker build -f apps/web/Dockerfile \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.seu-dominio.com.br \
+  --build-arg NEXT_PUBLIC_SENTRY_DSN=... \
+  -t petnalia-web .
+```
+
+- **Configuração em runtime.** Todo o resto vem das variáveis de ambiente do container. Os dois apps validam a configuração ao subir e recusam valores de exemplo em produção (veja [`.env.example`](.env.example)). Nenhum `.env` entra na imagem.
+- **Health checks.** A API responde em `GET /v1/health`; no web, use `/robots.txt`.
+- **Logs.** A API escreve JSON em produção, com `requestId` (o mesmo valor do header `X-Request-Id`).
+- **Verificação.** O workflow [`docker.yml`](.github/workflows/docker.yml) builda as imagens e sobe tudo em modo produção a cada PR.
+
+---
+
 ## Arquitetura
 
 O projeto segue **Clean Architecture + Vertical Slice + DDD Lite**:

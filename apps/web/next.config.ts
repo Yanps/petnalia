@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import type { NextConfig } from 'next';
 
 import { securityHeaders } from './src/lib/security-headers';
@@ -5,6 +7,12 @@ import { securityHeaders } from './src/lib/security-headers';
 const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig: NextConfig = {
+  // Self-contained server for the Docker image (apps/web/Dockerfile). Traced from the
+  // monorepo root so workspace packages are included.
+  ...(process.env.NEXT_OUTPUT_STANDALONE === 'true' && {
+    output: 'standalone' as const,
+    outputFileTracingRoot: path.join(__dirname, '../..'),
+  }),
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   compiler: {
