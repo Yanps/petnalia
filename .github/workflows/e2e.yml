@@ -89,12 +89,13 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
-      # Service containers cannot take a command, and MinIO needs `server /data`.
+      # Same image as docker-compose.yml (minio/minio left Docker Hub). Started by hand and
+      # polled from the host, since the image may not ship curl for a service healthcheck.
       - name: Subir MinIO
         run: |
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio server /data
+            bitnamilegacy/minio:2025.7.23-debian-12-r5
           timeout 60 bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 2; done'
 
       - name: Banco — migrations e seed
