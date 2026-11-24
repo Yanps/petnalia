@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 
+import { waitForHydration } from './fixtures/api';
+
 test.describe('Busca de veterinários', () => {
   test('landing page exibe veterinários e pet sitters em destaque num carrossel', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/');
     await expect(page.locator('text=Profissionais disponíveis agora')).toBeVisible();
     // 3 VetCards + 2 PetSitterCards in a single scroll row, sharing the .vn-vetcard hook class
     const cards = page.locator('.vn-vetcard');
@@ -24,24 +26,28 @@ test.describe('Busca de veterinários', () => {
   });
 
   test('filtro de raio atualiza resultados', async ({ page }) => {
-    await page.goto('/busca?lat=-23.5505&lng=-46.6333', { waitUntil: 'networkidle' });
+    await page.goto('/busca?lat=-23.5505&lng=-46.6333');
     // Click the 50km radio inside the desktop aside (mobile panel is hidden)
-    await page.locator('.pn-search-filters label:has-text("50 km")').click();
+    const radius = page.locator('.pn-search-filters label:has-text("50 km")');
+    await waitForHydration(radius);
+    await radius.click();
     await page.waitForURL(/raio=50/, { timeout: 5000 });
     await expect(page).toHaveURL(/raio=50/);
   });
 
   test('filtro de especialidade atualiza URL', async ({ page }) => {
-    await page.goto('/busca?lat=-23.5505&lng=-46.6333', { waitUntil: 'networkidle' });
+    await page.goto('/busca?lat=-23.5505&lng=-46.6333');
     // Click the Ortopedia checkbox (last in the list)
-    await page.locator('.pn-search-filters input[type="checkbox"]').last().click();
+    const specialty = page.locator('.pn-search-filters input[type="checkbox"]').last();
+    await waitForHydration(specialty);
+    await specialty.click();
     await page.waitForURL(/especialidade=/, { timeout: 5000 });
     await expect(page).toHaveURL(/especialidade=/);
   });
 
   test('desktop: apenas um painel de filtros visível', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto('/busca?lat=-23.5505&lng=-46.6333', { waitUntil: 'networkidle' });
+    await page.goto('/busca?lat=-23.5505&lng=-46.6333');
     // Mobile toggle button must be hidden on desktop
     const toggleBtn = page.locator('.pn-filter-toggle-btn');
     await expect(toggleBtn).toBeHidden();

@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 
-import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
 /**
  * Direct API calls for test setup (fresh users, slots, admin actions) so each flow test
@@ -83,9 +83,25 @@ export function stripeSignature(payload: string, secret: string): string {
   return `t=${timestamp},v1=${signature}`;
 }
 
-/** Logs in through the UI, the same way the shared fixtures do. */
+/**
+ * Waits until React has hydrated the element (event handlers attached). Interacting
+ * earlier is lost — a click does nothing, a form falls back to a native GET submit.
+ * Prefer this over `waitUntil: 'networkidle'`, which never settles reliably with
+ * Next.js route prefetching in production builds.
+ */
+export async function waitForHydration(locator: Locator): Promise<void> {
+  await expect
+    .poll(
+      () => locator.first().evaluate((el) => Object.keys(el).some((key) => key.startsWith('__reactProps'))),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
+/** Logs in through the UI. */
 export async function uiLogin(page: Page, email: string, password: string): Promise<void> {
-  await page.goto('/entrar', { waitUntil: 'networkidle' });
+  await page.goto('/entrar');
+  await waitForHydration(page.locator('form'));
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');

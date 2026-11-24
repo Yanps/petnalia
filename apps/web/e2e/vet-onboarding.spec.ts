@@ -1,4 +1,4 @@
-import { newVet, uiLogin } from './fixtures/api';
+import { newVet, uiLogin, waitForHydration } from './fixtures/api';
 import { test, expect } from './fixtures/auth';
 
 // Smallest valid PNG (1×1, transparent) — stands in for the CRMV photo.
@@ -19,7 +19,8 @@ test.describe('Onboarding do veterinário', () => {
     const page = await context.newPage();
 
     // 1. Sign-up
-    await page.goto('/cadastro', { waitUntil: 'networkidle' });
+    await page.goto('/cadastro');
+    await waitForHydration(page.locator('form'));
     await page.getByText('Sou veterinário').click();
     await page.fill('#name', vet.fullName);
     await page.fill('#reg-email', vet.email);
@@ -35,6 +36,7 @@ test.describe('Onboarding do veterinário', () => {
     await expect(page.getByText('Conta em análise.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Envie a foto do seu CRMV' })).toBeVisible();
 
+    await waitForHydration(page.locator('input[type="file"]'));
     await page.locator('input[type="file"]').setInputFiles({
       name: 'crmv.png',
       mimeType: 'image/png',
@@ -44,16 +46,17 @@ test.describe('Onboarding do veterinário', () => {
 
     // 3. Admin sees the new vet (with the photo) and approves
     const admin = await adminContext.newPage();
-    await admin.goto('/admin/verificacao', { waitUntil: 'networkidle' });
+    await admin.goto('/admin/verificacao');
     const card = admin
       .getByText(vet.email, { exact: true })
       .locator('xpath=ancestor::div[.//button[normalize-space()="Aprovar"]][1]');
     await expect(card.getByRole('img', { name: `CRMV de ${vet.fullName}` })).toBeVisible();
+    await waitForHydration(card.getByRole('button', { name: 'Aprovar' }));
     await card.getByRole('button', { name: 'Aprovar' }).click();
     await expect(admin.getByText(vet.email, { exact: true })).toBeHidden({ timeout: 10_000 });
 
     // 4. The vet's account is no longer under review
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload();
     await expect(page.getByText('Conta em análise.')).toBeHidden();
     await expect(page.getByRole('heading', { name: 'Envie a foto do seu CRMV' })).toBeHidden();
 

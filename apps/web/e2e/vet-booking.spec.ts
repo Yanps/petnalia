@@ -1,4 +1,4 @@
-import { apiLogin, createSlot, SEED_PASSWORD } from './fixtures/api';
+import { apiLogin, createSlot, SEED_PASSWORD, waitForHydration } from './fixtures/api';
 import { test, expect } from './fixtures/auth';
 
 /**
@@ -21,7 +21,7 @@ test.describe('Agendamento de consulta com veterinário', () => {
     await createSlot(request, vetToken, startsAt);
 
     const page = await tutorContext.newPage();
-    await page.goto(`/vet/${slug}`, { waitUntil: 'networkidle' });
+    await page.goto(`/vet/${slug}`);
 
     // Labels as the browser renders them (its own timezone/locale).
     const labels = await page.evaluate((iso) => {
@@ -37,12 +37,15 @@ test.describe('Agendamento de consulta com veterinário', () => {
     }, startsAt.toISOString());
 
     const sidebar = page.locator('aside').filter({ hasText: 'Agendar consulta' });
-    await sidebar.getByRole('button', { name: new RegExp(`^${labels.day}\\b`) }).click();
+    const dayButton = sidebar.getByRole('button', { name: new RegExp(`^${labels.day}\\b`) });
+    await waitForHydration(dayButton);
+    await dayButton.click();
     await sidebar.getByRole('button', { name: labels.time, exact: true }).click();
     await sidebar.getByRole('button', { name: 'Confirmar agendamento' }).click();
-    await expect(sidebar.getByText('Consulta agendada!')).toBeVisible({ timeout: 10_000 });
+    // The sidebar swaps its content for the confirmation, so look it up on the page.
+    await expect(page.getByText('Consulta agendada!')).toBeVisible({ timeout: 10_000 });
 
-    await sidebar.getByRole('link', { name: 'Ver minhas consultas' }).click();
+    await page.getByRole('link', { name: 'Ver minhas consultas' }).click();
     await expect(page).toHaveURL(/\/consultas/);
     const tutorCard = page
       .getByText(labels.full, { exact: true })
@@ -50,11 +53,13 @@ test.describe('Agendamento de consulta com veterinário', () => {
     await expect(tutorCard).toBeVisible();
 
     const vetPage = await vetContext.newPage();
-    await vetPage.goto('/vet/consultas', { waitUntil: 'networkidle' });
-    const vetCard = vetPage
+    await vetPage.goto('/vet/consultas');
+    const confirmButton = vetPage
       .getByText(labels.full, { exact: true })
-      .locator('xpath=ancestor::div[.//button[normalize-space()="Confirmar"]][1]');
-    await vetCard.getByRole('button', { name: 'Confirmar' }).click();
+      .locator('xpath=ancestor::div[.//button[normalize-space()="Confirmar"]][1]')
+      .getByRole('button', { name: 'Confirmar' });
+    await waitForHydration(confirmButton);
+    await confirmButton.click();
     await expect(
       vetPage
         .getByText(labels.full, { exact: true })

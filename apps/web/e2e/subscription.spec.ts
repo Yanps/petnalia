@@ -23,7 +23,7 @@ test.describe('Assinatura do veterinário', () => {
     await uiLogin(page, vet.email, vet.password);
 
     const currentPlan = page.locator('.pn-grid-3 > div').filter({ hasText: 'Plano atual' });
-    await page.goto('/vet/assinatura', { waitUntil: 'networkidle' });
+    await page.goto('/vet/assinatura');
     await expect(currentPlan.locator('p').first()).toHaveText('Grátis');
 
     const id = Date.now();
@@ -61,7 +61,7 @@ test.describe('Assinatura do veterinário', () => {
     expect(forged.ok()).toBeFalsy();
 
     // Where Stripe sends the vet back after paying.
-    await page.goto('/vet/assinatura?success=true', { waitUntil: 'networkidle' });
+    await page.goto('/vet/assinatura?success=true');
     await expect(page.getByText('Assinatura ativada com sucesso!', { exact: false })).toBeVisible();
     await expect(currentPlan.locator('p').first()).toHaveText('Pro');
     await expect(page.getByText('Ativo', { exact: true })).toBeVisible();
