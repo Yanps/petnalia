@@ -148,3 +148,12 @@ jobs:
 - Ao adicionar chaves server-side novas (ex.: AWS S3, OpenTelemetry), declará-las em `server` do `env.ts`.
 - Avaliar SOPS/dotenv-vault para secrets versionados se algum secret server-side precisar estar no repositório.
 - Configurar Dependabot para PRs automáticos de atualização de dependências.
+
+> **Atualização (2026-10-14) — estado da implementação:** só a medida 4 (CI no GitHub Actions) existe, e o `pnpm lint` passou a rodar de fato nesta data (antes falhava por falta de config do ESLint e bloqueava os testes). Ainda **não implementadas**: validação de env no build (`apps/*/src/env.ts` com t3-env — o arquivo não existe), o pacote `@petnalia/next-config` com `withSecurity()` e os security headers do web. Hoje a API lê `process.env` com defaults (`main.ts`, `redis.service.ts`).
+
+> **Atualização (2026-11-24) — medidas 1 a 3 implementadas, com dois desvios:**
+>
+> - **Validação de env na inicialização, não no build.** Os schemas ficam em `@petnalia/config` (`parseApiEnv`, `parseWebEnv`), sem t3-env. A API valida no `ConfigModule` (`app.module.ts`) e o web no `register()` de `src/instrumentation.ts`. Motivo: a imagem Docker é construída uma vez, sem segredos, e recebe o ambiente ao subir; validar no build obrigaria a passar segredos para o build ou a desligar a validação nele. Em produção, toda variável que tem default de desenvolvimento passa a ser obrigatória, e os valores de exemplo do `.env.example` (`change-me…`, `minioadmin`, `sk_test_`) são recusados. A mensagem de erro lista só nomes, nunca valores.
+> - **Sem pacote `@petnalia/next-config`.** Só existe um app Next, então os headers ficam em `apps/web/src/lib/security-headers.ts`, aplicados pelo `next.config.ts` (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, HSTS, `Permissions-Policy` e CSP em `Report-Only`). Extrair para um pacote quando houver um segundo app Next.
+> - Medida 2 aplicada no `next.config.ts`: `productionBrowserSourceMaps: false`, `compiler.removeConsole` (mantendo `error`/`warn`) e `poweredByHeader: false`.
+> - Gate de dependências: o CI roda `pnpm audit --prod --audit-level=high`. Correções de transitivas ficam em `overrides` no `pnpm-workspace.yaml`.

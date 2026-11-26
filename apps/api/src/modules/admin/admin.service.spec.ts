@@ -1,14 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import type { StoragePort } from '../../shared/storage/storage.port';
-import { AppointmentsRepository } from '../appointments/appointments.repository';
-import { NotificationsService } from '../notifications/notifications.service';
-import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import { UsersRepository } from '../users/users.repository';
-import { UserNotFoundError } from '../users/users.errors';
-import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
-import { PetSitterNotFlaggedError, PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
 import { AdminService, CannotSuspendSelfError, VetNotFoundError, VetNotPendingError } from './admin.service';
+import type { StoragePort } from '../../shared/storage/storage.port';
+import type { AppointmentsRepository } from '../appointments/appointments.repository';
+import type { NotificationsService } from '../notifications/notifications.service';
+import { PetSitterNotFlaggedError, PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
+import type { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
+import { UserNotFoundError } from '../users/users.errors';
+import type { UsersRepository } from '../users/users.repository';
+import type { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+
 
 const VET_ID = 'vet-uuid-1';
 const USER_ID = 'user-uuid-1';

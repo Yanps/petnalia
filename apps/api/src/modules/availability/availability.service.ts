@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { HttpStatus } from '@nestjs/common';
-import type { AvailabilitySlot } from '@prisma/client';
-import type { AvailabilityQuery, CreateSlotsInput, HoldSlotResponse } from '@petnalia/types';
 import { randomUUID } from 'crypto';
 
+import { Injectable, HttpStatus } from '@nestjs/common';
+import type { AvailabilitySlot } from '@prisma/client';
+
+import type { AvailabilityQuery, CreateSlotsInput, HoldSlotResponse } from '@petnalia/types';
+
+import { AvailabilityRepository } from './availability.repository';
 import { DomainError } from '../../shared/errors/domain.error';
 import { RedisService } from '../../shared/redis/redis.service';
-import { AvailabilityRepository } from './availability.repository';
+import { VeterinarianNotFoundError } from '../veterinarians/veterinarians.errors';
+import { VeterinariansRepository } from '../veterinarians/veterinarians.repository';
+
 
 const HOLD_TTL_SECONDS = 600;
 const HOLD_KEY = (slotId: string) => `slot:hold:${slotId}`;
@@ -27,6 +31,7 @@ export class SlotNotFoundError extends DomainError {
 export class AvailabilityService {
   constructor(
     private readonly availabilityRepository: AvailabilityRepository,
+    private readonly veterinariansRepository: VeterinariansRepository,
     private readonly redis: RedisService,
   ) {}
 
@@ -34,7 +39,10 @@ export class AvailabilityService {
     return this.availabilityRepository.findOpenSlots(query);
   }
 
-  async createSlots(veterinarianId: string, dto: CreateSlotsInput): Promise<{ created: number }> {
+  async createSlotsForUser(userId: string, dto: CreateSlotsInput): Promise<{ created: number }> {
+    const veterinarianId = await this.veterinariansRepository.findIdByUserId(userId);
+    if (!veterinarianId) throw new VeterinarianNotFoundError();
+
     const count = await this.availabilityRepository.createSlots(veterinarianId, dto.slots);
     return { created: count };
   }

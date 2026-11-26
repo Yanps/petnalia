@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import type { PetSitterProfilePublicResponse, PetSitterReview } from '@petnalia/types';
+
 import { PetSitterProfile } from '@/components/search/pet-sitter-profile';
 import { api, ApiError } from '@/lib/api-client';
-import { getSession, getToken } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 
 interface PetSitterPageProps {
   readonly params: Promise<{ slug: string }>;
@@ -52,10 +54,9 @@ export async function generateMetadata({ params }: PetSitterPageProps): Promise<
 
 export default async function PetSitterPage({ params }: PetSitterPageProps) {
   const { slug } = await params;
-  const [sitter, session, token] = await Promise.all([
+  const [sitter, session] = await Promise.all([
     getPetSitterProfile(slug),
     getSession(),
-    getToken(),
   ]);
 
   if (!sitter) notFound();
@@ -68,7 +69,6 @@ export default async function PetSitterPage({ params }: PetSitterPageProps) {
         sitter={sitter}
         initialReviews={reviews}
         session={session}
-        token={token}
       />
     </main>
   );

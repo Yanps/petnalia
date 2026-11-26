@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+
 import type {
   Address,
   HoldSlotResponse,
@@ -12,6 +13,7 @@ import type {
 } from '@petnalia/types';
 import { PET_SITTER_SERVICE_LABELS } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
+
 import type { Session } from '@/lib/auth';
 
 type BookingStep = 'idle' | 'select-details' | 'confirming' | 'done';
@@ -21,13 +23,10 @@ const SERVICES_REQUIRING_ADDRESS = new Set<PetSitterService>(['passeio', 'visita
 interface PetSitterBookingSidebarProps {
   readonly sitter: PetSitterProfilePublicResponse;
   readonly session: Session | null;
-  readonly token: string | null;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const res = await fetch(`/api${path}`, init);
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ?? `HTTP ${res.status}`);
@@ -86,7 +85,7 @@ function SelectItem({ label, selected, onClick }: { label: string; selected: boo
   );
 }
 
-export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBookingSidebarProps) {
+export function PetSitterBookingSidebar({ sitter, session }: PetSitterBookingSidebarProps) {
   const [service, setService] = useState<PetSitterService>(sitter.services[0] ?? 'passeio');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [slots, setSlots] = useState<PetSitterAvailabilitySlot[]>([]);
@@ -104,9 +103,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
 
   const weekDays = getWeekDays();
   const requiresAddress = SERVICES_REQUIRING_ADDRESS.has(service);
-  const authHeaders: Record<string, string> = token
-    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-    : { 'Content-Type': 'application/json' };
+  const jsonHeaders = { 'Content-Type': 'application/json' };
   const isTutor = session?.role === 'TUTOR';
 
   async function handleSelectDate(day: Date) {
@@ -140,8 +137,8 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
     setLoadingDetails(true);
     try {
       const [petsData, addressesData] = await Promise.all([
-        apiFetch<Pet[]>('/v1/pets', { headers: authHeaders }),
-        apiFetch<Address[]>('/v1/addresses', { headers: authHeaders }),
+        apiFetch<Pet[]>('/v1/pets', { headers: jsonHeaders }),
+        apiFetch<Address[]>('/v1/addresses', { headers: jsonHeaders }),
       ]);
       setPets(petsData);
       setAddresses(addressesData);
@@ -156,7 +153,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
   }
 
   async function handleConfirm() {
-    if (!selectedSlot || !selectedPetId || !token) return;
+    if (!selectedSlot || !selectedPetId || !session) return;
     if (requiresAddress && !selectedAddressId) return;
     setStep('confirming');
     setError(null);
@@ -164,12 +161,12 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
     try {
       const holdData = await apiFetch<HoldSlotResponse>(
         `/v1/pet-sitter-availability/slots/${selectedSlot.id}/hold`,
-        { method: 'POST', headers: authHeaders },
+        { method: 'POST', headers: jsonHeaders },
       );
 
       await apiFetch('/v1/pet-sitter-bookings', {
         method: 'POST',
-        headers: authHeaders,
+        headers: jsonHeaders,
         body: JSON.stringify({
           petSitterId: sitter.id,
           petId: selectedPetId,
@@ -264,7 +261,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
             <button
               key={day.toISOString()}
               type="button"
-              onClick={() => handleSelectDate(day)}
+              onClick={() => void handleSelectDate(day)}
               style={{
                 flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '8px 10px', borderRadius: 'var(--radius-md)', fontSize: '0.75rem',
@@ -307,7 +304,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
                     <button
                       key={slot.id}
                       type="button"
-                      onClick={() => handleSelectSlot(slot)}
+                      onClick={() => void handleSelectSlot(slot)}
                       style={{
                         padding: '8px 4px', borderRadius: 'var(--radius-sm)',
                         fontSize: '0.8125rem', fontWeight: 500,
@@ -415,7 +412,7 @@ export function PetSitterBookingSidebar({ sitter, session, token }: PetSitterBoo
                 block
                 iconLeft="calendar"
                 disabled={!selectedPetId || (requiresAddress && !selectedAddressId)}
-                onClick={handleConfirm}
+                onClick={() => void handleConfirm()}
               >
                 Confirmar reserva
               </Button>

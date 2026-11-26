@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+
 import type { Address, AvailabilitySlot, HoldSlotResponse, Pet, VetProfilePublicResponse } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
+
 import type { Session } from '@/lib/auth';
+
+import { ConsultationPrice } from './consultation-price';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -13,15 +17,12 @@ type BookingStep = 'idle' | 'select-details' | 'confirming' | 'done';
 interface BookingSidebarProps {
   readonly vet: VetProfilePublicResponse;
   readonly session: Session | null;
-  readonly token: string | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const res = await fetch(`/api${path}`, init);
   if (!res.ok) {
     const body = await res.json().catch(() => null) as { message?: string } | null;
     throw new Error(body?.message ?? `HTTP ${res.status}`);
@@ -99,7 +100,7 @@ function SelectItem({
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
+export function BookingSidebar({ vet, session }: BookingSidebarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -115,9 +116,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
   const [error, setError] = useState<string | null>(null);
 
   const weekDays = getWeekDays();
-  const authHeaders: Record<string, string> = token
-    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-    : { 'Content-Type': 'application/json' };
+  const jsonHeaders = { 'Content-Type': 'application/json' };
 
   async function handleSelectDate(day: Date) {
     setSelectedDate(day);
@@ -151,8 +150,8 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
     setLoadingDetails(true);
     try {
       const [petsData, addressesData] = await Promise.all([
-        apiFetch<Pet[]>('/v1/pets', { headers: authHeaders }),
-        apiFetch<Address[]>('/v1/addresses', { headers: authHeaders }),
+        apiFetch<Pet[]>('/v1/pets', { headers: jsonHeaders }),
+        apiFetch<Address[]>('/v1/addresses', { headers: jsonHeaders }),
       ]);
       setPets(petsData);
       setAddresses(addressesData);
@@ -167,19 +166,19 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
   }
 
   async function handleConfirm() {
-    if (!selectedSlot || !selectedPetId || !selectedAddressId || !token) return;
+    if (!selectedSlot || !selectedPetId || !selectedAddressId || !session) return;
     setStep('confirming');
     setError(null);
 
     try {
       const holdData = await apiFetch<HoldSlotResponse>(
         `/v1/availability/slots/${selectedSlot.id}/hold`,
-        { method: 'POST', headers: authHeaders },
+        { method: 'POST', headers: jsonHeaders },
       );
 
       await apiFetch('/v1/appointments', {
         method: 'POST',
-        headers: authHeaders,
+        headers: jsonHeaders,
         body: JSON.stringify({
           veterinarianId: vet.id,
           petId: selectedPetId,
@@ -244,6 +243,18 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
         Agendar consulta
       </p>
 
+      {/* Price — booking is in-person only for now (VETS-01, open question 1) */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        padding: '10px 12px', marginBottom: 16,
+        background: 'var(--surface-2)', borderRadius: 'var(--radius-md)',
+      }}>
+        <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>
+          Consulta presencial
+        </span>
+        <ConsultationPrice priceCents={vet.homePriceCents} />
+      </div>
+
       {/* Date picker */}
       <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
         Selecione a data
@@ -255,7 +266,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
             <button
               key={day.toISOString()}
               type="button"
-              onClick={() => handleSelectDate(day)}
+              onClick={() => void handleSelectDate(day)}
               style={{
                 flexShrink: 0,
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -305,7 +316,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
                     <button
                       key={slot.id}
                       type="button"
-                      onClick={() => handleSelectSlot(slot)}
+                      onClick={() => void handleSelectSlot(slot)}
                       style={{
                         padding: '8px 4px', borderRadius: 'var(--radius-sm)',
                         fontSize: '0.8125rem', fontWeight: 500,
@@ -435,7 +446,7 @@ export function BookingSidebar({ vet, session, token }: BookingSidebarProps) {
                 block
                 iconLeft="calendar"
                 disabled={!selectedPetId || !selectedAddressId}
-                onClick={handleConfirm}
+                onClick={() => void handleConfirm()}
               >
                 Confirmar agendamento
               </Button>

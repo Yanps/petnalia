@@ -1,4 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+
 import type {
   Specialty,
   UpdateVetProfileInput,
@@ -9,10 +10,11 @@ import type {
   VetSearchResult,
 } from '@petnalia/types';
 
-import { DomainError } from '../../shared/errors/domain.error';
-import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
 import { VeterinarianNotFoundError } from './veterinarians.errors';
 import { VeterinariansRepository } from './veterinarians.repository';
+import { DomainError } from '../../shared/errors/domain.error';
+import { STORAGE_PORT, type StoragePort } from '../../shared/storage/storage.port';
+
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'application/pdf']);
 const AVATAR_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -91,6 +93,8 @@ export class VeterinariansService {
       baseCity: row.base_city ?? '',
       baseState: row.base_state ?? '',
       serviceRadiusKm: row.service_radius_km,
+      homePriceCents: row.home_price_cents,
+      onlinePriceCents: row.online_price_cents,
     };
   }
 
@@ -114,6 +118,8 @@ export class VeterinariansService {
       baseCity: row.base_city ?? '',
       baseState: row.base_state ?? '',
       serviceRadiusKm: row.service_radius_km,
+      homePriceCents: row.home_price_cents,
+      onlinePriceCents: row.online_price_cents,
       crmvPhotoUploaded: row.has_crmv_photo,
     };
   }

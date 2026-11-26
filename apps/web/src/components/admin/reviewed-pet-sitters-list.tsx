@@ -1,5 +1,5 @@
-import { Badge } from '@petnalia/ui';
 import type { ReviewedPetSitterItem } from '@petnalia/types';
+import { Badge } from '@petnalia/ui';
 
 interface Props {
   readonly sitters: ReviewedPetSitterItem[];

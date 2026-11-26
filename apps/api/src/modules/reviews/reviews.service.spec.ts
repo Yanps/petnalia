@@ -1,14 +1,16 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { Review } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { CreateReviewInput } from '@petnalia/types';
 
-import { AppointmentNotFoundError } from '../appointments/appointments.errors';
-import { ReviewsRepository } from './reviews.repository';
+
+import type { ReviewsRepository } from './reviews.repository';
 import {
   AppointmentNotReviewableError,
   ReviewAlreadyExistsError,
   ReviewsService,
 } from './reviews.service';
+import { AppointmentNotFoundError } from '../appointments/appointments.errors';
 
 const TUTOR_ID = 'tutor-uuid-1';
 const VET_ID = 'vet-uuid-1';

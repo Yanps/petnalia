@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Icon } from '@petnalia/ui';
+
 import { PET_SITTER_SERVICE_LABELS, type PetSitterBooking } from '@petnalia/types';
+import { Button, Icon } from '@petnalia/ui';
 
 import { PetSitterReviewModal } from './pet-sitter-review-modal';
 
@@ -46,13 +47,12 @@ function filterByTab(bookings: PetSitterBooking[], tab: Tab): PetSitterBooking[]
 
 interface Props {
   initialBookings: PetSitterBooking[];
-  token: string;
   role: 'tutor' | 'pet_sitter';
   emptyMessage: string;
   emptyAction?: React.ReactNode;
 }
 
-export function PetSitterBookingsList({ initialBookings, token, role, emptyMessage, emptyAction }: Props) {
+export function PetSitterBookingsList({ initialBookings, role, emptyMessage, emptyAction }: Props) {
   const [bookings, setBookings] = useState<PetSitterBooking[]>(initialBookings);
   const [activeTab, setActiveTab] = useState<Tab>('Todas');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -66,9 +66,9 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
     setUpdatingId(id);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/pet-sitter-bookings/${id}/${action}`, {
+      const res = await fetch(`/api/v1/pet-sitter-bookings/${id}/${action}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         ...(action === 'cancel' ? { body: JSON.stringify({}) } : {}),
       });
       if (!res.ok) throw new Error(errorMessage);
@@ -181,7 +181,7 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => transition(booking.id, 'confirm', 'Erro ao confirmar reserva.')}
+                    onClick={() => void transition(booking.id, 'confirm', 'Erro ao confirmar reserva.')}
                     disabled={updatingId === booking.id}
                   >
                     Confirmar
@@ -191,7 +191,7 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => transition(booking.id, 'complete', 'Erro ao concluir reserva.')}
+                    onClick={() => void transition(booking.id, 'complete', 'Erro ao concluir reserva.')}
                     disabled={updatingId === booking.id}
                   >
                     Concluir
@@ -201,7 +201,7 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => transition(booking.id, 'cancel', 'Erro ao cancelar reserva.')}
+                    onClick={() => void transition(booking.id, 'cancel', 'Erro ao cancelar reserva.')}
                     disabled={updatingId === booking.id}
                   >
                     {updatingId === booking.id ? 'Cancelando...' : 'Cancelar'}
@@ -235,7 +235,6 @@ export function PetSitterBookingsList({ initialBookings, token, role, emptyMessa
       {reviewingId && (
         <PetSitterReviewModal
           bookingId={reviewingId}
-          token={token}
           onSuccess={() => {
             setReviewedIds((prev) => new Set(prev).add(reviewingId));
             setReviewingId(null);

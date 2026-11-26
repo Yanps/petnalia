@@ -2,10 +2,11 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { PrismaModule } from '../../shared/prisma/prisma.module';
-import { UsersRepository } from './users.repository';
 import { UsersModule } from './users.module';
+import { UsersRepository } from './users.repository';
 import { setupTestDatabase, type TestDatabase } from '../../../test/helpers/database';
+import { PrismaModule } from '../../shared/prisma/prisma.module';
+
 
 describe('UsersRepository (integração)', () => {
   let db: TestDatabase;

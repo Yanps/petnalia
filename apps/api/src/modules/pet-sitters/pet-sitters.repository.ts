@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+
 import type { PetSitterSearchQuery } from '@petnalia/types';
 
 import { PrismaService } from '../../shared/prisma/prisma.service';

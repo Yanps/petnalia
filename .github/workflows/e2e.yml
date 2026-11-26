@@ -1,0 +1,153 @@
+name: E2E
+
+# ADR-0003: opt-in per PR (label `run-e2e`), nightly, and on demand. Runs the Playwright
+# suite against the real stack (Postgres/PostGIS, Redis, MinIO, MailHog) with the dev seed.
+on:
+  pull_request:
+    types: [opened, reopened, labeled, synchronize]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/e2e.yml'
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright — fluxos críticos (Sentry ${{ matrix.sentry }})
+    if: >
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'run-e2e')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # `on` runs the apps with the Sentry SDKs active (as in production with a DSN) pointing
+    # at an unreachable host, so their instrumentation is exercised without sending anything.
+    strategy:
+      fail-fast: false
+      matrix:
+        sentry: ['off', 'on']
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: petnalia
+          POSTGRES_PASSWORD: petnalia
+          POSTGRES_DB: petnalia
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U petnalia -d petnalia"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      mailhog:
+        image: mailhog/mailhog
+        ports: ['1025:1025']
+
+    # Test-only values. None of them is a real secret.
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://petnalia:petnalia@localhost:5432/petnalia?schema=public
+      DIRECT_URL: postgresql://petnalia:petnalia@localhost:5432/petnalia?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: e2e-ci-access-secret-not-used-anywhere-else
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_BUCKET: petnalia
+      S3_FORCE_PATH_STYLE: 'true'
+      SMTP_HOST: localhost
+      SMTP_PORT: '1025'
+      SMTP_FROM: PetNalia <nao-responda@petnalia.com.br>
+      STRIPE_SECRET_KEY: sk_test_e2e_dummy
+      STRIPE_WEBHOOK_SECRET: whsec_e2e_ci_secret
+      STRIPE_PRICE_PRO: price_e2e_pro
+      STRIPE_PRICE_CLINIC: price_e2e_clinic
+      # Every request reaches the API from one address here (ADR-0007).
+      RATE_LIMIT_AUTH_PER_MINUTE: '1000'
+      API_URL: http://localhost:4000
+      API_INTERNAL_URL: http://localhost:4000
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      SENTRY_DSN: ${{ matrix.sentry == 'on' && 'https://e2e@o0.ingest.sentry.invalid/1' || '' }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ matrix.sentry == 'on' && 'https://e2e@o0.ingest.sentry.invalid/1' || '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version comes from "packageManager" in package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      # Same image as docker-compose.yml (minio/minio left Docker Hub). Started by hand and
+      # polled from the host, since the image may not ship curl for a service healthcheck.
+      - name: Subir MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            bitnamilegacy/minio:2025.7.23-debian-12-r5
+          timeout 60 bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 2; done'
+
+      - name: Banco — migrations e seed
+        run: |
+          pnpm --filter @petnalia/api prisma:generate
+          pnpm --filter @petnalia/api prisma:migrate:deploy
+          pnpm --filter @petnalia/api prisma:seed
+
+      - name: Build (API, web e pacotes)
+        run: pnpm turbo run build --filter=@petnalia/api --filter=@petnalia/web
+
+      - name: Instalar Chromium
+        run: pnpm --filter @petnalia/web exec playwright install --with-deps chromium
+
+      - name: Subir API
+        env:
+          APP_URL: http://localhost:3000
+        run: |
+          nohup node apps/api/dist/main > api.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:4000/v1/veterinarians/specialties > /dev/null; do sleep 2; done'
+
+      # `next start` runs with NODE_ENV=production, so the web env must pass the production
+      # rules (https APP_URL). APP_URL only feeds robots/sitemap on the web side.
+      - name: Subir web
+        env:
+          APP_URL: https://petnalia.test
+        run: |
+          nohup pnpm --filter @petnalia/web exec next start -p 3000 > web.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/termos > /dev/null; do sleep 2; done'
+
+      - name: E2E
+        run: pnpm --filter @petnalia/web test:e2e
+
+      - name: Logs da API e do web
+        if: failure()
+        run: |
+          echo "::group::api.log"; tail -n 200 api.log; echo "::endgroup::"
+          echo "::group::web.log"; tail -n 200 web.log; echo "::endgroup::"
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-sentry-${{ matrix.sentry }}
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7

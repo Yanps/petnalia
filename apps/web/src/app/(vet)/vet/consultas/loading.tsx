@@ -12,6 +12,7 @@ function AppointmentCardSkeleton() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Skeleton width={70} height={20} radius={100} />
           <Skeleton width={80} height={20} radius={100} />
+          <Skeleton width={84} height={20} radius={100} />
         </div>
         <Skeleton width={200} height={16} style={{ marginBottom: 6 }} />
         <Skeleton width={260} height={14} />

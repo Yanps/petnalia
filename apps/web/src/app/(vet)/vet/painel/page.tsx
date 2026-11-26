@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import { Button, Icon } from '@petnalia/ui';
-import { getSession, getToken } from '@/lib/auth';
+
 import { CrmvPhotoUpload } from '@/components/vet/crmv-photo-upload';
+import { getSession, getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Painel — Veterinário' };
 
@@ -75,7 +77,9 @@ export default async function VetPainelPage() {
               O documento deve estar dentro da validade.
             </p>
           </div>
-          <CrmvPhotoUpload token={token} onSuccess={() => { /* painel reloads on next navigation */ }} />
+          {/* No onSuccess: a Server Component cannot pass functions to a Client Component
+              (it crashed the page for every new vet). The panel updates on next navigation. */}
+          <CrmvPhotoUpload />
         </div>
       )}
 

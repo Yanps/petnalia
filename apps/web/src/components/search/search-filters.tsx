@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+
 import { Icon } from '@petnalia/ui';
 
 interface Specialty {
@@ -18,7 +19,7 @@ interface SearchFiltersProps {
   readonly lng: number;
 }
 
-export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds, lat, lng }: SearchFiltersProps) {
+export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -35,10 +36,10 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds,
     for (const [key, value] of Object.entries(updates)) {
       params.delete(key);
       if (value === null) continue;
-      if (Array.isArray(value)) {
-        for (const v of value) params.append(key, v);
+      if (typeof value === 'string') {
+        params.set(key, value);
       } else {
-        params.set(key, value as string);
+        for (const v of value) params.append(key, v);
       }
     }
     router.push(`/busca?${params.toString()}`);
@@ -52,7 +53,10 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds,
     updateParams({ especialidade: next });
   }
 
-  const filterContent = (
+  // Rendered twice (mobile panel + desktop aside). Each copy needs its own radio group
+  // name: with a shared name the browser keeps a single checked radio across both copies,
+  // so the mobile panel opened with no radius selected.
+  const renderFilterContent = (variant: 'mobile' | 'desktop') => (
     <>
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>
@@ -65,7 +69,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds,
           >
             <input
               type="radio"
-              name="raio"
+              name={`raio-${variant}`}
               checked={r === currentRadius}
               onChange={() => updateParams({ raio: String(r) })}
               style={{ accentColor: 'var(--brand)', cursor: 'pointer' }}
@@ -171,7 +175,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds,
           borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
           padding: '20px',
         }}>
-          {filterContent}
+          {renderFilterContent('mobile')}
         </div>
       </div>
 
@@ -191,7 +195,7 @@ export function SearchFilters({ specialties, currentRadius, currentSpecialtyIds,
         }}>
           Filtros
         </p>
-        {filterContent}
+        {renderFilterContent('desktop')}
       </aside>
     </>
   );

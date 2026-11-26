@@ -1,0 +1,128 @@
+name: Docker
+
+# Builds the production images and smoke-tests them: migrations through the `migrate`
+# target, then the API and web containers booting in production mode and answering.
+# Nothing is pushed — publishing/deploy is not set up yet.
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.dockerignore'
+      - '.github/workflows/docker.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  images:
+    name: Build e smoke test das imagens
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: petnalia
+          POSTGRES_PASSWORD: petnalia
+          POSTGRES_DB: petnalia
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U petnalia -d petnalia"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build — API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          tags: petnalia-api:ci
+          load: true
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Build — migrations
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: migrate
+          tags: petnalia-api-migrate:ci
+          load: true
+          cache-from: type=gha,scope=api
+
+      - name: Build — web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          tags: petnalia-web:ci
+          load: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://localhost:4000
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+      # The production env rules reject localhost, so containers reach the services
+      # through the runner's own address.
+      - name: Endereço do host
+        run: echo "HOST_IP=$(hostname -I | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - name: Migrations
+        run: |
+          docker run --rm --network host \
+            -e DATABASE_URL="postgresql://petnalia:petnalia@$HOST_IP:5432/petnalia?schema=public" \
+            -e DIRECT_URL="postgresql://petnalia:petnalia@$HOST_IP:5432/petnalia?schema=public" \
+            petnalia-api-migrate:ci
+
+      - name: Subir API (produção)
+        run: |
+          docker run -d --name api --network host \
+            -e APP_URL=https://petnalia.test \
+            -e DATABASE_URL="postgresql://petnalia:petnalia@$HOST_IP:5432/petnalia?schema=public" \
+            -e REDIS_URL="redis://$HOST_IP:6379" \
+            -e JWT_ACCESS_SECRET=smoke-test-access-secret-not-for-production \
+            -e S3_ENDPOINT=https://s3.smoke.invalid \
+            -e S3_ACCESS_KEY_ID=smoke -e S3_SECRET_ACCESS_KEY=smoke -e S3_BUCKET=smoke \
+            -e SMTP_HOST=smtp.smoke.invalid -e SMTP_FROM="PetNalia <smoke@petnalia.test>" \
+            -e STRIPE_SECRET_KEY=sk_test_smoke -e STRIPE_WEBHOOK_SECRET=whsec_smoke \
+            -e STRIPE_PRICE_PRO=price_smoke_pro -e STRIPE_PRICE_CLINIC=price_smoke_clinic \
+            petnalia-api:ci
+          timeout 60 bash -c 'until curl -sf http://localhost:4000/v1/health; do sleep 2; done'
+          echo
+          curl -sf "http://localhost:4000/v1/veterinarians/specialties" > /dev/null
+          # Production logs must be JSON, one object per line.
+          docker logs api 2>&1 | head -n 5 | while read -r line; do echo "$line" | jq -e .level > /dev/null; done
+
+      - name: Subir web (produção)
+        run: |
+          docker run -d --name web --network host \
+            -e APP_URL=https://petnalia.test \
+            -e API_URL=http://localhost:4000 \
+            -e API_INTERNAL_URL=http://localhost:4000 \
+            -e JWT_ACCESS_SECRET=smoke-test-access-secret-not-for-production \
+            petnalia-web:ci
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/robots.txt > /dev/null; do sleep 2; done'
+          curl -sf http://localhost:3000/termos > /dev/null
+          curl -sI http://localhost:3000/termos | grep -i '^x-frame-options: DENY'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/rota-inexistente)" = 404
+
+      - name: Logs dos containers
+        if: failure()
+        run: |
+          echo "::group::api"; docker logs api 2>&1 | tail -n 100 || true; echo "::endgroup::"
+          echo "::group::web"; docker logs web 2>&1 | tail -n 100 || true; echo "::endgroup::"

@@ -1,10 +1,11 @@
-import Link from 'next/link';
 import type { Metadata } from 'next';
-import { Button } from '@petnalia/ui';
-import type { PetSitterBooking } from '@petnalia/types';
+import Link from 'next/link';
 
-import { getToken } from '@/lib/auth';
+import type { PetSitterBooking } from '@petnalia/types';
+import { Button } from '@petnalia/ui';
+
 import { PetSitterBookingsList } from '@/components/dashboard/pet-sitter-bookings-list';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Minhas reservas com pet sitter' };
 
@@ -40,7 +41,6 @@ export default async function TutorReservasPage() {
 
       <PetSitterBookingsList
         initialBookings={bookings}
-        token={token ?? ''}
         role="tutor"
         emptyMessage="Você ainda não tem reservas com pet sitters."
         emptyAction={

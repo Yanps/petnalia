@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
+
 import type { CreatePetSitterBookingInput, PetSitterBooking } from '@petnalia/types';
 
-import { RedisService } from '../../shared/redis/redis.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
-import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import { PetSitterAvailabilityService } from '../pet-sitter-availability/pet-sitter-availability.service';
 import {
   InvalidPetSitterHoldTokenError,
   PetSitterBookingAddressRequiredError,
@@ -14,9 +10,21 @@ import {
   PetSitterBookingTransitionError,
 } from './pet-sitter-bookings.errors';
 import { PetSitterBookingsRepository } from './pet-sitter-bookings.repository';
+import { RedisService } from '../../shared/redis/redis.service';
+import { AddressesService } from '../addresses/addresses.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import {
+  PetSitterAvailabilityService,
+  PetSitterSlotNotFoundError,
+} from '../pet-sitter-availability/pet-sitter-availability.service';
+import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
+import { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
+import { PetsService } from '../pets/pets.service';
+
 
 const IDEM_TTL_SECONDS = 86400;
-const IDEM_KEY = (key: string) => `idem:pet-sitter-booking:${key}`;
+// Scoped per tutor: a key replayed by another user must never return someone else's booking.
+const IDEM_KEY = (tutorId: string, key: string) => `idem:pet-sitter-booking:${tutorId}:${key}`;
 
 // Only services that bring the sitter to the tutor require an address —
 // "hospedagem"/"day_care" have the pet go to the sitter instead.
@@ -58,6 +66,8 @@ export class PetSitterBookingsService {
     private readonly bookingsRepository: PetSitterBookingsRepository,
     private readonly availabilityService: PetSitterAvailabilityService,
     private readonly petSittersRepository: PetSittersRepository,
+    private readonly petsService: PetsService,
+    private readonly addressesService: AddressesService,
     private readonly redis: RedisService,
     private readonly notifications: NotificationsService,
   ) {}
@@ -68,7 +78,7 @@ export class PetSitterBookingsService {
     idempotencyKey?: string,
   ): Promise<PetSitterBooking> {
     if (idempotencyKey) {
-      const cached = await this.redis.get(IDEM_KEY(idempotencyKey));
+      const cached = await this.redis.get(IDEM_KEY(tutorId, idempotencyKey));
       if (cached) return JSON.parse(cached) as PetSitterBooking;
     }
 
@@ -76,11 +86,17 @@ export class PetSitterBookingsService {
       throw new PetSitterBookingAddressRequiredError();
     }
 
-    const valid = await this.availabilityService.verifyHoldToken(dto.slotId, dto.holdToken);
-    if (!valid) throw new InvalidPetSitterHoldTokenError();
+    await this.petsService.assertOwnedBy(dto.petId, tutorId);
+    if (dto.addressId) await this.addressesService.assertOwnedBy(dto.addressId, tutorId);
 
     const prisma = this.bookingsRepository.getPrisma();
     const repo = this.availabilityService.getRepository();
+
+    const slot = await repo.findSlotById(dto.slotId);
+    if (!slot || slot.petSitterId !== dto.petSitterId) throw new PetSitterSlotNotFoundError();
+
+    const valid = await this.availabilityService.verifyHoldToken(dto.slotId, dto.holdToken);
+    if (!valid) throw new InvalidPetSitterHoldTokenError();
 
     const booking = await prisma.$transaction(async (tx) => {
       const booked = await repo.bookSlot(dto.slotId, tx);
@@ -102,11 +118,10 @@ export class PetSitterBookingsService {
 
     await this.redis.del(`pet-sitter-slot:hold:${dto.slotId}`);
 
-    const slot = await repo.findSlotById(dto.slotId);
-    const result = toPetSitterBooking({ ...booking, slot: { startsAt: slot!.startsAt } });
+    const result = toPetSitterBooking({ ...booking, slot: { startsAt: slot.startsAt } });
 
     if (idempotencyKey) {
-      await this.redis.set(IDEM_KEY(idempotencyKey), JSON.stringify(result), 'EX', IDEM_TTL_SECONDS);
+      await this.redis.set(IDEM_KEY(tutorId, idempotencyKey), JSON.stringify(result), 'EX', IDEM_TTL_SECONDS);
     }
 
     void this.notifyBookingRequested(booking.id);

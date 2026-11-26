@@ -115,8 +115,15 @@ cp .env.example .env
 
 ```bash
 docker compose up -d
-# PostgreSQL :5432 · Redis :6379 · MinIO :9000/:9001 · Mailhog :8025
+# PostgreSQL :5433 · Redis :6379 · MinIO :9000/:9001 · Mailhog :8025
 ```
+
+> **Já tinha o volume do MinIO antes de novembro/2026?** A imagem `minio/minio` saiu do Docker Hub e o compose passou a usar `bitnamilegacy/minio`, que roda como uid 1001. O volume antigo pertence ao root e o MinIO para com `Permission denied`. Para manter os arquivos, ajuste o dono uma vez:
+>
+> ```bash
+> docker run --rm -v petnalia_minio_data:/d alpine chown -R 1001:1001 /d
+> docker compose up -d minio
+> ```
 
 ### 4. Execute as migrations e o seed
 
@@ -131,7 +138,6 @@ pnpm --filter @petnalia/api prisma:seed
 pnpm dev
 # API  → http://localhost:4000
 # Web  → http://localhost:3000
-# Docs → http://localhost:4000/api (Swagger)
 ```
 
 ---
@@ -147,7 +153,9 @@ Execute a partir da raiz do monorepo via Turborepo:
 | `pnpm typecheck` | Verifica tipos TypeScript em todo o monorepo |
 | `pnpm lint` | Lint ESLint em todo o monorepo |
 | `pnpm test` | Roda todos os testes (Vitest) |
-| `pnpm test:coverage` | Testes com relatório de cobertura |
+| `pnpm test:coverage` | Cobertura — ainda não configurada (falta `@vitest/coverage-v8`; ver ADR-0004) |
+| `pnpm --filter @petnalia/api test:integration` | Testes de integração da API (Testcontainers; requer Docker) |
+| `pnpm --filter @petnalia/web test:e2e` | Suíte Playwright contra o stack local (suba a API com `RATE_LIMIT_AUTH_PER_MINUTE=1000`; ver ADR-0007) |
 | `pnpm format` | Formata todo o código com Prettier |
 | `pnpm clean` | Remove todos os artefatos de build |
 
@@ -197,6 +205,29 @@ Valores monetários são sempre armazenados em **centavos** (inteiro). Todos os 
 
 ---
 
+## Imagens Docker (produção)
+
+Os Dockerfiles não dependem de provedor. Rode os builds a partir da raiz do repositório:
+
+```bash
+# API, e o job de migrations (rodar antes de cada deploy da API, com DATABASE_URL e DIRECT_URL)
+docker build -f apps/api/Dockerfile -t petnalia-api .
+docker build -f apps/api/Dockerfile --target migrate -t petnalia-api-migrate .
+
+# Web: as variáveis NEXT_PUBLIC_* entram no bundle no momento do build
+docker build -f apps/web/Dockerfile \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.seu-dominio.com.br \
+  --build-arg NEXT_PUBLIC_SENTRY_DSN=... \
+  -t petnalia-web .
+```
+
+- **Configuração em runtime.** Todo o resto vem das variáveis de ambiente do container. Os dois apps validam a configuração ao subir e recusam valores de exemplo em produção (veja [`.env.example`](.env.example)). Nenhum `.env` entra na imagem.
+- **Health checks.** A API responde em `GET /v1/health`; no web, use `/robots.txt`.
+- **Logs.** A API escreve JSON em produção, com `requestId` (o mesmo valor do header `X-Request-Id`).
+- **Verificação.** O workflow [`docker.yml`](.github/workflows/docker.yml) builda as imagens e sobe tudo em modo produção a cada PR.
+
+---
+
 ## Arquitetura
 
 O projeto segue **Clean Architecture + Vertical Slice + DDD Lite**:
@@ -221,4 +252,4 @@ Para detalhes completos: [`docs/architecture/ARCHITECTURE.md`](docs/architecture
 | [`docs/architecture/TESTING_GUIDE.md`](docs/architecture/TESTING_GUIDE.md) | Estratégia de testes e quality gates |
 | [`docs/architecture/adr/`](docs/architecture/adr/) | Architecture Decision Records |
 | [`docs/design-system/`](docs/design-system/) | Tokens, componentes, guidelines de UX |
-| `http://localhost:4000/api` | Swagger UI (API em execução) |
+| [`docs/specs/`](docs/specs/) | Especificações de features (criadas com a skill `create-spec`) |

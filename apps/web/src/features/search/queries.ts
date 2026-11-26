@@ -1,6 +1,9 @@
 import { queryOptions } from '@tanstack/react-query';
+
 import { api } from '@/lib/api-client';
+
 import type { SearchParams } from './schema';
+
 
 // TODO: import response type from @petnalia/types when search contract is defined
 export interface VetSearchResult {

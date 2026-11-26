@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+
 import type { PendingVetItem } from '@petnalia/types';
-import { getToken } from '@/lib/auth';
+
 import { PendingVetsList } from '@/components/admin/pending-vets-list';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Verificação de CRMV' };
 
@@ -39,7 +41,7 @@ export default async function VerificacaoPage() {
         </p>
       </div>
 
-      <PendingVetsList initialVets={vets} token={token ?? ''} />
+      <PendingVetsList initialVets={vets} />
     </main>
   );
 }

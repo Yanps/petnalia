@@ -16,11 +16,17 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
 
-      // Import order
+      // Import order (CLAUDE.md): external → workspace (@petnalia/*) → internal (@/*) → relative
       'import-x/order': [
         'error',
         {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
+          pathGroups: [
+            { pattern: '@petnalia/**', group: 'external', position: 'after' },
+            { pattern: '@/**', group: 'internal' },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          distinctGroup: true,
           'newlines-between': 'always',
           alphabetize: { order: 'asc' },
         },

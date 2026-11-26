@@ -13,12 +13,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
+
 import { UpdateVetProfileInputSchema, VetSearchQuerySchema } from '@petnalia/types';
 
+import { VeterinariansService } from './veterinarians.service';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
 import { Roles } from '../../shared/decorators/roles.decorator';
-import { VeterinariansService } from './veterinarians.service';
+
 
 @Controller('veterinarians')
 export class VeterinariansController {

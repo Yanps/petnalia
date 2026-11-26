@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
-import { getSession, getToken } from '@/lib/auth';
+
 import { VetShell } from '@/components/dashboard/vet-shell';
+import { getSession, getToken } from '@/lib/auth';
 
 const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+
 import { PetSitterShell } from '@/components/dashboard/pet-sitter-shell';
+import { getSession } from '@/lib/auth';
 
 export default async function PetSitterLayout({
   children,

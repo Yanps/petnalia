@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { Profile, User } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { UpdateProfileInput } from '@petnalia/types';
 
 import { UserNotFoundError } from './users.errors';
-import { UsersRepository } from './users.repository';
+import type { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
 
 const USER_ID = 'user-uuid-1';

@@ -1,6 +1,37 @@
+import path from 'node:path';
+
 import type { NextConfig } from 'next';
 
+import { securityHeaders } from './src/lib/security-headers';
+
+const isDev = process.env.NODE_ENV !== 'production';
+
 const nextConfig: NextConfig = {
+  // Self-contained server for the Docker image (apps/web/Dockerfile). Traced from the
+  // monorepo root so workspace packages are included.
+  ...(process.env.NEXT_OUTPUT_STANDALONE === 'true' && {
+    output: 'standalone' as const,
+    outputFileTracingRoot: path.join(__dirname, '../..'),
+  }),
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  compiler: {
+    // Keep error/warn: they are how boundaries and libraries surface real problems.
+    removeConsole: isDev ? false : { exclude: ['error', 'warn'] },
+  },
+  headers: () =>
+    Promise.resolve([
+      {
+        source: '/:path*',
+        headers: [
+          ...securityHeaders({
+            isDev,
+            publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+            sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+          }),
+        ],
+      },
+    ]),
   transpilePackages: [
     '@petnalia/ui',
     '@petnalia/types',
@@ -13,7 +44,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.amazonaws.com' },
     ],
   },
-  webpack: (config) => {
+  webpack: (config: { resolve: { extensionAlias?: Record<string, string[]> } }) => {
     // @petnalia/types re-exports its modules with explicit `.js` extensions
     // (required for NodeNext ESM output), but webpack resolves those specifiers
     // against the `.ts` source when bundling the workspace package directly.

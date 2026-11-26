@@ -1,7 +1,8 @@
 import { Controller, Get, Query } from '@nestjs/common';
 
-import { Public } from '../../shared/decorators/public.decorator';
 import { GeocoderService } from './geocoder.service';
+import { Public } from '../../shared/decorators/public.decorator';
+
 
 @Controller('geo')
 export class GeoController {

@@ -1,7 +1,7 @@
 import type { Appointment } from '@petnalia/types';
 
-import { getToken } from '@/lib/auth';
 import { AppointmentsList } from '@/components/dashboard/appointments-list';
+import { getToken } from '@/lib/auth';
 
 const API = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 
@@ -35,7 +35,6 @@ export default async function VetConsultasPage() {
 
       <AppointmentsList
         initialAppointments={appointments}
-        token={token ?? ''}
         role="veterinarian"
         emptyMessage="Nenhuma consulta agendada ainda."
       />

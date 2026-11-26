@@ -1,13 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Icon } from '@petnalia/ui';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import { Button, Icon } from '@petnalia/ui';
 
 interface PetSitterReviewModalProps {
   bookingId: string;
-  token: string;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -75,7 +73,7 @@ const RATING_LABEL: Record<number, string> = {
   5: 'Excelente',
 };
 
-export function PetSitterReviewModal({ bookingId, token, onSuccess, onClose }: PetSitterReviewModalProps) {
+export function PetSitterReviewModal({ bookingId, onSuccess, onClose }: PetSitterReviewModalProps) {
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -91,11 +89,10 @@ export function PetSitterReviewModal({ bookingId, token, onSuccess, onClose }: P
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/v1/pet-sitter-reviews`, {
+      const res = await fetch(`/api/v1/pet-sitter-reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           bookingId,
@@ -193,7 +190,7 @@ export function PetSitterReviewModal({ bookingId, token, onSuccess, onClose }: P
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
                 <label style={{
                   display: 'block', fontSize: '0.875rem', fontWeight: 600,

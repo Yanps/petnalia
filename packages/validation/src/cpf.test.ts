@@ -50,7 +50,7 @@ describe('zCpf', () => {
     const result = schema.safeParse('000.000.000-00');
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.errors[0]?.message).toBe('CPF inválido');
+      expect(result.error.issues[0]?.message).toBe('CPF inválido');
     }
   });
 });

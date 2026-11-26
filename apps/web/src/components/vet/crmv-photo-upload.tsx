@@ -1,19 +1,18 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Button, Icon } from '@petnalia/ui';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import { Button, Icon } from '@petnalia/ui';
 
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const MAX_MB = 5;
 
 interface Props {
-  token: string;
-  onSuccess: () => void;
+  /** Optional: Server Components cannot pass functions to Client Components. */
+  readonly onSuccess?: () => void;
 }
 
-export function CrmvPhotoUpload({ token, onSuccess }: Props) {
+export function CrmvPhotoUpload({ onSuccess }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +35,8 @@ export function CrmvPhotoUpload({ token, onSuccess }: Props) {
 
     setUploading(true);
     try {
-      const res = await fetch(`${API}/v1/veterinarians/crmv-photo`, {
+      const res = await fetch(`/api/v1/veterinarians/crmv-photo`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         body: form,
       });
 
@@ -48,7 +46,7 @@ export function CrmvPhotoUpload({ token, onSuccess }: Props) {
       }
 
       setUploaded(true);
-      onSuccess();
+      onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro inesperado. Tente novamente.');
     } finally {

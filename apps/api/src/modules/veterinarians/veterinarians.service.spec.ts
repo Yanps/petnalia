@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import type { VetSearchQuery } from '@petnalia/types';
 
-import type { StoragePort } from '../../shared/storage/storage.port';
+
+import type { VeterinariansRepository } from './veterinarians.repository';
 import { VeterinariansService } from './veterinarians.service';
-import { VeterinariansRepository } from './veterinarians.repository';
+import type { StoragePort } from '../../shared/storage/storage.port';
 
 // Raw row shape returned by the PostGIS query
 function makeRawRow(overrides: Record<string, unknown> = {}) {
@@ -149,6 +151,8 @@ describe('VeterinariansService.getOwnProfile', () => {
       base_city: 'São Paulo',
       base_state: 'SP',
       has_crmv_photo: false,
+      home_price_cents: 18000,
+      online_price_cents: null,
       specialties: [],
       ...overrides,
     };
@@ -179,6 +183,54 @@ describe('VeterinariansService.getOwnProfile', () => {
 
     expect(result.baseCity).toBe('');
     expect(result.baseState).toBe('');
+  });
+
+  it('retorna os preços por modalidade, com null para "a combinar"', async () => {
+    const repo = makeOwnProfileRepo(makeOwnProfileRow());
+    const service = new VeterinariansService(repo, mockStorage);
+
+    const result = await service.getOwnProfile(USER_ID);
+
+    expect(result.homePriceCents).toBe(18000);
+    expect(result.onlinePriceCents).toBeNull();
+  });
+});
+
+describe('VeterinariansService.getProfile', () => {
+  const SLUG = 'dra-ana-beatriz-aaaaaaaa';
+
+  function makeProfileRow(overrides: Record<string, unknown> = {}) {
+    return {
+      vet_id: 'aaaaaaaa-0000-0000-0000-000000000001',
+      full_name: 'Dra. Ana Beatriz',
+      avatar_url: null,
+      bio: null,
+      crmv: '12345',
+      crmv_state: 'SP',
+      verification_status: 'verified',
+      tier: 'free',
+      service_radius_km: 15,
+      base_city: 'São Paulo',
+      base_state: 'SP',
+      average_rating: 4.5,
+      total_reviews: 2,
+      home_price_cents: null,
+      online_price_cents: 9000,
+      specialties: [],
+      ...overrides,
+    };
+  }
+
+  it('expõe os preços por modalidade no perfil público', async () => {
+    const repo = {
+      findProfileBySlug: vi.fn().mockResolvedValue(makeProfileRow()),
+    } as unknown as VeterinariansRepository;
+    const service = new VeterinariansService(repo, mockStorage);
+
+    const result = await service.getProfile(SLUG);
+
+    expect(result.homePriceCents).toBeNull();
+    expect(result.onlinePriceCents).toBe(9000);
   });
 });
 

@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import type { ReviewedPetSitterItem } from '@petnalia/types';
-import { getToken } from '@/lib/auth';
+
 import { ReviewedPetSittersList } from '@/components/admin/reviewed-pet-sitters-list';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Histórico de moderação — Admin' };
 

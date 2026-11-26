@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+
 import { TutorShell } from '@/components/dashboard/tutor-shell';
+import { getSession } from '@/lib/auth';
 
 export default async function TutorLayout({
   children,

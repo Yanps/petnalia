@@ -8,19 +8,24 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "require": "./dist/index.js",
+      "import": "./src/index.ts",
       "default": "./src/index.ts"
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "build": "tsc --project tsconfig.build.json && echo '{\"type\":\"commonjs\"}' > dist/package.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "zod": "^3.25.51",
-    "@petnalia/types": "workspace:*"
+    "@petnalia/types": "workspace:*",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@petnalia/tsconfig": "workspace:*",
     "@types/node": "^22.15.29",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.6"
   }
 }

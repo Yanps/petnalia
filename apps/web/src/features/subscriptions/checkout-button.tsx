@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+
 import { Button } from '@petnalia/ui';
+
 import { createCheckoutSession } from './actions';
 
 interface CheckoutButtonProps {
@@ -35,7 +37,7 @@ export function CheckoutButton({ plan, variant, label }: CheckoutButtonProps) {
         variant={variant}
         size="md"
         block
-        onClick={handleClick}
+        onClick={() => void handleClick()}
         disabled={loading}
       >
         {loading ? 'Aguarde...' : label}

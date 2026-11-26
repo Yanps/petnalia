@@ -1,8 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-const BASE = 'http://localhost:3000';
-
-async function doLogin(page: import('@playwright/test').Page, email: string, password: string) {
+async function doLogin(page: Page, email: string, password: string) {
   await page.goto('/entrar', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
   await page.fill('input[name="email"]', email);

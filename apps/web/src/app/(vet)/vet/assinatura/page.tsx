@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+
 import { Icon } from '@petnalia/ui';
-import { getToken } from '@/lib/auth';
-import { CheckoutButton } from '@/features/subscriptions/checkout-button';
+
 import { CancelButton } from '@/features/subscriptions/cancel-button';
+import { CheckoutButton } from '@/features/subscriptions/checkout-button';
+import { getToken } from '@/lib/auth';
 
 export const metadata: Metadata = { title: 'Assinatura — PetNalia' };
 

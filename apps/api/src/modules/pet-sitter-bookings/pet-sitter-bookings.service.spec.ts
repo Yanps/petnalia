@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RedisService } from '../../shared/redis/redis.service';
-import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
-import type { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
-import type { PetSitterAvailabilityService } from '../pet-sitter-availability/pet-sitter-availability.service';
 import {
   InvalidPetSitterHoldTokenError,
   PetSitterBookingAddressRequiredError,
@@ -11,12 +7,25 @@ import {
   PetSitterBookingNotFoundError,
   PetSitterBookingTransitionError,
 } from './pet-sitter-bookings.errors';
-import { PetSitterBookingsRepository } from './pet-sitter-bookings.repository';
+import type { PetSitterBookingsRepository } from './pet-sitter-bookings.repository';
 import { PetSitterBookingsService } from './pet-sitter-bookings.service';
+import type { RedisService } from '../../shared/redis/redis.service';
+import { AddressNotFoundError, type AddressesService } from '../addresses/addresses.service';
+import {
+  PetSitterSlotNotFoundError,
+  type PetSitterAvailabilityService,
+} from '../pet-sitter-availability/pet-sitter-availability.service';
+import { PetSitterNotFoundError } from '../pet-sitters/pet-sitters.errors';
+import type { PetSittersRepository } from '../pet-sitters/pet-sitters.repository';
+import { PetNotFoundError } from '../pets/pets.errors';
+import type { PetsService } from '../pets/pets.service';
+
 
 const TUTOR_ID = 'aaaaaaaa-0000-0000-0000-000000000000';
+const OTHER_TUTOR_ID = 'aaaaaaaa-1111-0000-0000-000000000000';
 const SITTER_USER_ID = 'bbbbbbbb-0000-0000-0000-000000000000';
 const SITTER_ID = 'ffffffff-0000-0000-0000-000000000000';
+const OTHER_SITTER_ID = 'ffffffff-1111-0000-0000-000000000000';
 const SLOT_ID = 'cccccccc-0000-0000-0000-000000000000';
 const BOOKING_ID = 'dddddddd-0000-0000-0000-000000000000';
 
@@ -59,7 +68,11 @@ function makeAvailabilityService(overrides: Partial<PetSitterAvailabilityService
     releaseHold: vi.fn().mockResolvedValue(undefined),
     getRepository: vi.fn().mockReturnValue({
       bookSlot: vi.fn().mockResolvedValue(true),
-      findSlotById: vi.fn().mockResolvedValue({ startsAt: new Date('2026-01-05T09:00:00Z') }),
+      findSlotById: vi.fn().mockResolvedValue({
+        id: SLOT_ID,
+        petSitterId: SITTER_ID,
+        startsAt: new Date('2026-01-05T09:00:00Z'),
+      }),
     }),
     ...overrides,
   } as unknown as PetSitterAvailabilityService;
@@ -85,14 +98,47 @@ function makeNotifications() {
   return { enqueueEmail: vi.fn().mockResolvedValue(undefined) } as never;
 }
 
+function makePetsService(overrides: Partial<PetsService> = {}) {
+  return {
+    assertOwnedBy: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as PetsService;
+}
+
+function makeAddressesService(overrides: Partial<AddressesService> = {}) {
+  return {
+    assertOwnedBy: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as AddressesService;
+}
+
 function makeService(
   repo = makeRepo(),
   avail = makeAvailabilityService(),
   petSittersRepo = makePetSittersRepo(),
   redis = makeRedis(),
+  pets = makePetsService(),
+  addresses = makeAddressesService(),
 ) {
-  return new PetSitterBookingsService(repo, avail, petSittersRepo, redis, makeNotifications());
+  return new PetSitterBookingsService(
+    repo,
+    avail,
+    petSittersRepo,
+    pets,
+    addresses,
+    redis,
+    makeNotifications(),
+  );
 }
+
+const bookInput = {
+  petSitterId: SITTER_ID,
+  petId: 'pet-1',
+  addressId: 'addr-1',
+  slotId: SLOT_ID,
+  holdToken: 'valid-token',
+  service: 'passeio' as const,
+};
 
 describe('PetSitterBookingsService', () => {
   describe('bookSitterService', () => {
@@ -150,6 +196,71 @@ describe('PetSitterBookingsService', () => {
       expect(result.id).toBe(BOOKING_ID);
     });
 
+    it('rejects a pet that does not belong to the tutor', async () => {
+      const repo = makeRepo();
+      const pets = makePetsService({
+        assertOwnedBy: vi.fn().mockRejectedValue(new PetNotFoundError()),
+      });
+      const svc = makeService(repo, makeAvailabilityService(), makePetSittersRepo(), makeRedis(), pets);
+
+      await expect(svc.bookSitterService(TUTOR_ID, bookInput)).rejects.toThrow(PetNotFoundError);
+      expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('rejects an address that does not belong to the tutor', async () => {
+      const repo = makeRepo();
+      const addresses = makeAddressesService({
+        assertOwnedBy: vi.fn().mockRejectedValue(new AddressNotFoundError()),
+      });
+      const svc = makeService(
+        repo,
+        makeAvailabilityService(),
+        makePetSittersRepo(),
+        makeRedis(),
+        makePetsService(),
+        addresses,
+      );
+
+      await expect(svc.bookSitterService(TUTOR_ID, bookInput)).rejects.toThrow(AddressNotFoundError);
+      expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('does not check address ownership when no address is given', async () => {
+      const addresses = makeAddressesService();
+      const svc = makeService(
+        makeRepo(),
+        makeAvailabilityService(),
+        makePetSittersRepo(),
+        makeRedis(),
+        makePetsService(),
+        addresses,
+      );
+      const { addressId: _omit, ...withoutAddress } = bookInput;
+
+      await svc.bookSitterService(TUTOR_ID, { ...withoutAddress, service: 'hospedagem' });
+      expect(addresses.assertOwnedBy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a slot that belongs to a different pet sitter', async () => {
+      const repo = makeRepo();
+      const avail = makeAvailabilityService({
+        getRepository: vi.fn().mockReturnValue({
+          bookSlot: vi.fn().mockResolvedValue(true),
+          findSlotById: vi.fn().mockResolvedValue({
+            id: SLOT_ID,
+            petSitterId: OTHER_SITTER_ID,
+            startsAt: new Date('2026-01-05T09:00:00Z'),
+          }),
+        }),
+      });
+      const svc = makeService(repo, avail);
+
+      await expect(svc.bookSitterService(TUTOR_ID, bookInput)).rejects.toThrow(
+        PetSitterSlotNotFoundError,
+      );
+      expect(repo.book).not.toHaveBeenCalled();
+    });
+
     it('returns cached result when idempotency key already exists', async () => {
       const cached = JSON.stringify({ id: BOOKING_ID, status: 'requested' });
       const redis = makeRedis({ get: vi.fn().mockResolvedValue(cached) });
@@ -170,6 +281,24 @@ describe('PetSitterBookingsService', () => {
       );
       expect(result.id).toBe(BOOKING_ID);
       expect(repo.book).not.toHaveBeenCalled();
+    });
+
+    it('scopes the idempotency key to the tutor, so another tutor never gets a cached booking', async () => {
+      const store = new Map<string, string>();
+      const redis = makeRedis({
+        get: vi.fn((key: string) => Promise.resolve(store.get(key) ?? null)),
+        set: vi.fn((key: string, value: string) => {
+          store.set(key, value);
+          return Promise.resolve('OK' as const);
+        }),
+      });
+      const repo = makeRepo();
+      const svc = makeService(repo, makeAvailabilityService(), makePetSittersRepo(), redis);
+
+      await svc.bookSitterService(TUTOR_ID, bookInput, 'shared-key');
+      await svc.bookSitterService(OTHER_TUTOR_ID, bookInput, 'shared-key');
+
+      expect(repo.book).toHaveBeenCalledTimes(2);
     });
   });
 

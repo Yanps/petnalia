@@ -25,6 +25,24 @@ export default function Loading() {
           </div>
 
           <div>
+            <Skeleton width={170} height={14} style={{ marginBottom: 8 }} />
+            <Skeleton width="100%" height={44} radius="var(--radius-md)" />
+          </div>
+
+          <div>
+            <Skeleton width={130} height={14} style={{ marginBottom: 8 }} />
+            <Skeleton width={300} height={13} style={{ marginBottom: 12 }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} style={{ flex: '1 1 220px' }}>
+                  <Skeleton width={130} height={14} style={{ marginBottom: 8 }} />
+                  <Skeleton width="100%" height={44} radius="var(--radius-md)" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <Skeleton width={120} height={14} style={{ marginBottom: 10 }} />
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Skeleton width={100} height={30} radius="var(--radius-full)" />

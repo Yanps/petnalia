@@ -2,10 +2,11 @@ import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { PrismaModule } from '../../shared/prisma/prisma.module';
-import { PrismaService } from '../../shared/prisma/prisma.service';
 import { NotificationsRepository } from './notifications.repository';
 import { setupTestDatabase, type TestDatabase } from '../../../test/helpers/database';
+import { PrismaModule } from '../../shared/prisma/prisma.module';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+
 
 describe('NotificationsRepository (integração)', () => {
   let db: TestDatabase;

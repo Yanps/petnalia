@@ -1,9 +1,12 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { User } from '@prisma/client';
+
 import { CreateAddressInputSchema } from '@petnalia/types';
 
-import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { AddressesService } from './addresses.service';
+import { CurrentUser } from '../../shared/decorators/current-user.decorator';
+import { UuidParamPipe } from '../../shared/pipes/uuid-param.pipe';
+
 
 @Controller('addresses')
 export class AddressesController {
@@ -22,7 +25,7 @@ export class AddressesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@CurrentUser() user: User, @Param('id') id: string) {
+  remove(@CurrentUser() user: User, @Param('id', UuidParamPipe) id: string) {
     return this.addressesService.deleteAddress(id, user.id);
   }
 }

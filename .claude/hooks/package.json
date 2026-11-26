@@ -1,0 +1,9 @@
+{
+  "name": "petnalia-claude-hooks",
+  "private": true,
+  "type": "commonjs",
+  "description": "Forces CommonJS for the Claude Code hooks: if the root package.json ever becomes type:module, these require()-based .js hooks would fail to load and silently stop guarding.",
+  "scripts": {
+    "test": "node --test hooks.test.js"
+  }
+}

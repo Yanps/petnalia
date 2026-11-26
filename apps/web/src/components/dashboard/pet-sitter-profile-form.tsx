@@ -1,18 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+
 import type { PetSitterOwnProfileResponse, PetSitterService } from '@petnalia/types';
 import { PET_SITTER_SERVICE_LABELS, PetSitterServiceSchema } from '@petnalia/types';
 import { Button, Icon } from '@petnalia/ui';
 
 interface PetSitterProfileFormProps {
   readonly profile: PetSitterOwnProfileResponse;
-  readonly token: string;
 }
 
 type SaveState = 'idle' | 'saving' | 'success' | 'error';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 const ALL_SERVICES = PetSitterServiceSchema.options;
 
@@ -22,7 +20,7 @@ const BRAZIL_STATES = [
   'RS','RO','RR','SC','SP','SE','TO',
 ];
 
-export function PetSitterProfileForm({ profile, token }: PetSitterProfileFormProps) {
+export function PetSitterProfileForm({ profile }: PetSitterProfileFormProps) {
   const [bio, setBio] = useState(profile.bio ?? '');
   const [services, setServices] = useState<Set<PetSitterService>>(new Set(profile.services));
   const [baseCity, setBaseCity] = useState(profile.baseCity ?? '');
@@ -42,11 +40,10 @@ export function PetSitterProfileForm({ profile, token }: PetSitterProfileFormPro
     e.preventDefault();
     setSaveState('saving');
     try {
-      const res = await fetch(`${API_BASE}/v1/pet-sitters/me`, {
+      const res = await fetch(`/api/v1/pet-sitters/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           bio: bio || undefined,
@@ -87,7 +84,7 @@ export function PetSitterProfileForm({ profile, token }: PetSitterProfileFormPro
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <form onSubmit={(e) => void handleSubmit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <label style={labelStyle}>
                 Bio

@@ -3,14 +3,36 @@
 > **Veterinário a domicílio, cuidado que chega até você.**
 > A veterinary marketplace (Doctoralia for home vet care) connecting pet owners (*tutores*) with veterinarians for home visits and telemedicine.
 
-**Status:** Architecture proposal — scaffolding plan only, no implementation.
+**Status:** Target architecture. Much of it is implemented; see **§ Current state vs. target** right below for what is real today and what is still aspirational.
 **Author role:** Principal Software Architect / Staff Engineer.
-**Last updated:** 2026-06-16.
+**Last updated:** 2026-10-14 (current-state section); target sections 2026-06-16.
 
 > **Confirmed decisions (2026-06-16):**
 > 1. **API contract** — `@petnalia/types` Zod schemas consumed by a hand-rolled **typed fetch client** (no ts-rest / OpenAPI codegen).
 > 2. **Mutations** — primarily **Server Actions calling the NestJS API server-side** (progressive enhancement + revalidation; business logic stays in the API).
 > 3. **Initial scaffold depth** — **compiling skeleton**: every folder/config/module created and type-checking, with stubbed implementations + TODOs.
+
+---
+
+## Current state vs. target (2026-10-14)
+
+This document describes the **target**. Where the code differs, the code is the truth and this table says so — read it before relying on a section below.
+
+| Area | Target (sections below) | Today |
+|---|---|---|
+| Web runtime | Next.js 16 | **Next.js 15.5** (React 19) |
+| API module layout (§1.2) | `dto/`, `events/` per module; `src/jobs/`, `src/config/` | Flat `controller / service / repository / errors / spec` in all 15 modules; email processor lives in `notifications`. Layering decision pending in **ADR-0008** (proposed). |
+| Ports / hexagonal | Services depend on injected ports | Ports only for storage and mailer; Stripe SDK instantiated in `SubscriptionsService` (ADR-0008) |
+| Browser → API auth (§5) | Route Handler bridge over httpOnly cookie | **Implemented** — same-origin proxy `app/api/v1/[...path]` (**ADR-0006**) |
+| Rate limiting | Auth, search, write endpoints | **Implemented** — `@nestjs/throttler`, per user/IP, in-memory storage (**ADR-0007**) |
+| Idempotency | `Idempotency-Key` on booking, payments, subscriptions | Booking (vet + pet sitter), scoped per tutor; Stripe webhook deduplicated by event id. Checkout session not yet. |
+| Domain events (§6) | `AppointmentBooked`, `SubscriptionActivated`, … over BullMQ | Not implemented — services enqueue emails directly; only the `email` queue has a processor |
+| OpenAPI | Generated docs | Not implemented (`@nestjs/swagger` installed, not wired) |
+| Observability | Structured logs, correlation IDs, OpenTelemetry, Sentry | Plain-string logs; none of the rest yet |
+| Env validation | `@petnalia/config` env schema, fail fast | Not wired; API reads `process.env` with defaults (ADR-0001 note) |
+| Feature flags | `@petnalia/config` | Module exists, not used by any app |
+| i18n | Copy externalizable | pt-BR strings hard-coded in components |
+| `apps/mobile` | Placeholder | Does not exist |
 
 ---
 
@@ -39,7 +61,7 @@ Turborepo + pnpm workspaces. Build orchestration and remote caching via Turbo; d
 ```
 petnalia/
 ├── apps/
-│   ├── web/                      # Next.js 16 (App Router) — the marketplace front end
+│   ├── web/                      # Next.js 15 (App Router) — the marketplace front end
 │   ├── api/                      # NestJS — REST API, auth, jobs
 │   └── mobile/                   # (future) Expo / React Native — scaffold placeholder only
 │
@@ -74,7 +96,7 @@ petnalia/
 └── README.md
 ```
 
-### 1.1 `apps/web` — Next.js 16
+### 1.1 `apps/web` — Next.js 15
 
 ```
 apps/web/
@@ -188,7 +210,7 @@ apps/api/
 └── tsconfig.json
 ```
 
-Each module follows a consistent internal layout:
+Each module follows a consistent internal layout (**target** — today modules have no `dto/` or `events/`; see Current state and ADR-0008):
 
 ```
 modules/<domain>/
@@ -358,7 +380,8 @@ Appointment 1───1 Review               (post-visit)
 
 - **Strategy:** stateless JWT **access token** (short TTL ~15 min) + **refresh token** (long TTL ~30 days) with **rotation**.
 - **Refresh-token rotation + reuse detection:** each refresh issues a new token and invalidates the prior; tokens stored **hashed** (Redis primary, DB fallback for audit), keyed per-device/session. A presented-but-already-rotated token ⇒ session family revoked (theft signal).
-- **Transport:** web stores tokens in **httpOnly, Secure, SameSite=Lax cookies** (set via a Next.js Route Handler bridge so RSC fetches are authenticated). Mobile (future) uses secure storage + Authorization header.
+- **Transport:** web stores tokens in **httpOnly, Secure, SameSite=Lax cookies** (set by the login Server Action). Server Components/Actions read the cookie server-side; Client Components call the API through the same-origin proxy `app/api/v1/[...path]`, which attaches the token — the JWT never reaches the browser (**ADR-0006**). Mobile (future) uses secure storage + Authorization header.
+- **Rate limiting:** global throttler guard, per user when authenticated and per client IP otherwise; stricter limits on `/v1/auth/*` and booking writes (**ADR-0007**).
 - **Roles:** `tutor | veterinarian | admin`. Enforced at two layers:
   - **API:** `JwtAuthGuard` + `RolesGuard` (`@Roles('admin')`) + resource-ownership checks in services.
   - **Web:** `middleware.ts` edge guard per route group `(tutor)/(vet)/(admin)` + server-side session check in layouts.
@@ -566,7 +589,7 @@ merge to main
 | Concern | Technology |
 |---|---|
 | Monorepo / build | Turborepo, pnpm |
-| Web runtime | Next.js 16 (App Router, RSC, Server Actions), React 19 |
+| Web runtime | Next.js 15 (App Router, RSC, Server Actions), React 19 — 16 is the upgrade target |
 | Web data/state | TanStack Query (server state), Zustand (UI state), React Hook Form + Zod (forms) |
 | Styling/UI | Tailwind CSS v4, shadcn/ui, Radix UI, `@petnalia/ui` design system |
 | Maps | Mapbox GL JS (service area, coverage, search map) |

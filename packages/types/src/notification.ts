@@ -7,7 +7,7 @@ export const NotificationSchema = z.object({
   userId: z.string().uuid(),
   type: z.string(),
   channel: NotificationChannelSchema,
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   readAt: z.string().datetime().nullable(),
   sentAt: z.string().datetime().nullable(),
   status: z.enum(['pending', 'sent', 'failed']),

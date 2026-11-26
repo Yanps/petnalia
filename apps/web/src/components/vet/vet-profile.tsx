@@ -1,10 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
-import { Avatar, Badge, Icon, Rating, Separator } from '@petnalia/ui';
+
 import type { Review, VetProfilePublicResponse } from '@petnalia/types';
+import { Avatar, Badge, Icon, Rating, Separator } from '@petnalia/ui';
+
 import type { Session } from '@/lib/auth';
+
 import { BookingSidebar } from './booking-sidebar';
+import { ConsultationPrice } from './consultation-price';
+
 
 type Tab = 'sobre' | 'avaliacoes';
 
@@ -17,7 +23,6 @@ interface Props {
   readonly vet: VetProfilePublicResponse;
   readonly initialReviews: Review[];
   readonly session: Session | null;
-  readonly token: string | null;
 }
 
 function StarRating({ value }: { value: number }) {
@@ -67,7 +72,7 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-export function VetProfile({ vet, initialReviews, session, token }: Props) {
+export function VetProfile({ vet, initialReviews, session }: Props) {
   const [tab, setTab] = useState<Tab>('sobre');
 
   const tabLabel = (t: Tab) =>
@@ -79,7 +84,7 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Breadcrumb */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24, fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          <a href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Início</a>
+          <Link href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Início</Link>
           <Icon name="chevron-right" size={14} />
           <a href="/busca" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Busca</a>
           <Icon name="chevron-right" size={14} />
@@ -193,6 +198,33 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
               </p>
             )}
 
+            <Separator />
+            <div style={{ marginTop: 24, marginBottom: 24 }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1rem', color: 'var(--text)', marginBottom: 12 }}>
+                Valores da consulta
+              </h2>
+              <dl style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <dt style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
+                    <Icon name="home" size={16} aria-hidden />
+                    Consulta presencial
+                  </dt>
+                  <dd style={{ margin: 0 }}>
+                    <ConsultationPrice priceCents={vet.homePriceCents} />
+                  </dd>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <dt style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9375rem', color: 'var(--text-secondary)' }}>
+                    <Icon name="video" size={16} aria-hidden />
+                    Teleconsulta
+                  </dt>
+                  <dd style={{ margin: 0 }}>
+                    <ConsultationPrice priceCents={vet.onlinePriceCents} />
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
             {vet.specialties.length > 0 && (
               <>
                 <Separator />
@@ -259,7 +291,7 @@ export function VetProfile({ vet, initialReviews, session, token }: Props) {
       </div>
 
       {/* Booking sidebar */}
-      <BookingSidebar vet={vet} session={session} token={token} />
+      <BookingSidebar vet={vet} session={session} />
     </div>
   );
 }

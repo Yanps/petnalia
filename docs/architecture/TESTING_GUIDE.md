@@ -204,9 +204,13 @@ Every pull request **MUST** pass, before merge:
 
 `main` is protected; gates are non-negotiable and Turbo-cached/affected-only for speed.
 
-### Coverage thresholds (enforced)
+> **Current state (2026-10-14)** — what `.github/workflows/ci.yml` actually runs: lint (ESLint wired into `api` and `web` on this date; import-order rules, no architecture-boundary rules yet), typecheck, the Claude Code hook tests, unit tests of every workspace (`pnpm test`) and **API** integration tests (Testcontainers). Not yet in CI: E2E (ADR-0003, runs locally), build verification, coverage (ADR-0004), a11y/contrast (ADR-0002).
 
-**Global (MUST):**
+### Coverage thresholds (target — not yet enforced)
+
+> **Current state (2026-10-14):** no coverage gate runs today. `@vitest/coverage-v8` is not installed and no `vitest.config.ts` sets `coverage.thresholds`. The rollout plan is **ADR-0004** (per-path thresholds, global floor at 0 so new folders aren't blocked) — it supersedes the flat numbers below as the *mechanism*; the numbers remain the long-term target.
+
+**Global (target):**
 | Metric | Threshold |
 |---|---|
 | Statements | ≥ 80% |
@@ -214,7 +218,7 @@ Every pull request **MUST** pass, before merge:
 | Functions | ≥ 80% |
 | Lines | ≥ 80% |
 
-**Critical domains (MUST — higher bar):**
+**Critical domains (target — higher bar):**
 | Domain | Threshold |
 |---|---|
 | Appointments | ≥ 90% |

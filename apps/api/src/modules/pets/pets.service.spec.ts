@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
 import type { Pet } from '@prisma/client';
+import { describe, it, expect, vi } from 'vitest';
+
 import type { CreatePetInput } from '@petnalia/types';
 
-import { PetsRepository } from './pets.repository';
+import { PetNotFoundError } from './pets.errors';
+import type { PetsRepository } from './pets.repository';
 import { PetsService } from './pets.service';
 
 const TUTOR_ID = 'tutor-uuid-1';
@@ -28,6 +30,7 @@ const basePet: Pet = {
 function makeRepo(overrides: Partial<PetsRepository> = {}) {
   return {
     findByOwner: vi.fn().mockResolvedValue([basePet]),
+    findById: vi.fn().mockResolvedValue(basePet),
     create: vi.fn().mockResolvedValue(basePet),
     softDelete: vi.fn().mockResolvedValue(undefined),
     ...overrides,
@@ -115,5 +118,20 @@ describe('PetsService.deletePet', () => {
     const repo = makeRepo();
     await new PetsService(repo).deletePet(PET_ID, TUTOR_ID);
     expect(repo.softDelete).toHaveBeenCalledWith(PET_ID, TUTOR_ID);
+  });
+});
+
+describe('PetsService.assertOwnedBy', () => {
+  it('resolve quando o pet pertence ao tutor', async () => {
+    const repo = makeRepo();
+    await expect(new PetsService(repo).assertOwnedBy(PET_ID, TUTOR_ID)).resolves.toBeUndefined();
+    expect(repo.findById).toHaveBeenCalledWith(PET_ID, TUTOR_ID);
+  });
+
+  it('lança PetNotFoundError quando o pet não pertence ao tutor', async () => {
+    const repo = makeRepo({ findById: vi.fn().mockResolvedValue(null) });
+    await expect(new PetsService(repo).assertOwnedBy(PET_ID, 'outro-tutor')).rejects.toThrow(
+      PetNotFoundError,
+    );
   });
 });

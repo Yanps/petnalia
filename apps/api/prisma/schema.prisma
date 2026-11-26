@@ -178,6 +178,10 @@ model Veterinarian {
   rejectionReason    String?
   tier               VetTier            @default(free)
   serviceRadiusKm    Int                @default(20)
+  // Consultation price per modality, in cents; null = "a combinar" (VETS-01).
+  // CHECK 1..1_000_000 lives in the migration SQL.
+  homePriceCents     Int?
+  onlinePriceCents   Int?
   createdAt          DateTime           @default(now()) @db.Timestamptz
   updatedAt          DateTime           @updatedAt @db.Timestamptz
   deletedAt          DateTime?          @db.Timestamptz
@@ -254,7 +258,8 @@ model Appointment {
   slotId         String            @unique @db.Uuid
   modality       Modality
   status         AppointmentStatus @default(requested)
-  priceCents     Int
+  // Snapshot of the vet's price for the modality at booking time; null = "a combinar" (VETS-01).
+  priceCents     Int?
   notes          String?
   createdAt      DateTime          @default(now()) @db.Timestamptz
   updatedAt      DateTime          @updatedAt @db.Timestamptz

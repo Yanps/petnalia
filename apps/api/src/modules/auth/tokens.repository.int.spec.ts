@@ -1,12 +1,14 @@
+import { createHash } from 'node:crypto';
+
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { createHash } from 'node:crypto';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { PrismaModule } from '../../shared/prisma/prisma.module';
-import { UsersRepository } from '../users/users.repository';
 import { TokensRepository } from './tokens.repository';
 import { setupTestDatabase, type TestDatabase } from '../../../test/helpers/database';
+import { PrismaModule } from '../../shared/prisma/prisma.module';
+import { UsersRepository } from '../users/users.repository';
+
 
 function hashToken(raw: string): string {
   return createHash('sha256').update(raw).digest('hex');
