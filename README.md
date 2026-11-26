@@ -115,8 +115,15 @@ cp .env.example .env
 
 ```bash
 docker compose up -d
-# PostgreSQL :5432 · Redis :6379 · MinIO :9000/:9001 · Mailhog :8025
+# PostgreSQL :5433 · Redis :6379 · MinIO :9000/:9001 · Mailhog :8025
 ```
+
+> **Já tinha o volume do MinIO antes de novembro/2026?** A imagem `minio/minio` saiu do Docker Hub e o compose passou a usar `bitnamilegacy/minio`, que roda como uid 1001. O volume antigo pertence ao root e o MinIO para com `Permission denied`. Para manter os arquivos, ajuste o dono uma vez:
+>
+> ```bash
+> docker run --rm -v petnalia_minio_data:/d alpine chown -R 1001:1001 /d
+> docker compose up -d minio
+> ```
 
 ### 4. Execute as migrations e o seed
 
